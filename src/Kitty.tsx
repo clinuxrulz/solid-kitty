@@ -5,6 +5,7 @@ import { createStore, SetStoreFunction, Store } from "solid-js/store";
 type KittyState = {
     facing: "Left" | "Right",
     onGround: boolean,
+    lastJumpPressed: boolean,
     jumpHeld: boolean,
     remainingJumpHeldFrames: number,
 };
@@ -35,6 +36,7 @@ export class Kitty implements
         let [ state, setState ] = createStore<KittyState>({
             facing: "Right",
             onGround: false,
+            lastJumpPressed: false,
             jumpHeld: false,
             remainingJumpHeldFrames: 0,
         });
@@ -81,7 +83,7 @@ export class Kitty implements
         } else if (accelX > 0.0) {
             this.setState("facing", "Right");
         }
-        if (params.jumpPressed && params.onGround) {
+        if (params.jumpPressed && !this.state.lastJumpPressed && params.onGround) {
             this.actor.setState("vel", "y", -10);
             this.setState("jumpHeld", true);
             this.setState("remainingJumpHeldFrames", MAX_HOLD_JUMP_FRAMES);
@@ -103,5 +105,6 @@ export class Kitty implements
             }
             return vx2;
         });
+        this.setState("lastJumpPressed", params.jumpPressed);
     }
 }
