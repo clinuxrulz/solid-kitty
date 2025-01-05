@@ -10,6 +10,8 @@ import { Level } from "./Level";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
+const TARGET_FRAME_RATE = 60.0;
+const TARGET_TIME_STEP = 1.0 / TARGET_FRAME_RATE;
 const TEST_SPRITES = false;
 
 await Assets.load(tilesetAtlasData.meta.image);
@@ -30,6 +32,25 @@ const tileset = new Spritesheet(
 );
 
 await tileset.parse();
+
+function throttleUpdate(params: {
+  dtOffset: number,
+  dt: number,
+  updateFn: () => void,
+}): {
+  dtOffset: number,
+} {
+  return batch(() => {
+    let dt2 = params.dtOffset + params.dt;
+    while (dt2 > 0.0) {
+      params.updateFn();
+      dt2 -= TARGET_TIME_STEP;
+    }
+    return {
+      dtOffset: dt2,
+    };
+  });
+}
 
 const App: Component = () => {
   let [ windowSize, setWindowSize, ] = createStore<{
@@ -86,18 +107,30 @@ const App: Component = () => {
     document.removeEventListener("keydown", keyDownListener);
     document.removeEventListener("keyup", keyUpListener);
   });
-  let update = () => {
-    batch(() => {
-      world.update({
-        windowSize,
-        leftPressed: input.leftPressed,
-        rightPressed: input.rightPressed,
-        jumpPressed: input.jumpPressed,
+  {
+    let dtOffset = 0.0;
+    let lastTime: number = 0.0;
+    let update = (t: number) => {
+      let time = t / 1000.0;
+      let dt = time - lastTime;
+      lastTime = time;
+      batch(() => {
+        let { dtOffset: dtOffset2, } = throttleUpdate({
+          dtOffset,
+          dt,
+          updateFn: () => world.update({
+            windowSize,
+            leftPressed: input.leftPressed,
+            rightPressed: input.rightPressed,
+            jumpPressed: input.jumpPressed,
+          }),
+        });
+        dtOffset = dtOffset2;
       });
-    });
+      requestAnimationFrame(update);
+    };
     requestAnimationFrame(update);
-  };
-  requestAnimationFrame(update);
+  }
   const app = new Application();
   let [ app2, ] = createResource(async () => {
     await app.init({ background: "#00f8f8", resizeTo: window, });
