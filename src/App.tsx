@@ -1,4 +1,4 @@
-import { AnimatedSprite, Application, Assets, Container, ContainerChild, Graphics, Sprite, Spritesheet, Text, Texture } from "pixi.js";
+import { AnimatedSprite, Application, Assets, Container, ContainerChild, Graphics, Sprite, Spritesheet, Text, Texture, TextureStyle } from "pixi.js";
 import { batch, Component, createEffect, createMemo, createResource, createSignal, For, Index, JSX, mapArray, on, onCleanup, Show, untrack } from 'solid-js';
 import { atlasData, KITTY_SPRITES } from './KittySprites';
 import { World } from './World';
@@ -7,6 +7,8 @@ import { createStore } from 'solid-js/store';
 import { IsActor } from "./Actor";
 import { tilesetAtlasData } from "./tileset";
 import { Level } from "./Level";
+
+TextureStyle.defaultOptions.scaleMode = "nearest";
 
 const TEST_SPRITES = false;
 
