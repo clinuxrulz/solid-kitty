@@ -100,7 +100,7 @@ const App: Component = () => {
   requestAnimationFrame(update);
   const app = new Application();
   let [ app2, ] = createResource(async () => {
-    await app.init({ background: "#1099bb", resizeTo: window, });
+    await app.init({ background: "#00f8f8", resizeTo: window, });
     return app;
   });
   onCleanup(() => {
@@ -182,19 +182,6 @@ function RenderWorld(props: {
     return undefined;
   };
   let container: Container = new Container();
-  createMemo(mapArray(
-    () => props.world.state.actors,
-    (actor, idx) => {
-      let toAdd = forEachCallback(actor);
-      if (toAdd == undefined) {
-        return;
-      }
-      container.addChild(toAdd);
-      onCleanup(() => {
-        container.removeChild(toAdd);
-      });
-    },
-  ));
   container.addChild(RenderLevel({
     get windowSize() {
       return props.windowSize;
@@ -212,6 +199,19 @@ function RenderWorld(props: {
       return props.world.state.level;
     },
   }));
+  createMemo(mapArray(
+    () => props.world.state.actors,
+    (actor, idx) => {
+      let toAdd = forEachCallback(actor);
+      if (toAdd == undefined) {
+        return;
+      }
+      container.addChild(toAdd);
+      onCleanup(() => {
+        container.removeChild(toAdd);
+      });
+    },
+  ));
   return container;
 }
 
@@ -377,7 +377,4 @@ function TestSprites(props: {
 }
 */
 export default App;
-function mapIndex(): import("solid-js").EffectFunction<unknown, unknown> {
-  throw new Error("Function not implemented.");
-}
 

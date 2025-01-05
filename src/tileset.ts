@@ -22,6 +22,24 @@ export const tilesetAtlasData = {
         "woodGroundCentreRight": {
             frame: { x: 19+17, y: 197+17, w: 16, h: 16, },
         },
+        "bgCloudTopLeft": {
+            frame: { x: 138, y: 197, w: 16, h: 16, },
+        },
+        "bgCloudTopCentre": {
+            frame: { x: 138+17, y: 197, w: 16, h: 16, },
+        },
+        "bgCloudTopRight": {
+            frame: { x: 138+17*2, y: 197, w: 16, h: 16, },
+        },
+        "bgCloudBottomLeft": {
+            frame: { x: 138, y: 197+17, w: 16, h: 16, },
+        },
+        "bgCloudBottomCentre": {
+            frame: { x: 138+17, y: 197+17, w: 16, h: 16, },
+        },
+        "bgCloudBottomRight": {
+            frame: { x: 138+17*2, y: 197+17, w: 16, h: 16, },
+        },
     },
     meta: {
         image: TILESET_IMAGE,

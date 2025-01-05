@@ -60,6 +60,32 @@ export class Level {
                 }
                 return "woodGroundTopCentre";
             }
+        } else if (char == "c") {
+            let hasCloudLeft = this.readBlock(xIdx-1, yIdx) == "c";
+            let hasCloudRight = this.readBlock(xIdx+1, yIdx) == "c";
+            let hasCloudUp = this.readBlock(xIdx, yIdx-1) == "c";
+            let hasCloudDown = this.readBlock(xIdx, yIdx+1) == "c";
+            if (hasCloudLeft) {
+                if (hasCloudRight) {
+                    if (hasCloudUp) {
+                        return "bgCloudBottomCentre";
+                    } else {
+                        return "bgCloudTopCentre";
+                    }
+                } else {
+                    if (hasCloudUp) {
+                        return "bgCloudBottomRight";
+                    } else {
+                        return "bgCloudTopRight";
+                    }
+                }
+            } else {
+                if (hasCloudUp) {
+                    return "bgCloudBottomLeft";
+                } else {
+                    return "bgCloudTopLeft";
+                }
+            }
         }
         return undefined;
     }
@@ -67,11 +93,11 @@ export class Level {
 
 export const level1: string[] = [
     "                     ",
-    "                 GG  ",
+    "         ccc     GG  ",
+    "         ccc         ",
     "                     ",
-    "                     ",
-    "            GG       ",
-    "                     ",
+    "  ccccc     GG       ",
+    "  ccccc              ",
     "      GG             ",
     "                 GG  ",
     "                 GG  ",
