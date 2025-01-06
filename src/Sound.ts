@@ -46,7 +46,7 @@ interface GME_Module {
 let GME: GME_Module;
 let oldModule = (globalThis as any)["Module"];
 // @ts-ignore
-import "../node_modules/nsf-player/libgme/libgme.js";
+await import("../node_modules/nsf-player/libgme/libgme.js");
 GME = (globalThis as any)["Module"];
 (globalThis as any)["Module"] = oldModule;
 
