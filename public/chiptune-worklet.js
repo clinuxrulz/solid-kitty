@@ -1,4 +1,4 @@
-let ringBuffer = [];
+let ringBuffer = [[],[]];
 let ringBufferAt = 0;
 let ringBufferEnd = 0;
 
@@ -11,8 +11,8 @@ class ChiptuneProcessor extends AudioWorkletProcessor {
         const output = outputs[0];
         for (let i = 0; i < output[0].length; ++i) {
             let data = ringBuffer[ringBufferAt];
-            output[0][i] = data[0];
-            output[1][i] = data[1];
+            output[0][i] = ringBuffer[0][i];
+            output[1][i] = ringBuffer[1][i];
             ++ringBufferAt;
             if (ringBufferAt >= ringBuffer.length) {
                 ringBufferAt = 0;
@@ -31,12 +31,11 @@ self.addEventListener("message", (e) => {
     if (data.length > ringBuffer.length) {
         ringBuffer = data;
         ringBufferAt = 0;
-    } else if (data.length < ringBuffer.length) {
-        ringBufferEnd = (ringBufferAt + data.length) % ringBuffer.length;
     } else {
-        for (let i = 0, j = ringBufferAt; i < data.length; ++i) {
-            ringBuffer[i][0] = data[i][0];
-            ringBuffer[i][1] = data[i][1];
+        ringBufferEnd = (ringBufferAt + data.length) % ringBuffer.length;
+        for (let i = 0, j = ringBufferAt; i < data[0].length; ++i) {
+            ringBuffer[0][i] = data[0][i];
+            ringBuffer[1][i] = data[1][i];
             j++;
             if (j >= ringBuffer.length) {
                 j -= ringBuffer.length;
