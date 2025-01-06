@@ -8,6 +8,25 @@ import { IsActor } from "./Actor";
 import { tilesetAtlasData } from "./tileset";
 import { Level } from "./Level";
 
+import { NsfPlayer } from "./Sound";
+
+let nsfPlayer: NsfPlayer | undefined;
+document.addEventListener("pointerdown", () => {
+  if (nsfPlayer == undefined) {
+    let ctx = new AudioContext();
+    (window as any)["ctx"] = ctx;
+    nsfPlayer = new NsfPlayer(ctx);
+    let nsfPlayer2 = nsfPlayer;
+    fetch("./smb3.nsf")
+      .then((r) => r.arrayBuffer())
+      .then((r) => {
+        let data = new Uint8Array(r);
+        nsfPlayer2.load(data);
+        nsfPlayer2.play(9);
+      });
+  }
+});
+
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
 const TARGET_FRAME_RATE = 60.0;
