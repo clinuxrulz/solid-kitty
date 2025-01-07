@@ -8,23 +8,25 @@ import { IsActor } from "./Actor";
 import { tilesetAtlasData } from "./tileset";
 import { Level } from "./Level";
 
-import { NsfPlayer } from "./Sound";
+import { Chiptunes } from "./Chiptunes";
 
-let nsfPlayer: NsfPlayer | undefined;
+let firstTouch = true;
 document.addEventListener("pointerdown", () => {
-  if (nsfPlayer == undefined) {
-    let ctx = new AudioContext();
-    (window as any)["ctx"] = ctx;
-    nsfPlayer = new NsfPlayer(ctx);
-    let nsfPlayer2 = nsfPlayer;
+  if (!firstTouch) {
+    return;
+  }
+  firstTouch = false;
     fetch("./smb3.nsf")
       .then((r) => r.arrayBuffer())
-      .then((r) => {
-        let data = new Uint8Array(r);
-        nsfPlayer2.load(data);
-        nsfPlayer2.play(9);
+      .then(async (r) => {
+        let chiptunes = await Chiptunes.init();
+        let r2 = await chiptunes.load(r);
+        if (r2.type == "Err") {
+            return;
+        }
+        let { emu, } = r2.value;
+        await chiptunes.play(emu, 9);
       });
-  }
 });
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
