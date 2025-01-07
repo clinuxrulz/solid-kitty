@@ -54,92 +54,6 @@ GME = (globalThis as any)["Module"];
 
 GME.run();
 
-
-class NsfPlayer {
-    private ctx: AudioContext;
-    private emu: number | undefined;
-    private _subtuneCount: number;
-    private node: any;
-
-    get subtuneCount(): number {
-        return this.subtuneCount;
-    }
-
-    constructor(audioContext: AudioContext) {
-        this.ctx = audioContext;
-        this.emu = undefined;
-        this._subtuneCount = 0;
-    }
-
-    load(musicData: Uint8Array): boolean {
-        let ref = GME.allocate(1, "i32", GME.ALLOC_STATIC);
-        const sampleRate = this.ctx.sampleRate;
-        if (GME.ccall(
-            "gme_open_data",
-            "number",
-            ["array", "number", "number", "number"],
-            [musicData, musicData.length, ref, sampleRate]
-        ) != 0) {
-            return false;
-        }
-        this.emu = GME.getValue(ref, "i32");
-        this._subtuneCount = GME.ccall("gme_track_count", "number", ["number"], [this.emu]);
-        GME.ccall("gme_ignore_silence", "number", ["number"], [this.emu, 1]);
-        return true;
-    }
-
-    play(subtune: number): boolean {
-        const volumeValue = 1.0;
-        if (this.emu == undefined) {
-            return false;
-        }
-        if (GME.ccall("gme_start_track", "number", ["number", "number"], [this.emu, subtune]) != 0) {
-            return false;
-        }
-        const bufferSize = 1024 * 16;
-        const inputs = 2;
-        const outputs = 2;
-        if (!this.node && (this.ctx as any).createJavaScriptNode) {
-            this.node = (this.ctx as any).createJavaScriptNode(bufferSize, inputs, outputs);
-        }
-        if (!this.node && (this.ctx as any).createScriptProcessor) {
-            this.node = (this.ctx as any).createScriptProcessor(bufferSize, inputs, outputs);
-        }
-
-        //
-        const buffer = GME.allocate(bufferSize * 2, 'i32', GME.ALLOC_STATIC);
-
-        const INT16_MAX = Math.pow(2, 32) - 1;
-    
-        let emu = this.emu;
-        this.node.onaudioprocess = (e: any) => {
-          if (GME.ccall('gme_track_ended', 'number', ['number'], [emu]) == 1) {
-            this.node.disconnect();
-            return;
-          }
-    
-          const channels = [e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1)];
-    
-          const err = GME.ccall('gme_play', 'number', ['number', 'number', 'number'], [emu, bufferSize * 2, buffer]);
-          for (var i = 0; i < bufferSize; i++) {
-            for (var n = 0; n < e.outputBuffer.numberOfChannels; n++) {
-              channels[n][i] = GME.getValue(buffer + i * e.outputBuffer.numberOfChannels * 2 + n * 4, 'i32') / INT16_MAX;
-            }
-          }
-        }
-    
-        const volume = this.ctx.createGain();
-        this.node.connect(volume);
-        volume.gain.setValueAtTime(volumeValue, this.ctx.currentTime);
-        volume.connect(this.ctx.destination);
-    
-        (window as any)["savedReferences"] = [this.ctx, this.node];
-        //
-
-        return true;
-    }
-}
-
 interface AudioWorkletProcessor {
     readonly port: MessagePort;
     process(
@@ -174,18 +88,21 @@ class ChiptunesProcessor extends AudioWorkletProcessor {
 registerProcessor("chuptunes-processor", ChiptunesProcessor);
 
 self.addEventListener("message", (e) => {
-    let type = e.data.type;
+    let callbackId = e.data.callbackId;
+    let message = e.data.message;
+    let type = message.tyoe;
+    let data = message;
     switch (type) {
         case "load": {
-            let musicData = new Uint8Array(e.data.musicData);
-            let sampleRate = e.data.sampleRate;
+            let musicData = new Uint8Array(data.musicData);
+            let sampleRate = data.sampleRate;
             let r = load(musicData, sampleRate);
             self.postMessage(r);
             break;
         }
         case "play": {
-            let emu = e.data.emu;
-            let subtune = e.data.subtune;
+            let emu = data.emu;
+            let subtune = data.subtune;
             let r = play(emu, subtune);
             self.postMessage(r);
             break;
