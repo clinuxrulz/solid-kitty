@@ -81,6 +81,7 @@ let onProcess = (outputs: Float32Array[][]) => {};
 
 class ChiptunesProcessor extends AudioWorkletProcessor {
     process(inputs: Float32Array[][], outputs: Float32Array[][], params: Record<string, Float32Array>): boolean {
+        onProcess(outputs);
         return true;
     }
 }
