@@ -20,8 +20,10 @@ document.addEventListener("pointerdown", () => {
       .then((r) => r.arrayBuffer())
       .then(async (r) => {
         let chiptunes = await Chiptunes.init();
+        console.log(chiptunes);
         let r2 = await chiptunes.load(r);
         if (r2.type == "Err") {
+            console.log(r2.message);
             return;
         }
         let { emu, } = r2.value;
