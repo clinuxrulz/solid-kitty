@@ -1,6 +1,6 @@
 import { err, ok, Result } from "./Result.js";
 
-import bp_url from "./buffer-processor.ts?url";
+import bp_url from "./buffer-processor.ts?worker&url";
 
 interface ALLOC_STATIC_TYPE {}
 
