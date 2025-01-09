@@ -1,5 +1,7 @@
 import { err, ok, Result } from "./Result.js";
 
+import bp_url from "./buffer-processor.ts?url";
+
 interface ALLOC_STATIC_TYPE {}
 
 interface GME_Module {
@@ -64,7 +66,7 @@ export class Chiptunes {
     static async init(): Promise<Chiptunes> {
         const audioContext = new AudioContext();
         await audioContext.audioWorklet.addModule(
-            new URL("./buffer-processor.ts", import.meta.url)
+            bp_url
         );
         const chiptunesNode = new AudioWorkletNode(
             audioContext,
