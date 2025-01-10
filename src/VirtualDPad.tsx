@@ -52,32 +52,32 @@ export class VirtualDPad {
               }}>
                 <div></div>
                 <div
-                  onPointerDown={() => this.setState("upPressed", true)}
-                  onPointerUp={() => this.setState("upPressed", false)}
+                  onPointerOver={() => this.setState("upPressed", true)}
+                  onPointerOut={() => this.setState("upPressed", false)}
                   style={buttonStyle(this.upPressed)}
                 >
                   {"\u25B2"}
                 </div>
                 <div></div>
                 <div
-                  onPointerDown={() => this.setState("leftPressed", true)}
-                  onPointerUp={() => this.setState("leftPressed", false)}
+                  onPointerOver={() => this.setState("leftPressed", true)}
+                  onPointerOut={() => this.setState("leftPressed", false)}
                   style={buttonStyle(this.leftPressed)}
                 >
                   {"\u25C0"}
                 </div>
                 <div></div>
                 <div
-                  onPointerDown={() => this.setState("rightPressed", true)}
-                  onPointerUp={() => this.setState("rightPressed", false)}
+                  onPointerOver={() => this.setState("rightPressed", true)}
+                  onPointerOut={() => this.setState("rightPressed", false)}
                   style={buttonStyle(this.rightPressed)}
                 >
                   {"\u25B6"}
                 </div>
                 <div></div>
                 <div
-                  onPointerDown={() => this.setState("downPressed", true)}
-                  onPointerUp={() => this.setState("downPressed", false)}
+                  onPointerOver={() => this.setState("downPressed", true)}
+                  onPointerOut={() => this.setState("downPressed", false)}
                   style={buttonStyle(this.downPressed)}
                 >
                   {"\u25BC"}
