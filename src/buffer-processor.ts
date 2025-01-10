@@ -62,7 +62,7 @@ class BufferProcessor extends AudioWorkletProcessor {
             ++this.atFrame;
             if (this.channels != undefined && this.atFrame >= this.channels[0].length) {
                 this.atFrame = 0;
-                pool = this.channels.map((c) => c.buffer);
+                pool = this.channels.map((c) => c.buffer as ArrayBuffer);
                 this.channels = this.nextChannels;
                 this.nextChannels = undefined;
             }

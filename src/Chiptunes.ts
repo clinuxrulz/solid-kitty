@@ -86,7 +86,7 @@ export class Chiptunes {
         this.node = node;
         this.node.port.onmessage = (e) => {
             if (this.onMoreData != undefined) {
-                this.node.port.postMessage(this.onMoreData(e.pool));
+                this.node.port.postMessage(this.onMoreData(e.data.pool));
             }
         };
         this.sampleRate = sampleRate;
@@ -137,7 +137,7 @@ export class Chiptunes {
                     new Float32Array(bufferSize),
                 ];
             } else {
-                channels = pool.map((c) => new FloatArray(c));
+                channels = pool.map((c) => new Float32Array(c));
             }
             const err = GME.ccall('gme_play', 'number', ['number', 'number', 'number'], [emu, bufferSize * 2, buffer]);
             for (var i = 0; i < bufferSize; i++) {
@@ -146,7 +146,7 @@ export class Chiptunes {
                 }
             }
             return {
-                channels: channels.map((c) => c.buffer),
+                channels: channels.map((c) => c.buffer as ArrayBuffer),
             };
         };
         this.node.port.postMessage(this.onMoreData());
