@@ -15,7 +15,7 @@ export class VirtualDPad {
     readonly downPressed: Accessor<boolean>;
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    readonly Render: Component;
+    readonly Render: Component<{ onPointerDown: ()=>void, }>;
     constructor() {
         let [ state, setState ] = createStore<State>({
             leftPressed: false,
@@ -30,7 +30,7 @@ export class VirtualDPad {
         this.state = state;
         this.setState = setState;
         //
-        this.Render = () => {
+        this.Render = (props) => {
             let minOfWH = Math.min(window.innerWidth, window.innerHeight);
             let buttonStyle: (pressed: Accessor<boolean>) => string | JSX.CSSProperties = (pressed) => ({
               "background-color": pressed() ? "green" : "grey",
@@ -43,13 +43,16 @@ export class VirtualDPad {
               "user-select": "none",
             });
             return (
-              <div style={{
-                "display": "grid",
-                "grid-template-columns": "auto auto auto",
-                "position": "absolute",
-                "left": `${minOfWH * 0.12}px`,
-                "bottom": `${minOfWH * 0.12}px`,
-              }}>
+              <div
+                style={{
+                  "display": "grid",
+                  "grid-template-columns": "auto auto auto",
+                  "position": "absolute",
+                  "left": `${minOfWH * 0.12}px`,
+                  "bottom": `${minOfWH * 0.12}px`,
+                }}
+                onPointerDown={()=>props.onPointerDown()}
+              >
                 <div></div>
                 <div
                   onPointerOver={() => this.setState("upPressed", true)}

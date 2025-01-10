@@ -21,7 +21,7 @@ let playSoundEffect = (subtune: number) => {
 };
 
 let firstTouch = true;
-document.addEventListener("pointerdown", () => {
+function startSound() {
   if (!firstTouch) {
     return;
   }
@@ -53,6 +53,10 @@ document.addEventListener("pointerdown", () => {
           soundEffectsEmu = emu;
         }
       });
+}
+
+document.addEventListener("mousedown", () => {
+  startSound();
 });
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
@@ -217,7 +221,9 @@ const App: Component = () => {
           return app.canvas;
         }}
       </Show>
-      <virtualDPad.Render/>
+      <virtualDPad.Render
+        onPointerDown={() => startSound()}
+      />
     </div>
   );
 };
