@@ -59,7 +59,7 @@ GME.run();
 export class Chiptunes {
     private node: AudioWorkletNode;
     private sampleRate: number;
-    private onMoreData: (() => {
+    private onMoreData: ((pool?: ArrayBuffer[]) => {
         channels: ArrayBuffer[],
     }) | undefined;
     
@@ -86,7 +86,7 @@ export class Chiptunes {
         this.node = node;
         this.node.port.onmessage = (e) => {
             if (this.onMoreData != undefined) {
-                this.node.port.postMessage(this.onMoreData());
+                this.node.port.postMessage(this.onMoreData(e.pool));
             }
         };
         this.sampleRate = sampleRate;
@@ -129,11 +129,16 @@ export class Chiptunes {
     
         const INT32_MAX = Math.pow(2, 32) - 1;
 
-        this.onMoreData = () => {
-            const channels = [
-                new Float32Array(bufferSize),
-                new Float32Array(bufferSize),
-            ];
+        this.onMoreData = (pool) => {
+            let channels: Float32Array[];
+            if (pool == undefined) {
+                channels = [
+                    new Float32Array(bufferSize),
+                    new Float32Array(bufferSize),
+                ];
+            } else {
+                channels = pool.map((c) => new FloatArray(c));
+            }
             const err = GME.ccall('gme_play', 'number', ['number', 'number', 'number'], [emu, bufferSize * 2, buffer]);
             for (var i = 0; i < bufferSize; i++) {
                 for (var n = 0; n < channels.length; n++) {

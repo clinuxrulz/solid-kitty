@@ -50,6 +50,7 @@ class BufferProcessor extends AudioWorkletProcessor {
         if (this.atFrame >= this.channels[0].length) {
             return true;
         }
+        let pool: ArrayBuffer[] | undefined = undefined;
         let outputs2 = outputs[0];
         for (let i = 0; i < outputs2[0].length; ++i) {
             if (this.channels == undefined) {
@@ -61,16 +62,24 @@ class BufferProcessor extends AudioWorkletProcessor {
             ++this.atFrame;
             if (this.channels != undefined && this.atFrame >= this.channels[0].length) {
                 this.atFrame = 0;
+                pool = this.channels.map((c) => c.buffer);
                 this.channels = this.nextChannels;
                 this.nextChannels = undefined;
             }
         }
         if (!this.waitingForMore && this.nextChannels == undefined) {
-            this.port.postMessage("moreData");
+            if (pool != undefined) {
+                this.port.postMessage({
+                    type: "moreData",
+                    pool,
+                });
+            } else {
+                this.port.postMessage({
+                    type: "moreData",
+                });
+            }
             this.waitingForMore = true;
         }
-        //this.channels = undefined;
-        //this.port.postMessage("moreData");
         return true;
     }
 }
