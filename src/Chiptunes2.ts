@@ -80,6 +80,7 @@ export class Chiptunes {
         return this.call({
             type: "load",
             musicData,
+            sampleRate: this.sampleRate,
         });
     }
 
@@ -110,7 +111,10 @@ export class Chiptunes {
             }
             return r.value;
         };
-        this.node.port.postMessage({ channels: initChannels, });
+        this.node.port.postMessage({
+            channels: initChannels,
+            new: true,
+        });
         return ok({});
     }
 }

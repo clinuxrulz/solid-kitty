@@ -7,7 +7,7 @@ interface ALLOC_STATIC_TYPE {}
 interface GME_Module {
     ALLOC_STATIC: ALLOC_STATIC_TYPE;
     run(): void;
-    allocate(a: number, b: "i32", c: ALLOC_STATIC_TYPE): number;
+    _malloc(size: number): number;
     getValue(a: number, b: "i32"): number;
     ccall(
         a: "gme_open_data",
@@ -48,13 +48,9 @@ interface GME_Module {
 };
 
 let GME: GME_Module;
-let oldModule = (globalThis as any)["Module"];
 // @ts-ignore
-await import("../node_modules/nsf-player/libgme/libgme.js");
-GME = (globalThis as any)["Module"];
-(globalThis as any)["Module"] = oldModule;
-
-GME.run();
+import initGME from "../libgme/gme.js";
+GME = await initGME();
 
 export class Chiptunes {
     private node: AudioWorkletNode;
@@ -93,7 +89,7 @@ export class Chiptunes {
         };
         this.sampleRate = sampleRate;
         this.bufferSize = 1024 * 16;
-        this.buffer = GME.allocate(this.bufferSize * 2, 'i32', GME.ALLOC_STATIC);
+        this.buffer = GME._malloc(this.bufferSize * 2 * 4);
     }
 
     async load(musicData: ArrayBuffer):
@@ -102,7 +98,7 @@ export class Chiptunes {
         subtuneCount: number,
     }>> {
         let musicData2 = new Uint8Array(musicData);
-        let ref = GME.allocate(1, "i32", GME.ALLOC_STATIC);
+        let ref = GME._malloc(4);
         if (GME.ccall(
             "gme_open_data",
             "number",

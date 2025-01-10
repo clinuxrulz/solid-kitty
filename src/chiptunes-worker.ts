@@ -5,7 +5,7 @@ interface ALLOC_STATIC_TYPE {}
 interface GME_Module {
     ALLOC_STATIC: ALLOC_STATIC_TYPE;
     run(): void;
-    allocate(a: number, b: "i32", c: ALLOC_STATIC_TYPE): number;
+    _malloc(size: number): number;
     getValue(a: number, b: "i32"): number;
     ccall(
         a: "gme_open_data",
@@ -48,17 +48,9 @@ interface GME_Module {
 let moreDataCallbacks = new Map<number,(pool: ArrayBuffer[])=>{ channels: ArrayBuffer[], }>();
 let nextMoreDataCallbackId = 0;
 
-//let GME!: GME_Module;
-//let oldModule = (globalThis as any)["Module"];
-//let window = self;
+let GME!: GME_Module;
 // @ts-ignore
-import * as GME from "./gme.js"; //"../node_modules/nsf-player/libgme/libgme.js";
-//debugger;
-//GME = (globalThis as any)["Module"];
-//window = undefined as any;
-//debugger;
-//(globalThis as any)["Module"] = oldModule;
-//GME.run();
+import initGME from "../libgme/gme.js";
 
 self.addEventListener("message", (e) => {
     let callbackId = e.data.callbackId;
@@ -113,8 +105,7 @@ self.addEventListener("message", (e) => {
 });
 
 async function init(): Promise<Result<{}>> {
-    //await initGME();
-    GME.run();
+    GME = await initGME();
     return ok({});
 }
 
@@ -123,7 +114,7 @@ function load(musicData: ArrayBuffer, sampleRate: number): Result<{
     subtuneCount: number,
 }> {
     let musicData2 = new Uint8Array(musicData);
-    let ref = GME.allocate(1, "i32", GME.ALLOC_STATIC);
+    let ref = GME._malloc(4);
     if (GME.ccall(
         "gme_open_data",
         "number",
@@ -153,7 +144,7 @@ function play(emu: number, subtune: number): Result<{
     const outputs = 2;
 
     //
-    const buffer = GME.allocate(bufferSize * 2, 'i32', GME.ALLOC_STATIC);
+    const buffer = GME._malloc(bufferSize * 2 * 4);
 
     const INT32_MAX = Math.pow(2, 32) - 1;
 
