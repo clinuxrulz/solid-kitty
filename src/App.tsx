@@ -9,6 +9,7 @@ import { tilesetAtlasData } from "./tileset";
 import { Level } from "./Level";
 
 import { Chiptunes } from "./Chiptunes";
+import { VirtualDPad } from "./VirtualDPad";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -129,6 +130,12 @@ const App: Component = () => {
   const LEFT_KEY = "ArrowLeft";
   const RIGHT_KEY = "ArrowRight";
   const JUMP_KEY = " ";
+  let virtualDPad = new VirtualDPad();
+  createEffect(() => {
+    setInput("leftPressed", virtualDPad.leftPressed());
+    setInput("rightPressed", virtualDPad.rightPressed());
+    setInput("jumpPressed", virtualDPad.upPressed());
+  });
   let keyDownListener = (e: KeyboardEvent) => {
     if (e.key == LEFT_KEY) {
       setInput("leftPressed", true);
@@ -187,28 +194,31 @@ const App: Component = () => {
     app.destroy();
   });
   return (
-    <Show when={app2()}>
-      {(_) => {
-        /*
-        app.stage.addChild(
-          new Sprite({
-            texture: Texture.from(tilesetAtlasData.meta.image),
-            scale: 3.0,
-            x: 100,
-            y: -586,
-          }),
-        );*/
-        app.stage.addChild(
-          RenderWorld({
-            windowSize,
-            tileset,
-            spritesheet,
-            world,
-          })
-        );
-        return app.canvas;
-      }}
-    </Show>
+    <div style="position: relative; width: 100%; height: 100%;">
+      <Show when={app2()}>
+        {(_) => {
+          /*
+          app.stage.addChild(
+            new Sprite({
+              texture: Texture.from(tilesetAtlasData.meta.image),
+              scale: 3.0,
+              x: 100,
+              y: -586,
+            }),
+          );*/
+          app.stage.addChild(
+            RenderWorld({
+              windowSize,
+              tileset,
+              spritesheet,
+              world,
+            })
+          );
+          return app.canvas;
+        }}
+      </Show>
+      <virtualDPad.Render/>
+    </div>
   );
 };
 
