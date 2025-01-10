@@ -1,6 +1,7 @@
 import { Accessor, createMemo } from "solid-js";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
+import { JUMP_SOUND } from "./sound-effect-ids";
 
 type KittyState = {
     facing: "Left" | "Right",
@@ -69,6 +70,7 @@ export class Kitty implements
         rightPressed: boolean,
         jumpPressed: boolean,
         onGround: boolean,
+        playSoundEffect: (soundId: number) => void,
     }) {
         this.setState("onGround", params.onGround);
         let accelX = 0.0;
@@ -84,6 +86,7 @@ export class Kitty implements
             this.setState("facing", "Right");
         }
         if (params.jumpPressed && !this.state.lastJumpPressed && params.onGround) {
+            params.playSoundEffect(JUMP_SOUND);
             this.actor.setState("vel", "y", -10);
             this.setState("jumpHeld", true);
             this.setState("remainingJumpHeldFrames", MAX_HOLD_JUMP_FRAMES);

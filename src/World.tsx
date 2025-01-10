@@ -48,6 +48,7 @@ export class World {
         leftPressed: boolean,
         rightPressed: boolean,
         jumpPressed: boolean,
+        playSoundEffect: (soundId: number) => void,
     }) {
         { // drag camera if kitty gets close to edges
             let minScreenX = params.windowSize.width / 3;
@@ -109,6 +110,7 @@ export class World {
                     rightPressed: params.rightPressed,
                     jumpPressed: params.jumpPressed,
                     onGround,
+                    playSoundEffect: params.playSoundEffect,
                 });
             }
         }

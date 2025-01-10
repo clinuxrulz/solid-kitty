@@ -10,6 +10,15 @@ import { Level } from "./Level";
 
 import { Chiptunes } from "./Chiptunes";
 
+let chiptunes: Chiptunes | undefined = undefined;
+let chiptunesEmu: number = 0;
+let soundEffects: Chiptunes | undefined = undefined;
+let soundEffectsEmu: number = 0;
+
+let playSoundEffect = (subtune: number) => {
+  soundEffects?.play?.(soundEffectsEmu, subtune);
+};
+
 let firstTouch = true;
 document.addEventListener("pointerdown", () => {
   if (!firstTouch) {
@@ -19,15 +28,29 @@ document.addEventListener("pointerdown", () => {
     fetch("./smb3.nsf")
       .then((r) => r.arrayBuffer())
       .then(async (r) => {
-        let chiptunes = await Chiptunes.init();
-        console.log(chiptunes);
-        let r2 = await chiptunes.load(r);
-        if (r2.type == "Err") {
+        let chiptunes2 = await Chiptunes.init();
+        {
+          let r2 = await chiptunes2.load(r);
+          if (r2.type == "Err") {
+              console.log(r2.message);
+              return;
+          }
+          let { emu, } = r2.value;
+          await chiptunes2.play(emu, 9);
+          chiptunes = chiptunes2;
+          chiptunesEmu = emu;
+        }
+        let soundEffects2 = await Chiptunes.init();
+        {
+          let r2 = await soundEffects2.load(r);
+          if (r2.type == "Err") {
             console.log(r2.message);
             return;
+          }
+          let { emu, } = r2.value;
+          soundEffects = soundEffects2;
+          soundEffectsEmu = emu;
         }
-        let { emu, } = r2.value;
-        await chiptunes.play(emu, 9);
       });
 });
 
@@ -146,6 +169,7 @@ const App: Component = () => {
             leftPressed: input.leftPressed,
             rightPressed: input.rightPressed,
             jumpPressed: input.jumpPressed,
+            playSoundEffect,
           }),
         });
         dtOffset = dtOffset2;

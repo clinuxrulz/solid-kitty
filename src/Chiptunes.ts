@@ -62,6 +62,8 @@ export class Chiptunes {
     private onMoreData: ((pool?: ArrayBuffer[]) => {
         channels: ArrayBuffer[],
     }) | undefined;
+    bufferSize: number;
+    buffer: number;
     
     static async init(): Promise<Chiptunes> {
         const audioContext = new AudioContext();
@@ -90,6 +92,8 @@ export class Chiptunes {
             }
         };
         this.sampleRate = sampleRate;
+        this.bufferSize = 1024 * 16;
+        this.buffer = GME.allocate(this.bufferSize * 2, 'i32', GME.ALLOC_STATIC);
     }
 
     async load(musicData: ArrayBuffer):
@@ -120,36 +124,37 @@ export class Chiptunes {
         if (GME.ccall("gme_start_track", "number", ["number", "number"], [emu, subtune]) != 0) {
             return err("Failed.");
         }
-        const bufferSize = 1024 * 16;
-        const inputs = 2;
-        const outputs = 2;
-    
-        //
-        const buffer = GME.allocate(bufferSize * 2, 'i32', GME.ALLOC_STATIC);
-    
+        
         const INT32_MAX = Math.pow(2, 32) - 1;
 
         this.onMoreData = (pool) => {
             let channels: Float32Array[];
             if (pool == undefined) {
                 channels = [
-                    new Float32Array(bufferSize),
-                    new Float32Array(bufferSize),
+                    new Float32Array(this.bufferSize),
+                    new Float32Array(this.bufferSize),
                 ];
             } else {
                 channels = pool.map((c) => new Float32Array(c));
             }
-            const err = GME.ccall('gme_play', 'number', ['number', 'number', 'number'], [emu, bufferSize * 2, buffer]);
-            for (var i = 0; i < bufferSize; i++) {
+            if (GME.ccall('gme_track_ended', 'number', ['number'], [emu]) == 1) {
+                this.onMoreData = undefined;
+                return { channels: channels.map((c) => c.buffer as ArrayBuffer), };
+            }
+            const err = GME.ccall('gme_play', 'number', ['number', 'number', 'number'], [emu, this.bufferSize * 2, this.buffer]);
+            for (var i = 0; i < this.bufferSize; i++) {
                 for (var n = 0; n < channels.length; n++) {
-                    channels[n][i] = GME.getValue(buffer + i * channels.length * 2 + n * 4, 'i32') / INT32_MAX;
+                    channels[n][i] = GME.getValue(this.buffer + i * channels.length * 2 + n * 4, 'i32') / INT32_MAX;
                 }
             }
             return {
                 channels: channels.map((c) => c.buffer as ArrayBuffer),
             };
         };
-        this.node.port.postMessage(this.onMoreData());
+        this.node.port.postMessage({
+            new: true,
+            ...this.onMoreData(),
+        });
         return ok({});
     }
 }

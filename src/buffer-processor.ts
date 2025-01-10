@@ -33,6 +33,10 @@ class BufferProcessor extends AudioWorkletProcessor {
         this.waitingForMore = false;
         this.port.onmessage = (e) => {
             let data = e.data;
+            if (data.new) {
+                this.channels = undefined;
+                this.nextChannels = undefined;
+            }
             if (this.channels == undefined) {
                 this.channels = (data.channels as ArrayBuffer[]).map((x) => new Float32Array(x));
                 this.port.postMessage("moreData");
