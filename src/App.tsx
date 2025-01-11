@@ -8,7 +8,7 @@ import { IsActor } from "./Actor";
 import { tilesetAtlasData } from "./tileset";
 import { Level } from "./Level";
 
-import { Chiptunes } from "./Chiptunes";
+import { Chiptunes } from "./Chiptunes3";
 import { VirtualDPad } from "./VirtualDPad";
 
 let chiptunes: Chiptunes | undefined = undefined;
