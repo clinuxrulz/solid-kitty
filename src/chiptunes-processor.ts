@@ -178,7 +178,6 @@ class ChiptunesProcessor extends AudioWorkletProcessor {
                     this.channels[n][i] = this.GME.getValue(this.buffer + i * this.channels.length * 2 + n * 4, 'i32') / INT32_MAX;
                 }
             }
-            console.log("fill");
         };
         this.onMoreData = onMoreData;
         this.onMoreData();
@@ -187,17 +186,21 @@ class ChiptunesProcessor extends AudioWorkletProcessor {
     }
 
     process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean {
+        if (this.channels.length == 0) {
+            return true;
+        }
         let outputs2 = outputs[0];
         for (let i = 0; i < outputs2[0].length; ++i) {
-            for (let j = 0; i < this.channels.length; ++i) {
-                outputs2[j][i] = this.channels[j][this.atFrame++];
-                if (this.atFrame >= this.channels[j].length) {
-                    this.atFrame = 0;
-                    this.onMoreData();
-                    let tmp = this.nextChannels;
-                    this.nextChannels = this.channels;
-                    this.channels = tmp;
-                }
+            for (let j = 0; j < this.channels.length; ++j) {
+                outputs2[j][i] = this.channels[j][this.atFrame];
+            }
+            ++this.atFrame;
+            if (this.atFrame >= this.channels[0].length) {
+                this.atFrame = 0;
+                this.onMoreData();
+                let tmp = this.nextChannels;
+                this.nextChannels = this.channels;
+                this.channels = tmp;
             }
         }
         return true;

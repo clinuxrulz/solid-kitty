@@ -1,5 +1,8 @@
 emcc \
-  -O0 \
+  --bind -O1 \
+  -s WASM=1 \
+  -s BINARYEN_ASYNC_COMPILATION=0 \
+  -s SINGLE_FILE=1 \
   -o gme.js \
   main.c \
   -Lbuild/gme \
@@ -9,4 +12,4 @@ emcc \
   -s EXPORTED_RUNTIME_METHODS='[ccall, getValue, run]' \
   -s MODULARIZE=1 \
   -s EXPORT_ES6=1 \
-  -s ENVIRONMENT='worker'
+  -s ENVIRONMENT='shell'
