@@ -13,6 +13,10 @@ type WorldState = {
         },
     },
     actors: IsActor[],
+    blockSpawns: {
+        xIdx: number,
+        yIdx: number,
+    }[],
     level: Level,
 };
 
@@ -42,6 +46,7 @@ export class World {
             actors: [
                 kitty,
             ],
+            blockSpawns: [],
             level: new Level(level1),
         });
         this.state = state;
@@ -87,7 +92,6 @@ export class World {
             let startJ = Math.floor(this.state.camera.pos.x / RENDER_BLOCK_WIDTH);
             let numRows = Math.ceil(params.windowSize.height / RENDER_BLOCK_WIDTH);
             let numCols = Math.ceil(params.windowSize.width / RENDER_BLOCK_HEIGHT);
-            console.log(startJ);
             for (let i = startI; i < startI+numRows; ++i) {
                 for (let j = startJ; j < startJ+numCols; ++j) {
                     if (this.state.level.readBlock(j, i) == "@") {
@@ -101,9 +105,16 @@ export class World {
                                 }
                             }
                         }
+                        // Also only respawn if the spawn point has only just appeared on the screen
+                        for (let blockSpawn of this.state.blockSpawns) {
+                            if (blockSpawn.xIdx == j && blockSpawn.yIdx == i) {
+                                skipSpawn = true;
+                            }
+                        }
                         if (skipSpawn) {
                             continue;
                         }
+                        this.setState("blockSpawns", (blockSpawns) => [...blockSpawns, { xIdx: j, yIdx: i, }]);
                         this.setState("actors", (actors) => [
                             ...actors,
                             new Goomba({
@@ -121,7 +132,8 @@ export class World {
                 }
             }
         }
-        { // If actor goes too far of the screen, make them dissappear.
+        {
+            // If actor goes too far of the screen, make them dissappear.
             let minXIdx = Math.floor(this.state.camera.pos.x / RENDER_BLOCK_WIDTH);
             let minYIdx = Math.floor(this.state.camera.pos.y / RENDER_BLOCK_HEIGHT);
             let numRows = Math.ceil(params.windowSize.height / RENDER_BLOCK_WIDTH);
@@ -140,12 +152,32 @@ export class World {
                     actorYIdx < minYIdx ||
                     actorYIdx > maxYIdx
                 ) {
-                    actorsChanged = true;
                     actors.splice(i, 1);
+                    actorsChanged = true;
                 }
             }
             if (actorsChanged) {
                 this.setState("actors", actors);
+            }
+            // Likewise if a spawn bloocker goes too far of the screen, remove it.
+            let blockSpawnsChanged = false;
+            let blockSpawns = [...this.state.blockSpawns];
+            for (let i = blockSpawns.length-1; i >= 0; --i) {
+                let blockSpawn = blockSpawns[i];
+                let xIdx = blockSpawn.xIdx;
+                let yIdx = blockSpawn.yIdx;
+                if (
+                    xIdx < minXIdx ||
+                    xIdx > maxXIdx ||
+                    yIdx < minYIdx ||
+                    yIdx > maxYIdx
+                ) {
+                    blockSpawns.splice(i, 1);
+                    blockSpawnsChanged = true;
+                }
+            }
+            if (blockSpawnsChanged) {
+                this.setState("blockSpawns", blockSpawns);
             }
         }
         for (let actor of this.state.actors) {
