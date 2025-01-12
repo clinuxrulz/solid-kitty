@@ -29,4 +29,9 @@ export class Goomba implements
         });
         this.animation = () => "goomba_walking";
     }
+
+    update(params: { leftPressed: boolean; rightPressed: boolean; jumpPressed: boolean; onGround: boolean; playSoundEffect: (soundId: number) => void; }): void {
+        this.actor.update(params);
+        this.actor.setState("vel", "x", -1);
+    }
 }

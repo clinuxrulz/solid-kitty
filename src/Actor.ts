@@ -22,6 +22,13 @@ type ActorState = {
 
 export interface IsActor {
     get actor(): ActorBase;
+    update(params: {
+        leftPressed: boolean,
+        rightPressed: boolean,
+        jumpPressed: boolean,
+        onGround: boolean,
+        playSoundEffect: (soundId: number) => void,
+    }): void;
 }
 
 export interface IsAnimated {
@@ -29,7 +36,9 @@ export interface IsAnimated {
     readonly animation: Accessor<string>;
 }
 
-export class ActorBase {
+const GRAVITY = 1;
+
+export class ActorBase implements IsActor {
     state: Store<ActorState>;
     setState: SetStoreFunction<ActorState>;
 
@@ -63,5 +72,22 @@ export class ActorBase {
         });
         this.state = state;
         this.setState = setState;
+    }
+
+
+    get actor(): ActorBase {
+        return this;
+    }
+
+    update(params: {
+        leftPressed: boolean;
+        rightPressed: boolean;
+        jumpPressed: boolean;
+        onGround: boolean;
+        playSoundEffect: (soundId: number) => void; }
+    ): void {
+        if (!params.onGround) {
+            this.actor.setState("acc", "y", (ay) => ay + GRAVITY);
+        }
     }
 }

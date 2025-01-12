@@ -114,15 +114,13 @@ export class World {
                 }
             }
             //
-            if (actor instanceof Kitty) {
-                actor.update({
-                    leftPressed: params.leftPressed,
-                    rightPressed: params.rightPressed,
-                    jumpPressed: params.jumpPressed,
-                    onGround,
-                    playSoundEffect: params.playSoundEffect,
-                });
-            }
+            actor.update({
+                leftPressed: params.leftPressed,
+                rightPressed: params.rightPressed,
+                jumpPressed: params.jumpPressed,
+                onGround,
+                playSoundEffect: params.playSoundEffect,
+            });
         }
         for (let actor of this.state.actors) {
             let oldX = actor.actor.state.pos.x;
