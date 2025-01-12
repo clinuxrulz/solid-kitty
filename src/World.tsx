@@ -3,6 +3,7 @@ import { IsActor } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Level, level1 } from "./Level";
 import { untrack } from "solid-js";
+import { Goomba } from "./Goomba";
 
 type WorldState = {
     camera: {
@@ -26,6 +27,12 @@ export class World {
                 y: 210.0,
             },
         });
+        let goomba = new Goomba({
+            initPos: {
+                x: 486,
+                y: 352,
+            },
+        });
         let [ state, setState, ] = createStore<WorldState>({
             camera: {
                 pos: {
@@ -33,7 +40,10 @@ export class World {
                     y: untrack(() => kitty.actor.state.pos.y - 300),
                 },
             },
-            actors: [ kitty ],
+            actors: [
+                kitty,
+                goomba,
+            ],
             level: new Level(level1),
         });
         this.state = state;

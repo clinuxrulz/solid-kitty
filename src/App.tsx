@@ -12,6 +12,7 @@ import { Chiptunes } from "./Chiptunes3";
 import { VirtualDPad } from "./VirtualDPad";
 import { smSpriteAtlasData } from "./SmSprites";
 import { PixiRemoveBgColourFilter } from "./PixiRemoveBgColourFilter";
+import { Goomba } from "./Goomba";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -114,6 +115,8 @@ function throttleUpdate(params: {
     };
   });
 }
+
+let whiteToTransparentFilter = new PixiRemoveBgColourFilter();
 
 const App: Component = () => {
   let [ windowSize, setWindowSize, ] = createStore<{
@@ -227,20 +230,10 @@ const App: Component = () => {
               windowSize,
               tileset,
               spritesheet,
+              smSpritesheet,
               world,
             })
           );
-          // test goomba
-          let goomba = new AnimatedSprite({
-            x: 100,
-            y: 100,
-            textures: smSpritesheet.animations.goomba_walking,
-            scale: 3.0,
-          });
-          goomba.animationSpeed = 0.1;
-          goomba.filters = new PixiRemoveBgColourFilter();
-          goomba.play();
-          app.stage.addChild(goomba);
           //
           return app.canvas;
         }}
@@ -256,6 +249,7 @@ function RenderWorld(props: {
   windowSize: { width: number, height: number },
   tileset: Spritesheet<typeof tilesetAtlasData>,
   spritesheet: Spritesheet,
+  smSpritesheet: Spritesheet,
   world: World,
 }): ContainerChild {
   let cameraX = createMemo(() => {
@@ -266,6 +260,7 @@ function RenderWorld(props: {
   });
   let forEachCallback = (actor: IsActor): ContainerChild | undefined => {
     let spritesheet = untrack(() => props.spritesheet);
+    let smSpritesheet = untrack(() => props.smSpritesheet);
     if (actor instanceof Kitty) {
       let actor2 = actor.actor.state;
       let animation = actor.animation;
@@ -296,6 +291,30 @@ function RenderWorld(props: {
           animatedSprite.pivot.set(0.0, 0.0);
         }
       });
+      animatedSprite.play();
+      return animatedSprite;
+    } else if (actor instanceof Goomba) {
+      let actor2 = actor.actor.state;
+      let animation = actor.animation;
+      let textures = createMemo(() => smSpritesheet.animations[animation()]);
+      let animatedSprite = new AnimatedSprite(
+        untrack(textures),
+      );
+      createMemo(() => {
+        animatedSprite.x = actor2.pos.x - cameraX();
+        animatedSprite.y = actor2.pos.y - cameraY();
+      });
+      createMemo(on(
+        textures,
+        () => {
+          animatedSprite.textures = textures();
+          animatedSprite.play();
+        },
+        { defer: true, },
+      ));
+      animatedSprite.animationSpeed = 0.1;
+      animatedSprite.scale = 5.0;
+      animatedSprite.filters = whiteToTransparentFilter;
       animatedSprite.play();
       return animatedSprite;
     }
