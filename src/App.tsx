@@ -238,7 +238,7 @@ const App: Component = () => {
             scale: 3.0,
           });
           goomba.animationSpeed = 0.1;
-          //goomba.filters = new PixiRemoveBgColourFilter();
+          goomba.filters = new PixiRemoveBgColourFilter();
           goomba.play();
           app.stage.addChild(goomba);
           //
