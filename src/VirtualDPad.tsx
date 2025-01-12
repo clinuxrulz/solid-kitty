@@ -15,7 +15,7 @@ export class VirtualDPad {
     readonly downPressed: Accessor<boolean>;
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    readonly Render: Component<{ onPointerDown: ()=>void, }>;
+    readonly Render: Component;
     constructor() {
         let [ state, setState ] = createStore<State>({
             leftPressed: false,
@@ -51,7 +51,6 @@ export class VirtualDPad {
                   "left": `${minOfWH * 0.12}px`,
                   "bottom": `${minOfWH * 0.12}px`,
                 }}
-                onPointerDown={()=>props.onPointerDown()}
               >
                 <div></div>
                 <div

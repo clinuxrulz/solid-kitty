@@ -243,9 +243,7 @@ const App: Component = () => {
           return app.canvas;
         }}
       </Show>
-      <virtualDPad.Render
-        onPointerDown={() => startSound()}
-      />
+      <virtualDPad.Render/>
     </div>
   );
 };
