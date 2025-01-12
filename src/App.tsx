@@ -11,6 +11,7 @@ import { Level } from "./Level";
 import { Chiptunes } from "./Chiptunes3";
 import { VirtualDPad } from "./VirtualDPad";
 import { smSpriteAtlasData } from "./SmSprites";
+import { PixiRemoveBgColourFilter } from "./PixiRemoveBgColourFilter";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -237,6 +238,7 @@ const App: Component = () => {
             scale: 3.0,
           });
           goomba.animationSpeed = 0.1;
+          //goomba.filters = new PixiRemoveBgColourFilter();
           goomba.play();
           app.stage.addChild(goomba);
           //

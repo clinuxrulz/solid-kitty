@@ -18,10 +18,10 @@ void main(void) {
     vec4 whiteColor = vec4(1.0);
     float difference = colorDifference(currentColor, whiteColor);
 
-    if (difference > 0.05) {
+    if (difference < 0.01) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); // Transparent black
     } else {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.5);
+        gl_FragColor = currentColor;
     }
 }
 `;
