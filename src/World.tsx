@@ -91,19 +91,61 @@ export class World {
             for (let i = startI; i < startI+numRows; ++i) {
                 for (let j = startJ; j < startJ+numCols; ++j) {
                     if (this.state.level.readBlock(j, i) == "@") {
-                        console.log("SPAWN");
+                        // block spawn if that block is the home block of existing actor
+                        let skipSpawn = false;
+                        for (let actor of this.state.actors) {
+                            if (actor.actor.state.spawnHome != undefined) {
+                                let spawnHome = actor.actor.state.spawnHome;
+                                if (spawnHome.xIdx == j && spawnHome.yIdx == i) {
+                                    skipSpawn = true;
+                                }
+                            }
+                        }
+                        if (skipSpawn) {
+                            continue;
+                        }
                         this.setState("actors", (actors) => [
                             ...actors,
                             new Goomba({
+                                spawnHome: {
+                                    xIdx: j,
+                                    yIdx: i,
+                                },
                                 initPos: {
                                     x: j * RENDER_BLOCK_WIDTH,
                                     y: (i + 1) * RENDER_BLOCK_HEIGHT - 16*5,
                                 },
                             }),
                         ]);
-                        this.state.level.setState("blocks", i, j, " ");
                     }
                 }
+            }
+        }
+        { // If actor goes too far of the screen, make them dissappear.
+            let minXIdx = Math.floor(this.state.camera.pos.x / RENDER_BLOCK_WIDTH);
+            let minYIdx = Math.floor(this.state.camera.pos.y / RENDER_BLOCK_HEIGHT);
+            let numRows = Math.ceil(params.windowSize.height / RENDER_BLOCK_WIDTH);
+            let numCols = Math.ceil(params.windowSize.width / RENDER_BLOCK_HEIGHT);
+            let maxXIdx = minXIdx + numCols;
+            let maxYIdx = minYIdx + numRows;
+            let actorsChanged = false;
+            let actors = [...this.state.actors];
+            for (let i = actors.length-1; i >= 0; --i) {
+                let actor = actors[i];
+                let actorXIdx = Math.ceil(actor.actor.state.pos.x / RENDER_BLOCK_WIDTH);
+                let actorYIdx = Math.ceil(actor.actor.state.pos.y / RENDER_BLOCK_HEIGHT);
+                if (
+                    actorXIdx < minXIdx ||
+                    actorXIdx > maxXIdx ||
+                    actorYIdx < minYIdx ||
+                    actorYIdx > maxYIdx
+                ) {
+                    actorsChanged = true;
+                    actors.splice(i, 1);
+                }
+            }
+            if (actorsChanged) {
+                this.setState("actors", actors);
             }
         }
         for (let actor of this.state.actors) {

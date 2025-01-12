@@ -15,6 +15,10 @@ export class Goomba implements
     animation: Accessor<string>;
 
     constructor(params: {
+        spawnHome?: {
+            xIdx: number,
+            yIdx: number,
+        },
         initPos?: {
             x: number,
             y: number,
@@ -25,6 +29,7 @@ export class Goomba implements
         this.state = state;
         this.setState = setState;
         this.actor = new ActorBase({
+            spawnHome: params.spawnHome,
             initPos: params.initPos,
         });
         this.animation = () => "goomba_walking";

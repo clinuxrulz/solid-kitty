@@ -2,6 +2,10 @@ import { Accessor } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
 type ActorState = {
+    spawnHome?: {
+        xIdx: number,
+        yIdx: number,
+    },
     pos: {
         x: number,
         y: number,
@@ -43,6 +47,10 @@ export class ActorBase implements IsActor {
     setState: SetStoreFunction<ActorState>;
 
     constructor(params: {
+        spawnHome?: {
+            xIdx: number,
+            yIdx: number,
+        },
         initPos?: {
             x: number,
             y: number,
@@ -53,6 +61,10 @@ export class ActorBase implements IsActor {
         },
     }) {
         let [ state, setState ] = createStore<ActorState>({
+            spawnHome: params.spawnHome == undefined ? undefined : {
+                xIdx: params.spawnHome.xIdx,
+                yIdx: params.spawnHome.yIdx,
+            },
             pos: {
                 x: params.initPos?.x ?? 0,
                 y: params.initPos?.y ?? 0,
