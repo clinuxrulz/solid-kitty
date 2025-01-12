@@ -10,6 +10,7 @@ import { Level } from "./Level";
 
 import { Chiptunes } from "./Chiptunes3";
 import { VirtualDPad } from "./VirtualDPad";
+import { smSpriteAtlasData } from "./SmSprites";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -65,8 +66,11 @@ const TARGET_FRAME_RATE = 60.0;
 const TARGET_TIME_STEP = 1.0 / TARGET_FRAME_RATE;
 const TEST_SPRITES = false;
 
-await Assets.load(tilesetAtlasData.meta.image);
-await Assets.load(atlasData.meta.image);
+await Promise.all([
+  Assets.load(tilesetAtlasData.meta.image),
+  Assets.load(atlasData.meta.image),
+  Assets.load(smSpriteAtlasData.meta.image),
+]);
 
 // Create the SpriteSheet from data and image
 const spritesheet = new Spritesheet(
@@ -76,6 +80,13 @@ const spritesheet = new Spritesheet(
 
 // Generate all the Textures asynchronously
 await spritesheet.parse();
+
+const smSpritesheet = new Spritesheet(
+  Texture.from(smSpriteAtlasData.meta.image),
+  smSpriteAtlasData
+);
+
+await smSpritesheet.parse();
 
 const tileset = new Spritesheet(
   Texture.from(tilesetAtlasData.meta.image),
@@ -218,6 +229,17 @@ const App: Component = () => {
               world,
             })
           );
+          // test goomba
+          let goomba = new AnimatedSprite({
+            x: 100,
+            y: 100,
+            textures: smSpritesheet.animations.goomba_walking,
+            scale: 3.0,
+          });
+          goomba.animationSpeed = 0.1;
+          goomba.play();
+          app.stage.addChild(goomba);
+          //
           return app.canvas;
         }}
       </Show>
