@@ -16,6 +16,11 @@ type WorldState = {
     level: Level,
 };
 
+const BLOCK_WIDTH = 16;
+const BLOCK_HEIGHT = 16;
+const RENDER_BLOCK_WIDTH = 16*3;
+const RENDER_BLOCK_HEIGHT = 16*3;
+
 export class World {
     state: Store<WorldState>;
     setState: SetStoreFunction<WorldState>;
@@ -27,12 +32,6 @@ export class World {
                 y: 210.0,
             },
         });
-        let goomba = new Goomba({
-            initPos: {
-                x: 486,
-                y: 352,
-            },
-        });
         let [ state, setState, ] = createStore<WorldState>({
             camera: {
                 pos: {
@@ -42,7 +41,6 @@ export class World {
             },
             actors: [
                 kitty,
-                goomba,
             ],
             level: new Level(level1),
         });
@@ -84,6 +82,30 @@ export class World {
                 }
             }
         }
+        { // scan for new monsters
+            let startI = Math.floor(this.state.camera.pos.y / RENDER_BLOCK_HEIGHT);
+            let startJ = Math.floor(this.state.camera.pos.x / RENDER_BLOCK_WIDTH);
+            let numRows = Math.ceil(params.windowSize.height / RENDER_BLOCK_WIDTH);
+            let numCols = Math.ceil(params.windowSize.width / RENDER_BLOCK_HEIGHT);
+            console.log(startJ);
+            for (let i = startI; i < startI+numRows; ++i) {
+                for (let j = startJ; j < startJ+numCols; ++j) {
+                    if (this.state.level.readBlock(j, i) == "@") {
+                        console.log("SPAWN");
+                        this.setState("actors", (actors) => [
+                            ...actors,
+                            new Goomba({
+                                initPos: {
+                                    x: j * RENDER_BLOCK_WIDTH,
+                                    y: (i + 1) * RENDER_BLOCK_HEIGHT - 16*5,
+                                },
+                            }),
+                        ]);
+                        this.state.level.setState("blocks", i, j, " ");
+                    }
+                }
+            }
+        }
         for (let actor of this.state.actors) {
             actor.actor.setState("acc", "x", 0.0);
             actor.actor.setState("acc", "y", 0.0);
@@ -94,8 +116,6 @@ export class World {
             let onGround = false;
             {
                 let actor2 = actor.actor.state;
-                const RENDER_BLOCK_WIDTH = 16*3;
-                const RENDER_BLOCK_HEIGHT = 16*3;
                 const ACTOR_WIDTH = 24;
                 const ACTOR_HEIGHT = 24;
                 let minX = actor2.pos.x;

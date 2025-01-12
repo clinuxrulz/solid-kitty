@@ -104,6 +104,11 @@ function throttleUpdate(params: {
 }): {
   dtOffset: number,
 } {
+  // Detect a need skip update catchup. (E.g. User changed tabs.)
+  if (params.dt > 1.0) {
+    return { dtOffset: 0.0 };
+  }
+  //
   return batch(() => {
     let dt2 = params.dtOffset + params.dt;
     while (dt2 > 0.0) {
