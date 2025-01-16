@@ -185,8 +185,10 @@ export class World {
             actor.actor.setState("acc", "x", 0.0);
             actor.actor.setState("acc", "y", 0.0);
         }
+        let actorIndicesToRemove: number[] = [];
         for (let i = 0; i < this.state.actors.length; ++i) {
             let actor = this.state.actors[i];
+            let actorIdx = i;
             // check if actor on ground
             let onGround = false;
             {
@@ -215,7 +217,18 @@ export class World {
                 jumpPressed: params.jumpPressed,
                 onGround,
                 playSoundEffect: params.playSoundEffect,
+                removeSelf: () => {
+                    actorIndicesToRemove.push(actorIdx);
+                },
             });
+        }
+        if (actorIndicesToRemove.length != 0) {
+            actorIndicesToRemove.sort((a,b) => a - b);
+            let newActors = [...this.state.actors];
+            for (let i = actorIndicesToRemove.length-1; i >= 0; --i) {
+                newActors.splice(actorIndicesToRemove[i], 1);
+            }
+            this.setState("actors", newActors);
         }
         for (let actor of this.state.actors) {
             let oldX = actor.actor.state.pos.x;

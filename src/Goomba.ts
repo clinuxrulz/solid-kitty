@@ -6,7 +6,10 @@ import { SQUASH_SOUND } from "./sound-effect-ids";
 
 type GoombaState = {
     isFlat: boolean,
+    flatCounter: number,
 };
+
+const FLAT_TIMEOUT = 100;
 
 export class Goomba implements
     IsActor,
@@ -30,6 +33,7 @@ export class Goomba implements
     }) {
         let [ state, setState ] = createStore<GoombaState>({
             isFlat: false,
+            flatCounter: 0,
         });
         this.state = state;
         this.setState = setState;
@@ -46,10 +50,23 @@ export class Goomba implements
         });
     }
 
-    update(params: { leftPressed: boolean; rightPressed: boolean; jumpPressed: boolean; onGround: boolean; playSoundEffect: (soundId: number) => void; }): void {
+    update(params: {
+        leftPressed: boolean;
+        rightPressed: boolean;
+        jumpPressed: boolean;
+        onGround: boolean;
+        playSoundEffect: (soundId: number) => void;
+        removeSelf: () => void;
+    }): void {
         this.actor.update(params);
         if (this.state.isFlat) {
             this.actor.setState("vel", "x", 0);
+            let flatCounter = this.state.flatCounter;
+            flatCounter--;
+            this.setState("flatCounter", flatCounter);
+            if (flatCounter == 0) {
+                params.removeSelf();
+            }
             return;
         }
         this.actor.setState("vel", "x", -1);
@@ -66,6 +83,7 @@ export class Goomba implements
                 let kittyMaxY = params.other.actor.state.pos.y + params.other.actor.state.size.y;
                 //
                 if (kittyMaxY <= squashMaxY) {
+                    this.setState("flatCounter", FLAT_TIMEOUT);
                     this.setState("isFlat", true);
                     params.other.actor.setState("vel", "y", -100);
                     params.other.setState("jumpHeld", true);

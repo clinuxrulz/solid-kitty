@@ -40,6 +40,7 @@ export interface IsActor {
         jumpPressed: boolean,
         onGround: boolean,
         playSoundEffect: (soundId: number) => void,
+        removeSelf: () => void,
     }): void;
     onCollide(params: {
         other: IsActor,
