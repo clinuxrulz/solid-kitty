@@ -13,6 +13,7 @@ import { VirtualDPad } from "./VirtualDPad";
 import { smSpriteAtlasData } from "./SmSprites";
 import { PixiRemoveBgColourFilter } from "./PixiRemoveBgColourFilter";
 import { Goomba } from "./Goomba";
+import { VirtualButtons } from "./VirtualButtons";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -162,10 +163,11 @@ const App: Component = () => {
   const RIGHT_KEY = "ArrowRight";
   const JUMP_KEY = " ";
   let virtualDPad = new VirtualDPad();
+  let virtualButtons = new VirtualButtons();
   createEffect(() => {
     setInput("leftPressed", virtualDPad.leftPressed());
     setInput("rightPressed", virtualDPad.rightPressed());
-    setInput("jumpPressed", virtualDPad.upPressed());
+    setInput("jumpPressed", virtualButtons.jumpPressed());
   });
   let keyDownListener = (e: KeyboardEvent) => {
     if (e.key == LEFT_KEY) {
@@ -270,6 +272,7 @@ const App: Component = () => {
         }}
       </Show>
       <virtualDPad.Render/>
+      <virtualButtons.Render/>
       <Show when={!started()}>
         <div
           style={{
