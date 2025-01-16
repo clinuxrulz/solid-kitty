@@ -22,6 +22,10 @@ type ActorState = {
         x: number,
         y: number,
     },
+    /** Adds a tint to the actor.
+     *  For debugging purposes to see if collision detector is working.
+     */
+    tint: number | undefined,
 };
 
 export interface IsActor {
@@ -81,6 +85,7 @@ export class ActorBase implements IsActor {
                 x: 10.0,
                 y: 10.0,
             },
+            tint: undefined,
         });
         this.state = state;
         this.setState = setState;

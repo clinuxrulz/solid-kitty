@@ -4,6 +4,7 @@ import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Level, level1 } from "./Level";
 import { untrack } from "solid-js";
 import { Goomba } from "./Goomba";
+import { collision_detection } from "./collision_detection";
 
 type WorldState = {
     camera: {
@@ -296,5 +297,30 @@ export class World {
                 }
             }
         }
+        // do collision detection between actors
+        for (let actor of this.state.actors) {
+            actor.actor.setState("tint", undefined);
+        }
+        collision_detection({
+            hasBox: {
+                x: (actor: IsActor) => {
+                    return actor.actor.state.pos.x;
+                },
+                y: (actor: IsActor) => {
+                    return actor.actor.state.pos.y;
+                },
+                w: (actor: IsActor) => {
+                    return 24*3;
+                },
+                h: (actor: IsActor) => {
+                    return 24*3;
+                },
+            },
+            objects: this.state.actors,
+            onCollide(a, b) {
+                a.actor.setState("tint", 0x0000AA);
+                b.actor.setState("tint", 0x0000AA);
+            },
+        });
     }
 }

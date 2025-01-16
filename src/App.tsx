@@ -1,5 +1,5 @@
 import { AnimatedSprite, Application, Assets, Container, ContainerChild, Graphics, Sprite, Spritesheet, Text, Texture, TextureStyle } from "pixi.js";
-import { batch, Component, createEffect, createMemo, createResource, createSignal, For, Index, JSX, mapArray, on, onCleanup, Show, untrack } from 'solid-js';
+import { batch, Component, createComputed, createEffect, createMemo, createResource, createSignal, For, Index, JSX, mapArray, on, onCleanup, Show, untrack } from 'solid-js';
 import { atlasData, KITTY_SPRITES } from './KittySprites';
 import { World } from './World';
 import { Kitty } from './Kitty';
@@ -275,6 +275,9 @@ function RenderWorld(props: {
         animatedSprite.x = actor2.pos.x - cameraX();
         animatedSprite.y = actor2.pos.y - cameraY();
       });
+      createComputed(() => {
+        animatedSprite.tint = actor2.tint ?? 0xFFFFFF;
+      });
       createMemo(on(
         textures,
         () => {
@@ -306,6 +309,9 @@ function RenderWorld(props: {
       createMemo(() => {
         animatedSprite.x = actor2.pos.x - cameraX();
         animatedSprite.y = actor2.pos.y - cameraY();
+      });
+      createComputed(() => {
+        animatedSprite.tint = actor2.tint ?? 0xFFFFFF;
       });
       createMemo(on(
         textures,
