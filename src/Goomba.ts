@@ -1,7 +1,7 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { Accessor, createMemo } from "solid-js";
-import { Kitty } from "./Kitty";
+import { Kitty, MAX_HOLD_JUMP_FRAMES } from "./Kitty";
 import { SQUASH_SOUND } from "./sound-effect-ids";
 
 type GoombaState = {
@@ -61,8 +61,17 @@ export class Goomba implements
     }): void {
         if (!this.state.isFlat) {
             if (params.other instanceof Kitty) {
-                this.setState("isFlat", true);
-                params.playSoundEffect(SQUASH_SOUND);
+                //
+                let squashMaxY = this.actor.state.pos.y + this.actor.state.size.y * 0.2;
+                let kittyMaxY = params.other.actor.state.pos.y + params.other.actor.state.size.y;
+                //
+                if (kittyMaxY <= squashMaxY) {
+                    this.setState("isFlat", true);
+                    params.other.actor.setState("vel", "y", -100);
+                    params.other.setState("jumpHeld", true);
+                    params.other.setState("remainingJumpHeldFrames", MAX_HOLD_JUMP_FRAMES);
+                    params.playSoundEffect(SQUASH_SOUND);
+                }
             }
         }
     }

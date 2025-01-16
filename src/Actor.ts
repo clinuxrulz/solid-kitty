@@ -10,6 +10,10 @@ type ActorState = {
         x: number,
         y: number,
     },
+    size: {
+        x: number,
+        y: number,
+    },
     vel: {
         x: number,
         y: number,
@@ -63,6 +67,10 @@ export class ActorBase implements IsActor {
             x: number,
             y: number,
         },
+        initSize?: {
+            x: number,
+            y: number,
+        },
         initVel?: {
             x: number,
             y: number,
@@ -76,6 +84,10 @@ export class ActorBase implements IsActor {
             pos: {
                 x: params.initPos?.x ?? 0,
                 y: params.initPos?.y ?? 0,
+            },
+            size: {
+                x: params.initSize?.x ?? 24*3,
+                y: params.initSize?.y ?? 24*3,
             },
             vel: {
                 x: params.initVel?.x ?? 0,

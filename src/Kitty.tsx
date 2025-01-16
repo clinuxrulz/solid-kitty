@@ -12,7 +12,7 @@ type KittyState = {
 };
 
 const GRAVITY = 1;
-const MAX_HOLD_JUMP_FRAMES = 20;
+export const MAX_HOLD_JUMP_FRAMES = 20;
 
 export class Kitty implements
     IsActor,
