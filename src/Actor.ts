@@ -37,6 +37,7 @@ export interface IsActor {
         onGround: boolean,
         playSoundEffect: (soundId: number) => void,
     }): void;
+    onCollide(other: IsActor): void;
 }
 
 export interface IsAnimated {
@@ -106,5 +107,8 @@ export class ActorBase implements IsActor {
         if (!params.onGround) {
             this.actor.setState("acc", "y", (ay) => ay + GRAVITY);
         }
+    }
+
+    onCollide(other: IsActor): void {
     }
 }

@@ -110,4 +110,7 @@ export class Kitty implements
         });
         this.setState("lastJumpPressed", params.jumpPressed);
     }
+
+    onCollide(other: IsActor): void {
+    }
 }

@@ -318,8 +318,8 @@ export class World {
             },
             objects: this.state.actors,
             onCollide(a, b) {
-                a.actor.setState("tint", 0x0000AA);
-                b.actor.setState("tint", 0x0000AA);
+                a.onCollide(b);
+                b.onCollide(a);
             },
         });
     }

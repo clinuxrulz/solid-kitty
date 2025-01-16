@@ -28,5 +28,8 @@ export const smSpriteAtlasData = {
             "goomba_walking_1",
             "goomba_walking_2",
         ],
+        goomba_flat: [
+            "goomba_flat",
+        ],
     },
 };
