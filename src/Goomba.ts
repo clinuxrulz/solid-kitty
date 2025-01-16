@@ -59,8 +59,8 @@ export class Goomba implements
         other: IsActor,
         playSoundEffect: (soundId: number) => void,
     }): void {
-        if (params.other instanceof Kitty) {
-            if (!this.state.isFlat) {
+        if (!this.state.isFlat) {
+            if (params.other instanceof Kitty) {
                 this.setState("isFlat", true);
                 params.playSoundEffect(SQUASH_SOUND);
             }
