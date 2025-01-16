@@ -27,11 +27,14 @@ let playBackgroundMusic = (subtune: number) => {
   chiptunes?.play?.(chiptunesEmu, subtune);
 };
 
+let [ started, setStarted ] = createSignal(false);
+
 let firstTouch = true;
 function startSound() {
   if (!firstTouch) {
     return;
   }
+  setStarted(true);
   firstTouch = false;
     fetch("./smb3.nsf")
       .then((r) => r.arrayBuffer())
@@ -212,7 +215,25 @@ const App: Component = () => {
       });
       requestAnimationFrame(update);
     };
-    requestAnimationFrame(update);
+    // update one frame to put in goomba on pause screen
+    world.update({
+      windowSize,
+      leftPressed: input.leftPressed,
+      rightPressed: input.rightPressed,
+      jumpPressed: input.jumpPressed,
+      playSoundEffect,
+      playBackgroundMusic,
+    });
+    //
+    createEffect(on(
+      started,
+      () => {
+        if (!started()) {
+          return;
+        }
+        requestAnimationFrame(update);
+      }
+    ));
   }
   const app = new Application();
   let [ app2, ] = createResource(async () => {
@@ -249,6 +270,25 @@ const App: Component = () => {
         }}
       </Show>
       <virtualDPad.Render/>
+      <Show when={!started()}>
+        <div
+          style={{
+            "position": "absolute",
+            "left": "0",
+            "top": "0",
+            "right": "0",
+            "bottom": "0",
+            "display": "flex",
+            "align-items": "center",
+            "justify-content": "center",
+            "color": "red",
+            "font-weight": "bold",
+            "font-size": "32pt",
+          }}
+        >
+          Click / Tap Screen to start
+        </div>
+      </Show>
     </div>
   );
 };
