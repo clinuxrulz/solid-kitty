@@ -5,6 +5,7 @@ import { Level, level1 } from "./Level";
 import { untrack } from "solid-js";
 import { Goomba } from "./Goomba";
 import { collision_detection } from "./collision_detection";
+import { RENDER_BLOCK_HEIGHT, RENDER_BLOCK_WIDTH } from "./constants";
 
 type WorldState = {
     camera: {
@@ -20,11 +21,6 @@ type WorldState = {
     }[],
     level: Level,
 };
-
-const BLOCK_WIDTH = 16;
-const BLOCK_HEIGHT = 16;
-export const RENDER_BLOCK_WIDTH = 16*3;
-export const RENDER_BLOCK_HEIGHT = 16*3;
 
 export class World {
     state: Store<WorldState>;

@@ -2,7 +2,7 @@ import { Accessor, createMemo } from "solid-js";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { JUMP_SOUND, PLAYER_DEATH_SOUND } from "./sound-effect-ids";
-import { RENDER_BLOCK_HEIGHT, RENDER_BLOCK_WIDTH } from "./World";
+import { RENDER_BLOCK_HEIGHT, RENDER_BLOCK_WIDTH } from "./constants";
 
 type KittyState = {
     facing: "Left" | "Right",
