@@ -23,6 +23,10 @@ let playSoundEffect = (subtune: number) => {
   soundEffects?.play?.(soundEffectsEmu, subtune);
 };
 
+let playBackgroundMusic = (subtune: number) => {
+  chiptunes?.play?.(chiptunesEmu, subtune);
+};
+
 let firstTouch = true;
 function startSound() {
   if (!firstTouch) {
@@ -201,6 +205,7 @@ const App: Component = () => {
             rightPressed: input.rightPressed,
             jumpPressed: input.jumpPressed,
             playSoundEffect,
+            playBackgroundMusic,
           }),
         });
         dtOffset = dtOffset2;

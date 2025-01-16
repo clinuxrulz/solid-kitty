@@ -1,7 +1,7 @@
 import { Accessor, createMemo } from "solid-js";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { JUMP_SOUND } from "./sound-effect-ids";
+import { JUMP_SOUND, PLAYER_DEATH_SOUND } from "./sound-effect-ids";
 
 type KittyState = {
     facing: "Left" | "Right",
@@ -9,6 +9,7 @@ type KittyState = {
     lastJumpPressed: boolean,
     jumpHeld: boolean,
     remainingJumpHeldFrames: number,
+    dead: boolean,
 };
 
 const GRAVITY = 1;
@@ -40,6 +41,7 @@ export class Kitty implements
             lastJumpPressed: false,
             jumpHeld: false,
             remainingJumpHeldFrames: 0,
+            dead: false,
         });
         this.state = state;
         this.setState = setState;
@@ -115,5 +117,14 @@ export class Kitty implements
         other: IsActor,
         playSoundEffect: (soundId: number) => void,
     }): void {
+    }
+
+    onHurt(params: {
+        playBackgroundMusic: (musicId: number) => void,
+    }): void {
+        if (!this.state.dead) {
+            params.playBackgroundMusic(PLAYER_DEATH_SOUND);
+            this.setState("dead", true);
+        }
     }
 }

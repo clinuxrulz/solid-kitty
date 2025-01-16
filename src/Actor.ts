@@ -45,6 +45,7 @@ export interface IsActor {
     onCollide(params: {
         other: IsActor,
         playSoundEffect: (soundId: number) => void,
+        playBackgroundMusic: (musicId: number) => void,
     }): void;
 }
 

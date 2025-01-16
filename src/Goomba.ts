@@ -75,6 +75,7 @@ export class Goomba implements
     onCollide(params: {
         other: IsActor,
         playSoundEffect: (soundId: number) => void,
+        playBackgroundMusic: (musicId: number) => void,
     }): void {
         if (!this.state.isFlat) {
             if (params.other instanceof Kitty) {
@@ -89,6 +90,10 @@ export class Goomba implements
                     params.other.setState("jumpHeld", true);
                     params.other.setState("remainingJumpHeldFrames", MAX_HOLD_JUMP_FRAMES);
                     params.playSoundEffect(SQUASH_SOUND);
+                } else {
+                    params.other.onHurt({
+                        playBackgroundMusic: params.playBackgroundMusic,
+                    });
                 }
             }
         }

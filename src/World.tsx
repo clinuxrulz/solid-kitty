@@ -63,6 +63,7 @@ export class World {
         rightPressed: boolean,
         jumpPressed: boolean,
         playSoundEffect: (soundId: number) => void,
+        playBackgroundMusic: (musicId: number) => void,
     }) {
         { // drag camera if kitty gets close to edges
             let minScreenX = params.windowSize.width / 3;
@@ -334,10 +335,12 @@ export class World {
                 a.onCollide({
                     other: b,
                     playSoundEffect: params.playSoundEffect,
+                    playBackgroundMusic: params.playBackgroundMusic,
                 });
                 b.onCollide({
                     other: a,
                     playSoundEffect: params.playSoundEffect,
+                    playBackgroundMusic: params.playBackgroundMusic,
                 });
             },
         });
