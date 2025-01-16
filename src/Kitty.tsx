@@ -111,6 +111,9 @@ export class Kitty implements
         this.setState("lastJumpPressed", params.jumpPressed);
     }
 
-    onCollide(other: IsActor): void {
+    onCollide(params: {
+        other: IsActor,
+        playSoundEffect: (soundId: number) => void,
+    }): void {
     }
 }

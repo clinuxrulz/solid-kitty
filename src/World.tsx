@@ -318,8 +318,14 @@ export class World {
             },
             objects: this.state.actors,
             onCollide(a, b) {
-                a.onCollide(b);
-                b.onCollide(a);
+                a.onCollide({
+                    other: b,
+                    playSoundEffect: params.playSoundEffect,
+                });
+                b.onCollide({
+                    other: a,
+                    playSoundEffect: params.playSoundEffect,
+                });
             },
         });
     }

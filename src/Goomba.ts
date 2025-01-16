@@ -2,6 +2,7 @@ import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { Accessor, createMemo } from "solid-js";
 import { Kitty } from "./Kitty";
+import { SQUASH_SOUND } from "./sound-effect-ids";
 
 type GoombaState = {
     isFlat: boolean,
@@ -54,9 +55,15 @@ export class Goomba implements
         this.actor.setState("vel", "x", -1);
     }
 
-    onCollide(other: IsActor): void {
-        if (other instanceof Kitty) {
-            this.setState("isFlat", true);
+    onCollide(params: {
+        other: IsActor,
+        playSoundEffect: (soundId: number) => void,
+    }): void {
+        if (params.other instanceof Kitty) {
+            if (!this.state.isFlat) {
+                this.setState("isFlat", true);
+                params.playSoundEffect(SQUASH_SOUND);
+            }
         }
     }
 }

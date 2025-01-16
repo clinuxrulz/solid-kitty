@@ -37,7 +37,10 @@ export interface IsActor {
         onGround: boolean,
         playSoundEffect: (soundId: number) => void,
     }): void;
-    onCollide(other: IsActor): void;
+    onCollide(params: {
+        other: IsActor,
+        playSoundEffect: (soundId: number) => void,
+    }): void;
 }
 
 export interface IsAnimated {
@@ -109,6 +112,9 @@ export class ActorBase implements IsActor {
         }
     }
 
-    onCollide(other: IsActor): void {
+    onCollide(params: {
+        other: IsActor,
+        playSoundEffect: (soundId: number) => void,
+    }): void {
     }
 }
