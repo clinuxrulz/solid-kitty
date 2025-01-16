@@ -23,18 +23,24 @@ type WorldState = {
 
 const BLOCK_WIDTH = 16;
 const BLOCK_HEIGHT = 16;
-const RENDER_BLOCK_WIDTH = 16*3;
-const RENDER_BLOCK_HEIGHT = 16*3;
+export const RENDER_BLOCK_WIDTH = 16*3;
+export const RENDER_BLOCK_HEIGHT = 16*3;
 
 export class World {
     state: Store<WorldState>;
     setState: SetStoreFunction<WorldState>;
 
     constructor() {
+        let kittySpawnXIdx = Math.round(100.0 / RENDER_BLOCK_WIDTH);
+        let kittySpawnYIdx = Math.round(210.0 / RENDER_BLOCK_HEIGHT);
         let kitty = new Kitty({
+            spawnHome: {
+                xIdx: kittySpawnXIdx,
+                yIdx: kittySpawnYIdx,
+            },
             initPos: {
-                x: 100.0,
-                y: 210.0,
+                x: kittySpawnXIdx * RENDER_BLOCK_WIDTH,
+                y: kittySpawnYIdx * RENDER_BLOCK_HEIGHT,
             },
         });
         let [ state, setState, ] = createStore<WorldState>({
@@ -73,6 +79,11 @@ export class World {
             for (let i = 0; i < this.state.actors.length; ++i) {
                 let actor = this.state.actors[i];
                 if (actor instanceof Kitty) {
+                    // If kitty dead, then do not camera follow
+                    if (actor.state.dead) {
+                        continue;
+                    }
+                    //
                     let actor2 = actor.actor.state;
                     let kittyScreenX = actor2.pos.x - this.state.camera.pos.x;
                     let kittyScreenY = actor2.pos.y - this.state.camera.pos.y;
@@ -136,6 +147,7 @@ export class World {
         }
         {
             // If actor goes too far of the screen, make them dissappear.
+            // Unless it is kitty.
             let minXIdx = Math.floor(this.state.camera.pos.x / RENDER_BLOCK_WIDTH);
             let minYIdx = Math.floor(this.state.camera.pos.y / RENDER_BLOCK_HEIGHT);
             let numRows = Math.ceil(params.windowSize.height / RENDER_BLOCK_WIDTH);
@@ -146,6 +158,9 @@ export class World {
             let actors = [...this.state.actors];
             for (let i = actors.length-1; i >= 0; --i) {
                 let actor = actors[i];
+                if (actor instanceof Kitty) {
+                    continue;
+                }
                 let actorXIdx = Math.ceil(actor.actor.state.pos.x / RENDER_BLOCK_WIDTH);
                 let actorYIdx = Math.ceil(actor.actor.state.pos.y / RENDER_BLOCK_HEIGHT);
                 if (
@@ -218,6 +233,7 @@ export class World {
                 jumpPressed: params.jumpPressed,
                 onGround,
                 playSoundEffect: params.playSoundEffect,
+                playBackgroundMusic: params.playBackgroundMusic,
                 removeSelf: () => {
                     actorIndicesToRemove.push(actorIdx);
                 },
@@ -232,6 +248,9 @@ export class World {
             this.setState("actors", newActors);
         }
         for (let actor of this.state.actors) {
+            if (!actor.actor.state.collideBlocks) {
+                continue;
+            }
             let oldX = actor.actor.state.pos.x;
             let oldY = actor.actor.state.pos.y;
             let actor2 = actor.actor.state;

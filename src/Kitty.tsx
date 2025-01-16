@@ -2,6 +2,7 @@ import { Accessor, createMemo } from "solid-js";
 import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { JUMP_SOUND, PLAYER_DEATH_SOUND } from "./sound-effect-ids";
+import { RENDER_BLOCK_HEIGHT, RENDER_BLOCK_WIDTH } from "./World";
 
 type KittyState = {
     facing: "Left" | "Right",
@@ -10,10 +11,15 @@ type KittyState = {
     jumpHeld: boolean,
     remainingJumpHeldFrames: number,
     dead: boolean,
+    deadInitPosY: number,
+    deadSequence: number,
+    deadFrame: number,
 };
 
 const GRAVITY = 1;
 export const MAX_HOLD_JUMP_FRAMES = 20;
+const DEAD_STILL_TIMEOUT = 50;
+const DEAD_SIN_FALL_TIMEOUT = 100;
 
 export class Kitty implements
     IsActor,
@@ -26,6 +32,10 @@ export class Kitty implements
     animation: Accessor<string>;
 
     constructor(params: {
+        spawnHome?: {
+            xIdx: number,
+            yIdx: number,
+        },
         initPos?: {
             x: number,
             y: number,
@@ -42,16 +52,22 @@ export class Kitty implements
             jumpHeld: false,
             remainingJumpHeldFrames: 0,
             dead: false,
+            deadInitPosY: 0,
+            deadSequence: 0,
+            deadFrame: 0,
         });
         this.state = state;
         this.setState = setState;
         this.actor = new ActorBase({
+            spawnHome: params.spawnHome,
             initPos: params.initPos,
             initVel: params.initVel,
         });
         this.flipX = createMemo(() => state.facing == "Left");
         this.animation = createMemo(() => {
-            if (this.state.onGround) {
+            if (this.state.dead) {
+                return "kitty_hurt";
+            } else if (this.state.onGround) {
                 if (this.actor.state.vel.x != 0.0) {
                     return "kitty_running";
                 } else {
@@ -73,7 +89,45 @@ export class Kitty implements
         jumpPressed: boolean,
         onGround: boolean,
         playSoundEffect: (soundId: number) => void,
+        playBackgroundMusic: (musicId: number) => void,
     }) {
+        if (this.state.dead) {
+            if (this.state.deadSequence == 0) {
+                let deadFrame = this.state.deadFrame;
+                deadFrame++;
+                this.setState("deadFrame", deadFrame);
+                if (deadFrame >= DEAD_STILL_TIMEOUT) {
+                    this.setState("deadSequence", 1);
+                    this.setState("deadFrame", 0);
+                }
+                this.actor.setState("vel", "x", 0);
+                this.actor.setState("vel", "y", 0);
+            } else {
+                let deadFrame = this.state.deadFrame;
+                deadFrame++;
+                this.setState("deadFrame", deadFrame);
+                if (deadFrame >= DEAD_SIN_FALL_TIMEOUT) {
+                    this.setState("dead", false);
+                    this.setState("deadSequence", 0);
+                    this.setState("deadFrame", 0);
+                    this.actor.setState("collideBlocks", true);
+                    if (this.actor.actor.state.spawnHome != undefined) {
+                        let spawnHome = this.actor.actor.state.spawnHome;
+                        this.actor.setState("pos", {
+                            x: spawnHome.xIdx * RENDER_BLOCK_WIDTH,
+                            y: spawnHome.yIdx * RENDER_BLOCK_HEIGHT,
+                        });
+                        params.playBackgroundMusic(9);
+                    }
+                } else {
+                    let a = Math.sin(deadFrame * 3.0 / 4.0 * 2.0 * Math.PI / DEAD_SIN_FALL_TIMEOUT);
+                    this.actor.setState("pos", "y", this.state.deadInitPosY - a * 400.0);
+                    this.actor.setState("vel", "x", 0);
+                    this.actor.setState("vel", "y", 0);
+                }
+            }
+            return;
+        }
         this.setState("onGround", params.onGround);
         let accelX = 0.0;
         if (params.leftPressed) {
@@ -125,6 +179,8 @@ export class Kitty implements
         if (!this.state.dead) {
             params.playBackgroundMusic(PLAYER_DEATH_SOUND);
             this.setState("dead", true);
+            this.setState("deadInitPosY", this.actor.state.pos.y);
+            this.actor.setState("collideBlocks", false);
         }
     }
 }

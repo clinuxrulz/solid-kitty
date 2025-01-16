@@ -334,7 +334,18 @@ function RenderWorld(props: {
         },
         { defer: true, },
       ));
-      animatedSprite.animationSpeed = 0.3;
+      createComputed(() => {
+        let animationSpeed: number;
+        switch (animation()) {
+          case "kitty_hurt":
+            animationSpeed = 0.15;
+            break;
+          default:
+            animationSpeed = 0.3;
+            break;
+        }
+        animatedSprite.animationSpeed = animationSpeed;
+      });
       animatedSprite.scale = 5.0;
       createMemo(() => {
         if (actor.flipX()) {

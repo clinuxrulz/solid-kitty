@@ -78,7 +78,7 @@ export class Goomba implements
         playBackgroundMusic: (musicId: number) => void,
     }): void {
         if (!this.state.isFlat) {
-            if (params.other instanceof Kitty) {
+            if (params.other instanceof Kitty && !params.other.state.dead) {
                 //
                 let squashMaxY = this.actor.state.pos.y + this.actor.state.size.y * 0.2;
                 let kittyMaxY = params.other.actor.state.pos.y + params.other.actor.state.size.y;

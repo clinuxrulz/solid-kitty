@@ -26,8 +26,16 @@ type ActorState = {
         x: number,
         y: number,
     },
-    /** Adds a tint to the actor.
-     *  For debugging purposes to see if collision detector is working.
+    /**
+     * Weither or not the actor collides against level blocks.
+     * Default is true.
+     * This is used (set to false) for kitty death animation,
+     * so kitty can pass throug the blocks.
+     */
+    collideBlocks: boolean,
+    /** 
+     * Adds a tint to the actor.
+     * For debugging purposes to see if collision detector is working.
      */
     tint: number | undefined,
 };
@@ -40,6 +48,7 @@ export interface IsActor {
         jumpPressed: boolean,
         onGround: boolean,
         playSoundEffect: (soundId: number) => void,
+        playBackgroundMusic: (musicId: number) => void,
         removeSelf: () => void,
     }): void;
     onCollide(params: {
@@ -103,6 +112,7 @@ export class ActorBase implements IsActor {
                 x: 10.0,
                 y: 10.0,
             },
+            collideBlocks: true,
             tint: undefined,
         });
         this.state = state;
