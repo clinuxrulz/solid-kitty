@@ -3,7 +3,7 @@ import { ActorBase, IsActor, IsAnimated } from "./Actor";
 import { Accessor, createMemo } from "solid-js";
 import { KOOPA_TROOPA_1_HEIGHT, KOOPA_TROOPA_2_HEIGHT, KOOPA_TROOPA_WIDTH } from "./SmSprites";
 import { Kitty, MAX_HOLD_JUMP_FRAMES } from "./Kitty";
-import { SQUASH_SOUND } from "./sound-effect-ids";
+import { KICK_SOUND, SQUASH_SOUND } from "./sound-effect-ids";
 
 type KoopaTroopaState = {
     state: "Walking" | "Shell" | "Spinning" | "WakingUp",
@@ -99,6 +99,11 @@ export class KoopaTroopa implements
                         playBackgroundMusic: params.playBackgroundMusic,
                     });
                 }
+            }
+        } else if (this.state.state == "Shell") {
+            if (params.other instanceof Kitty && !params.other.state.dead) {
+                this.setState("state", "Spinning");
+                params.playSoundEffect(KICK_SOUND);
             }
         }
     }
