@@ -42,6 +42,7 @@ type ActorState = {
 
 export interface IsActor {
     get actor(): ActorBase;
+    readonly animated?: IsAnimated;
     update(params: {
         leftPressed: boolean,
         rightPressed: boolean,

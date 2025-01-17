@@ -22,14 +22,12 @@ const DEAD_STILL_TIMEOUT = 50;
 const DEAD_SIN_FALL_TIMEOUT = 100;
 
 export class Kitty implements
-    IsActor,
-    IsAnimated
+    IsActor
 {
     state: Store<KittyState>;
     setState: SetStoreFunction<KittyState>;
     actor: ActorBase;
-    flipX: Accessor<boolean>;
-    animation: Accessor<string>;
+    animated: IsAnimated;
 
     constructor(params: {
         spawnHome?: {
@@ -63,24 +61,26 @@ export class Kitty implements
             initPos: params.initPos,
             initVel: params.initVel,
         });
-        this.flipX = createMemo(() => state.facing == "Left");
-        this.animation = createMemo(() => {
-            if (this.state.dead) {
-                return "kitty_hurt";
-            } else if (this.state.onGround) {
-                if (this.actor.state.vel.x != 0.0) {
-                    return "kitty_running";
+        this.animated = {
+            flipX: createMemo(() => state.facing == "Left"),
+            animation: createMemo(() => {
+                if (this.state.dead) {
+                    return "kitty_hurt";
+                } else if (this.state.onGround) {
+                    if (this.actor.state.vel.x != 0.0) {
+                        return "kitty_running";
+                    } else {
+                        return "kitty_stand";
+                    }
                 } else {
-                    return "kitty_stand";
+                    if (this.actor.state.vel.y < 0.0) {
+                        return "kitty_jump";
+                    } else {
+                        return "kitty_drop";
+                    }
                 }
-            } else {
-                if (this.actor.state.vel.y < 0.0) {
-                    return "kitty_jump";
-                } else {
-                    return "kitty_drop";
-                }
-            }
-        });
+            }),
+        };
     }
 
     update(params: {

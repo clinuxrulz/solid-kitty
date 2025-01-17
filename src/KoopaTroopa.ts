@@ -9,14 +9,12 @@ type KoopaTroopaState = {
 };
 
 export class KoopaTroopa implements
-    IsActor,
-    IsAnimated
+    IsActor
 {
     state: Store<KoopaTroopaState>;
     setState: SetStoreFunction<KoopaTroopaState>;
     actor: ActorBase;
-    flipX: Accessor<boolean>;
-    animation: Accessor<string>;
+    animated: IsAnimated;
 
     constructor(params: {
         spawnHome?: {
@@ -42,19 +40,21 @@ export class KoopaTroopa implements
                 y: KOOPA_TROOPA_1_HEIGHT * 5,
             },
         });
-        this.flipX = createMemo(() => state.facing == "Left");
-        this.animation = createMemo(() => {
-            switch (state.state) {
-                case "Walking":
-                    return "koopa_troopa_walking";
-                case "Shell":
-                    return "koopa_troopa_shell";
-                case "Spinning":
-                    return "koopa_troopa_shell_spin";
-                case "WakingUp":
-                    return "koopa_troopa_waking_up";
-            }
-        });
+        this.animated = {
+            flipX: createMemo(() => state.facing == "Left"),
+            animation: createMemo(() => {
+                switch (state.state) {
+                    case "Walking":
+                        return "koopa_troopa_walking";
+                    case "Shell":
+                        return "koopa_troopa_shell";
+                    case "Spinning":
+                        return "koopa_troopa_shell_spin";
+                    case "WakingUp":
+                        return "koopa_troopa_waking_up";
+                }
+            }),
+        };
     }
 
     update(params: {

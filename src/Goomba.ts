@@ -12,14 +12,12 @@ type GoombaState = {
 const FLAT_TIMEOUT = 100;
 
 export class Goomba implements
-    IsActor,
-    IsAnimated
+    IsActor
 {
     state: Store<GoombaState>;
     setState: SetStoreFunction<GoombaState>;
     actor: ActorBase;
-    flipX = () => false;
-    animation: Accessor<string>;
+    animated: IsAnimated;
 
     constructor(params: {
         spawnHome?: {
@@ -41,13 +39,16 @@ export class Goomba implements
             spawnHome: params.spawnHome,
             initPos: params.initPos,
         });
-        this.animation = createMemo(() => {
-            if (state.isFlat) {
-                return "goomba_flat";
-            } else {
-                return "goomba_walking";
-            }
-        });
+        this.animated = {
+            flipX: () => false,
+            animation: createMemo(() => {
+                if (state.isFlat) {
+                    return "goomba_flat";
+                } else {
+                    return "goomba_walking";
+                }
+            }),
+        };
     }
 
     update(params: {

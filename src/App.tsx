@@ -315,7 +315,7 @@ function RenderWorld(props: {
     let smSpritesheet = untrack(() => props.smSpritesheet);
     if (actor instanceof Kitty) {
       let actor2 = actor.actor.state;
-      let animation = actor.animation;
+      let animation = actor.animated.animation;
       let textures = createMemo(() => spritesheet.animations[animation()]);
       let animatedSprite = new AnimatedSprite(
         untrack(textures),
@@ -349,7 +349,7 @@ function RenderWorld(props: {
       });
       animatedSprite.scale = 5.0;
       createMemo(() => {
-        if (actor.flipX()) {
+        if (actor.animated.flipX()) {
           animatedSprite.scale.set(-5.0, 5.0);
           animatedSprite.pivot.set(12.0, 0.0);
         } else {
@@ -359,9 +359,10 @@ function RenderWorld(props: {
       });
       animatedSprite.play();
       return animatedSprite;
-    } else if (actor instanceof Goomba || actor instanceof KoopaTroopa) {
+    } else if (actor.animated != undefined) {
+      let animated = actor.animated;
       let actor2 = actor.actor.state;
-      let animation = actor.animation;
+      let animation = actor.animated.animation;
       let textures = createMemo(() => smSpritesheet.animations[animation()]);
       let animatedSprite = new AnimatedSprite(
         untrack(textures),
@@ -383,6 +384,15 @@ function RenderWorld(props: {
       ));
       animatedSprite.animationSpeed = 0.1;
       animatedSprite.scale = 5.0;
+      createComputed(() => {
+        if (animated.flipX()) {
+          animatedSprite.scale.set(-5.0, 5.0);
+          animatedSprite.pivot.set(actor2.size.x / 5, 0.0);
+        } else {
+          animatedSprite.scale = 5.0;
+          animatedSprite.pivot.set(0.0, 0.0);
+        }
+      });
       animatedSprite.filters = whiteToTransparentFilter;
       animatedSprite.play();
       return animatedSprite;
