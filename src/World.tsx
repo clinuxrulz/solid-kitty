@@ -125,18 +125,19 @@ export class World {
                             continue;
                         }
                         this.setState("blockSpawns", (blockSpawns) => [...blockSpawns, { xIdx: j, yIdx: i, }]);
+                        let newActor = new monsterConstructor2({
+                            spawnHome: {
+                                xIdx: j,
+                                yIdx: i,
+                            },
+                        });
+                        newActor.actor.setState("pos", {
+                            x: j * RENDER_BLOCK_WIDTH,
+                            y: (i + 1) * RENDER_BLOCK_HEIGHT - newActor.actor.state.size.y,
+                        });
                         this.setState("actors", (actors) => [
                             ...actors,
-                            new monsterConstructor2({
-                                spawnHome: {
-                                    xIdx: j,
-                                    yIdx: i,
-                                },
-                                initPos: {
-                                    x: j * RENDER_BLOCK_WIDTH,
-                                    y: (i + 1) * RENDER_BLOCK_HEIGHT - 16*5,
-                                },
-                            }),
+                            newActor,
                         ]);
                     }
                 }
