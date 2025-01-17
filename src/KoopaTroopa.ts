@@ -78,6 +78,9 @@ export class KoopaTroopa implements
         if (this.state.state == "Walking") {
             let vx = this.state.facing == "Left" ? -1 : 1;
             this.actor.setState("vel", "x", vx);
+        } else if (this.state.state == "Spinning") {
+            let vx = this.state.facing == "Left" ? -10 : 10;
+            this.actor.setState("vel", "x", vx);
         }
     }
 
@@ -108,6 +111,13 @@ export class KoopaTroopa implements
             }
         } else if (this.state.state == "Shell") {
             if (params.other instanceof Kitty && !params.other.state.dead) {
+                let scx = this.actor.state.pos.x + 0.5 * this.actor.state.size.x;
+                let kcx = params.other.actor.state.pos.x + 0.5 * params.other.actor.state.size.x;
+                if (kcx < scx) {
+                    this.setState("facing", "Right");
+                } else {
+                    this.setState("facing", "Left");
+                }
                 this.setState("state", "Spinning");
                 params.playSoundEffect(KICK_SOUND);
             }
