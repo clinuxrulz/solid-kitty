@@ -56,6 +56,12 @@ export class KoopaTroopa implements
                         return "koopa_troopa_waking_up";
                 }
             }),
+            animationSpeed: createMemo(() => {
+                if (state.state == "Spinning") {
+                    return 0.4;
+                }
+                return undefined;
+            }),
         };
     }
 

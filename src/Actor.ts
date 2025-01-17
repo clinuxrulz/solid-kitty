@@ -62,6 +62,7 @@ export interface IsActor {
 export interface IsAnimated {
     readonly flipX: Accessor<boolean>;
     readonly animation: Accessor<string>;
+    readonly animationSpeed?: Accessor<number | undefined>;
 }
 
 const GRAVITY = 1;

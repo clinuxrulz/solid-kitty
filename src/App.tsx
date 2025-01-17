@@ -383,6 +383,9 @@ function RenderWorld(props: {
         { defer: true, },
       ));
       animatedSprite.animationSpeed = 0.1;
+      createComputed(() => {
+        animatedSprite.animationSpeed = animated.animationSpeed?.() ?? 0.1;
+      });
       animatedSprite.scale = 5.0;
       createComputed(() => {
         if (animated.flipX()) {
