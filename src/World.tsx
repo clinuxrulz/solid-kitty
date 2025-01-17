@@ -1,7 +1,7 @@
 import { Kitty } from "./Kitty";
 import { IsActor } from "./Actor";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { Level, level1 } from "./Level";
+import { isMonsterChar, Level, level1, monsterConstructor } from "./Level";
 import { untrack } from "solid-js";
 import { Goomba } from "./Goomba";
 import { collision_detection } from "./collision_detection";
@@ -103,7 +103,8 @@ export class World {
             let numCols = Math.ceil(params.windowSize.width / RENDER_BLOCK_HEIGHT);
             for (let i = startI; i < startI+numRows; ++i) {
                 for (let j = startJ; j < startJ+numCols; ++j) {
-                    if (this.state.level.readBlock(j, i) == "@") {
+                    let monsterConstructor2 = monsterConstructor(this.state.level.readBlock(j, i) ?? "");
+                    if (monsterConstructor2 != undefined) {
                         // block spawn if that block is the home block of existing actor
                         let skipSpawn = false;
                         for (let actor of this.state.actors) {
@@ -126,7 +127,7 @@ export class World {
                         this.setState("blockSpawns", (blockSpawns) => [...blockSpawns, { xIdx: j, yIdx: i, }]);
                         this.setState("actors", (actors) => [
                             ...actors,
-                            new Goomba({
+                            new monsterConstructor2({
                                 spawnHome: {
                                     xIdx: j,
                                     yIdx: i,

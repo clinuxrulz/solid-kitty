@@ -14,6 +14,7 @@ import { smSpriteAtlasData } from "./SmSprites";
 import { PixiRemoveBgColourFilter } from "./PixiRemoveBgColourFilter";
 import { Goomba } from "./Goomba";
 import { VirtualButtons } from "./VirtualButtons";
+import { KoopaTroopa } from "./KoopaTroopa";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -358,7 +359,7 @@ function RenderWorld(props: {
       });
       animatedSprite.play();
       return animatedSprite;
-    } else if (actor instanceof Goomba) {
+    } else if (actor instanceof Goomba || actor instanceof KoopaTroopa) {
       let actor2 = actor.actor.state;
       let animation = actor.animation;
       let textures = createMemo(() => smSpritesheet.animations[animation()]);

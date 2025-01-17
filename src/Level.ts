@@ -1,5 +1,7 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { tilesetAtlasData } from "./tileset";
+import { Goomba } from "./Goomba";
+import { KoopaTroopa } from "./KoopaTroopa";
 
 type LevelState = {
     blocks: string[][],
@@ -103,8 +105,25 @@ export const level1: string[] = [
     "                 GG  ",
     "     GG   GGG    GG  ",
     "                     ",
-    "                                          @                @",
+    "               &                          @                @",
     "GGGGGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
     "GGGGGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
     "GGGGGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
 ];
+
+export const GOOMBA_CHAR = "@";
+export const KOOPA_TROOPA_CHAR = "&";
+
+export function isMonsterChar(c: string): boolean {
+    return monsterConstructor(c) != undefined;
+}
+
+export function monsterConstructor(c: string) {
+    if (c == GOOMBA_CHAR) {
+        return Goomba;
+    } else if (c == KOOPA_TROOPA_CHAR) {
+        return KoopaTroopa;
+    } else {
+        return undefined;
+    }
+};
