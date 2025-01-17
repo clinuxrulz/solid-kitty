@@ -99,6 +99,7 @@ export class KoopaTroopa implements
                     this.setState("state", "Shell");
                     this.actor.setState("size", "y", KOOPA_TROOPA_2_HEIGHT * 5);
                     this.actor.setState("pos", "y", (y) => y - (KOOPA_TROOPA_2_HEIGHT - KOOPA_TROOPA_1_HEIGHT) * 5);
+                    this.actor.setState("vel", "x", 0);
                     params.other.actor.setState("vel", "y", -100);
                     params.other.setState("jumpHeld", true);
                     params.other.setState("remainingJumpHeldFrames", MAX_HOLD_JUMP_FRAMES);
