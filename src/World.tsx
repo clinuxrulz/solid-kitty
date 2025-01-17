@@ -270,8 +270,8 @@ export class World {
                 let actor2 = actor.actor.state;
                 const RENDER_BLOCK_WIDTH = 16*3;
                 const RENDER_BLOCK_HEIGHT = 16*3;
-                const ACTOR_WIDTH = 24;
-                const ACTOR_HEIGHT = 24;
+                const ACTOR_WIDTH = actor2.size.x;
+                const ACTOR_HEIGHT = actor2.size.y;
                 let minX = actor2.pos.x;
                 let minY = actor2.pos.y;
                 let maxX = minX + ACTOR_WIDTH;
@@ -280,8 +280,6 @@ export class World {
                 let minYIdx = Math.floor(minY / RENDER_BLOCK_HEIGHT);
                 let maxXIdx = Math.ceil(maxX / RENDER_BLOCK_WIDTH);
                 let maxYIdx = Math.ceil(maxY / RENDER_BLOCK_HEIGHT);
-                let originalPosX = actor.actor.state.pos.x;
-                let originalPosY = actor.actor.state.pos.y;
                 for (let yIdx = minYIdx; yIdx <= maxYIdx; ++yIdx) {
                     for (let xIdx = minXIdx; xIdx <= maxXIdx; ++xIdx) {
                         let cell = this.state.level.readBlock(xIdx, yIdx);
@@ -295,27 +293,34 @@ export class World {
                             let blockTop = yIdx * RENDER_BLOCK_HEIGHT;
                             let blockBottom = blockTop + RENDER_BLOCK_HEIGHT;
                             if (
-                                leftCell != "G" &&
-                                actor2.pos.x + 24*3 - blockLeft < 20
+                                maxX < blockLeft ||
+                                minX > blockRight ||
+                                maxY < blockTop ||
+                                minY > blockBottom
                             ) {
-                                actor.actor.setState("pos", "x", blockLeft - 24*3);
+                                continue;
+                            }
+                            if (
+                                leftCell != "G" &&
+                                maxX - blockLeft < 20
+                            ) {
+                                actor.actor.setState("pos", "x", blockLeft - actor.actor.state.size.x);
                                 actor.actor.setState("vel", "x", 0);
                             } else if (
                                 rightCell != "G" &&
-                                blockRight - actor2.pos.x < 20
+                                blockRight - minX < 20
                             ) {
                                 actor.actor.setState("pos", "x", blockRight);
                                 actor.actor.setState("vel", "x", 0);
                             } else if (
                                 topCell != "G" &&
-                                originalPosY + 24*3 - blockTop < 20
+                                maxY - blockTop < 20
                             ) {
-                                console.log(actor2.pos.y + 24*3 - blockTop);
-                                actor.actor.setState("pos", "y", blockTop - 24*3);
+                                actor.actor.setState("pos", "y", blockTop - actor.actor.state.size.y);
                                 actor.actor.setState("vel", "y", 0);
                             } else if (
                                 bottomCell != "G" &&
-                                originalPosY - blockBottom < 20
+                                minY - blockBottom < 20
                             ) {
                                 actor.actor.setState("pos", "y", blockBottom);
                                 actor.actor.setState("vel", "y", 0);
