@@ -282,7 +282,7 @@ const App: Component = () => {
             texture: mmSpritesheet.textures["mario_standing"],
             x: 100,
             y: 100,
-            scale: 10,
+            scale: 5,
           });
           app.stage.addChild(
             sprite,
