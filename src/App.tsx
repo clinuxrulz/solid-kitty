@@ -15,6 +15,7 @@ import { PixiRemoveBgColourFilter } from "./PixiRemoveBgColourFilter";
 import { Goomba } from "./Goomba";
 import { VirtualButtons } from "./VirtualButtons";
 import { KoopaTroopa } from "./KoopaTroopa";
+import { mmSpriteAtlasData } from "./MmSprites";
 
 let chiptunes: Chiptunes | undefined = undefined;
 let chiptunesEmu: number = 0;
@@ -81,6 +82,7 @@ await Promise.all([
   Assets.load(tilesetAtlasData.meta.image),
   Assets.load(atlasData.meta.image),
   Assets.load(smSpriteAtlasData.meta.image),
+  Assets.load(mmSpriteAtlasData.meta.image),
 ]);
 
 // Create the SpriteSheet from data and image
@@ -98,6 +100,13 @@ const smSpritesheet = new Spritesheet(
 );
 
 await smSpritesheet.parse();
+
+const mmSpritesheet = new Spritesheet(
+  Texture.from(mmSpriteAtlasData.meta.image),
+  mmSpriteAtlasData,
+);
+
+await mmSpritesheet.parse();
 
 const tileset = new Spritesheet(
   Texture.from(tilesetAtlasData.meta.image),
@@ -267,6 +276,16 @@ const App: Component = () => {
               smSpritesheet,
               world,
             })
+          );
+          // test micro mario
+          let sprite = new Sprite({
+            texture: mmSpritesheet.textures["mario_standing"],
+            x: 100,
+            y: 100,
+            scale: 10,
+          });
+          app.stage.addChild(
+            sprite,
           );
           //
           return app.canvas;
