@@ -1,7 +1,26 @@
-import { Component, createEffect, createMemo, createSignal } from "solid-js";
+import { Component, createComputed, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
 const PixelEditor: Component = () => {
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
+    createComputed(() => {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return undefined;
+        }
+        let resizeObserver = new ResizeObserver(
+            () => {
+                let rect = canvas2.getBoundingClientRect();
+                canvas2.width = rect.width;
+                canvas2.height = rect.height;
+                drawOnCanvas();
+            },
+        );
+        resizeObserver.observe(canvas2);
+        onCleanup(() => {
+            resizeObserver.unobserve(canvas2);
+            resizeObserver.disconnect();
+        });
+    });
     let ctx = createMemo(() => {
         let canvas2 = canvas();
         if (canvas2 == undefined) {
@@ -26,7 +45,7 @@ const PixelEditor: Component = () => {
         }
         return result;
     });
-    createEffect(() => {
+    function drawOnCanvas() {
         let ctx2 = ctx();
         if (ctx2 == undefined) {
             return;
@@ -35,8 +54,8 @@ const PixelEditor: Component = () => {
         if (imageData2 == undefined) {
             return;
         }
-        ctx2.putImageData(imageData2, 0, 0);
-    });
+        ctx2.putImageData(imageData2, 100, 100);
+    }
     return (
         <div
             style={{
