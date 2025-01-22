@@ -2,6 +2,7 @@
 import { render } from 'solid-js/web';
 import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
 
 const App = lazy(() => import("./App"));
