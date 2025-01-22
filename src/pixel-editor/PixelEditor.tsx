@@ -28,21 +28,25 @@ const PixelEditor: Component = () => {
         }
         return canvas2.getContext("2d");
     });
-    let imageData = createMemo(() => {
+    let image = createMemo(() => {
         let ctx2 = ctx();
         if (ctx2 == undefined) {
             return undefined;
         }
-        let result = ctx2.createImageData(100, 100);
+        let imageData = new ImageData(100,100);
+        let result = new OffscreenCanvas(100, 100);
+        let data = imageData.data;
         let at = 0;
         for (let i = 0; i < 100; ++i) {
             for (let j = 0; j < 100; ++j) {
-                result.data[at++] = i;
-                result.data[at++] = 0;
-                result.data[at++] = j;
-                result.data[at++] = 255;
+                data[at++] = i;
+                data[at++] = 0;
+                data[at++] = j;
+                data[at++] = 255;
             }
         }
+        let offCtx = result.getContext("2d");
+        offCtx.putImageData(imageData, 0, 0);
         return result;
     });
     function drawOnCanvas() {
@@ -50,11 +54,11 @@ const PixelEditor: Component = () => {
         if (ctx2 == undefined) {
             return;
         }
-        let imageData2 = imageData();
-        if (imageData2 == undefined) {
+        let image2 = image();
+        if (image2 == undefined) {
             return;
         }
-        ctx2.putImageData(imageData2, 100, 100);
+        ctx2.drawImage(image2, 50, 50, 300, 300);
     }
     return (
         <div
