@@ -33,15 +33,15 @@ const PixelEditor: Component = () => {
         if (ctx2 == undefined) {
             return undefined;
         }
-        let imageData = new ImageData(100,100);
-        let result = new OffscreenCanvas(100, 100);
+        let imageData = new ImageData(10,10);
+        let result = new OffscreenCanvas(10, 10);
         let data = imageData.data;
         let at = 0;
-        for (let i = 0; i < 100; ++i) {
-            for (let j = 0; j < 100; ++j) {
-                data[at++] = i;
+        for (let i = 0; i < 10; ++i) {
+            for (let j = 0; j < 10; ++j) {
+                data[at++] = i*20;
                 data[at++] = 0;
-                data[at++] = j;
+                data[at++] = j*20;
                 data[at++] = 255;
             }
         }
@@ -58,7 +58,9 @@ const PixelEditor: Component = () => {
         if (image2 == undefined) {
             return;
         }
+        ctx2.imageSmoothingEnabled = false;
         ctx2.drawImage(image2, 50, 50, 300, 300);
+        ctx2.imageSmoothingEnabled = true;
     }
     return (
         <div
