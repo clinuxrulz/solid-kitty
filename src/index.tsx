@@ -6,6 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
 
 const App = lazy(() => import("./App"));
+const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 
 const root = document.getElementById('root');
 
@@ -18,6 +19,6 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 render(() => (
   <HashRouter>
     <Route path="/" component={App}/>
-    <Route path="/pixel-editor" component={() => "TODO"}/>
+    <Route path="/pixel-editor" component={PixelEditor}/>
   </HashRouter>
 ), root!);
