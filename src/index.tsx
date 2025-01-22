@@ -1,8 +1,10 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
-
+import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
-import App from './App';
+import { lazy } from 'solid-js';
+
+const App = lazy(() => import("./App"));
 
 const root = document.getElementById('root');
 
@@ -12,4 +14,9 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <App />, root!);
+render(() => (
+  <HashRouter>
+    <Route path="/" component={App}/>
+    <Route path="/pixel-editor" component={() => "TODO"}/>
+  </HashRouter>
+), root!);
