@@ -1,4 +1,4 @@
-import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
+import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { KOOPA_TROOPA_1_HEIGHT } from "../SmSprites";
@@ -12,7 +12,7 @@ const PixelEditor: Component = () => {
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
     }>({
-        pan: new Vec2(-100, -100),
+        pan: new Vec2(-500, -500),
         scale: 30.0,
         mousePos: undefined,
         // panning states
@@ -20,7 +20,7 @@ const PixelEditor: Component = () => {
         panningFrom: undefined,
     });
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-        return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
+        return screenPt.clone().multScalar(state.scale).add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
         return worldPt.clone().sub(state.pan).multScalar(state.scale);
@@ -92,7 +92,7 @@ const PixelEditor: Component = () => {
         ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.save();
         ctx2.imageSmoothingEnabled = false;
-        ctx2.translate(-state.pan.x, -state.pan.y);
+        ctx2.translate(-state.pan.x / state.scale, -state.pan.y / state.scale);
         ctx2.scale(state.scale, state.scale);
         ctx2.drawImage(image2, 0, 0, 10, 10);
         ctx2.restore();
@@ -188,6 +188,7 @@ const PixelEditor: Component = () => {
     return (
         <div
             style={{
+                "position": "relative",
                 "flex-grow": "1",
                 "display": "flex",
                 "flex-direction": "column",
@@ -203,6 +204,20 @@ const PixelEditor: Component = () => {
                 }}
                 ref={setCanvas}
             />
+            <div
+                style={{
+                    "position": "absolute",
+                    "left": "0",
+                    "top": "0",
+                }}
+            >
+                <Show when={state.mousePos}>
+                    {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
+                </Show>
+                <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
+                    {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
+                </Show>
+            </div>
         </div>
     );
 };
