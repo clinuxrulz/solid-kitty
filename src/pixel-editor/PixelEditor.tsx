@@ -214,36 +214,55 @@ const PixelEditor: Component = () => {
     return (
         <div
             style={{
-                "position": "relative",
                 "flex-grow": "1",
                 "display": "flex",
-                "flex-direction": "column",
+                "flex-direction": "row",
             }}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
-            onMouseMove={onMouseMove}
-            onMouseOut={onMouseOut}
-            onWheel={onWheel}
         >
-            <canvas
-                style={{
-                    "flex-grow": "1"
-                }}
-                ref={setCanvas}
-            />
             <div
                 style={{
-                    "position": "absolute",
-                    "left": "0",
-                    "top": "0",
+                    "background-color": "black",
                 }}
             >
-                <Show when={state.mousePos}>
-                    {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
-                </Show>
-                <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
-                    {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
-                </Show>
+                <button
+                    class="btn btn-blue"
+                >
+                    <i class="fa-solid fa-pencil"/>
+                </button>
+            </div>
+            <div
+                style={{
+                    "position": "relative",
+                    "flex-grow": "1",
+                    "display": "flex",
+                    "flex-direction": "column",
+                }}
+                onMouseDown={onMouseDown}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+                onMouseOut={onMouseOut}
+                onWheel={onWheel}
+            >
+                <canvas
+                    style={{
+                        "flex-grow": "1"
+                    }}
+                    ref={setCanvas}
+                />
+                <div
+                    style={{
+                        "position": "absolute",
+                        "left": "0",
+                        "top": "0",
+                    }}
+                >
+                    <Show when={state.mousePos}>
+                        {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
+                    </Show>
+                    <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
+                        {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
+                    </Show>
+                </div>
             </div>
         </div>
     );
