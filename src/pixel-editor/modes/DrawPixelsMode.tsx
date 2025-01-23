@@ -3,6 +3,7 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
 import { Colour } from "../Colour";
+import { UndoUnit } from "../UndoManager";
 
 export class DrawPixelsMode implements Mode {
     click: () => void;
@@ -24,7 +25,23 @@ export class DrawPixelsMode implements Mode {
         });
         //
         let writePixel = (pt: Vec2) => {
-            params.writePixel(pt, new Colour(0, 255, 0, 255));
+            let oldColour = params.readPixel(pt);
+            if (oldColour == undefined) {
+                return;
+            }
+            let newColour = new Colour(0, 255, 0, 255);
+            params.writePixel(pt, newColour);
+            let undoUnit: UndoUnit = {
+                displayName: "Draw Pixel",
+                run(isUndo) {
+                    if (isUndo) {
+                        params.writePixel(pt, oldColour);
+                    } else {
+                        params.writePixel(pt, newColour);
+                    }
+                },
+            };
+            params.undoManager.pushUndoUnit(undoUnit);
         };
         //
         this.click = () => {
