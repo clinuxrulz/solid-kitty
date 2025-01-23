@@ -1,8 +1,10 @@
 import { Accessor } from "solid-js";
 import { Colour } from "./Colour";
 import { Vec2 } from "../Vec2";
+import { UndoManager } from "./UndoManager";
 
 export type ModeParams = {
+    undoManager: UndoManager,
     snapDist: Accessor<number>,
     snapDistSquared: Accessor<number>,
     mousePos: Accessor<Vec2 | undefined>,

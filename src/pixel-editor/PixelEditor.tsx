@@ -6,6 +6,7 @@ import { Colour } from "./Colour";
 import { IdleMode } from "./modes/IdleMode";
 import { DrawPixelsMode } from "./modes/DrawPixelsMode";
 import { Mode } from "./Mode";
+import { UndoManager } from "./UndoManager";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -27,6 +28,7 @@ const PixelEditor: Component = () => {
         //
         mode: "Idle",
     });
+    const undoManager = new UndoManager();
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
         return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
     };
@@ -125,6 +127,7 @@ const PixelEditor: Component = () => {
     const SNAP_DIST = 10;
     const SNAP_DIST_SQUARED = SNAP_DIST * SNAP_DIST;
     let modeParams: ModeParams = {
+        undoManager,
         snapDist: () => SNAP_DIST,
         snapDistSquared: () => SNAP_DIST_SQUARED,
         mousePos: () => state.mousePos,
@@ -304,9 +307,31 @@ const PixelEditor: Component = () => {
         >
             <div
                 style={{
+                    "display": "flex",
+                    "flex-direction": "column",
                     "background-color": "black",
                 }}
             >
+                <button
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                    }}
+                    disabled={!undoManager.canUndo()}
+                    onClick={() => undoManager.undo()}
+                >
+                    <i class="fas fa-undo"></i>
+                </button>
+                <button
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                    }}
+                    disabled={!undoManager.canRedo()}
+                    onClick={() => undoManager.redo()}
+                >
+                    <i class="fas fa-redo"></i>
+                </button>
                 <button
                     style={{
                         "font-size": "20pt",
