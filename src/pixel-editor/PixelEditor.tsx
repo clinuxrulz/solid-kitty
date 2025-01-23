@@ -265,6 +265,15 @@ const PixelEditor: Component = () => {
     let onClick = (e: MouseEvent) => {
         mode().click?.();
     };
+    let onKeyDown = (e: KeyboardEvent) => {
+        if (e.key == "Escape") {
+            setState("mode", "Idle");
+        }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    onCleanup(() => {
+        document.removeEventListener("keydown", onKeyDown);
+    });
     return (
         <div
             style={{
@@ -282,6 +291,7 @@ const PixelEditor: Component = () => {
                     style={{
                         "font-size": "20pt",
                         "padding": "5pt",
+                        "background-color": state.mode == "Draw Pixels" ? "blue" : null,
                     }}
                     onClick={() => setState("mode", "Draw Pixels")}
                 >
