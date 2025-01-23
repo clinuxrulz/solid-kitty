@@ -13,7 +13,14 @@ export class DrawPixelsMode implements Mode {
             if (mousePos == undefined) {
                 return undefined;
             }
-            return params.screenPtToWorldPt(mousePos);
+            let pt = params.screenPtToWorldPt(mousePos);
+            if (pt == undefined) {
+                return undefined;
+            }
+            return Vec2.create(
+                Math.floor(pt.x),
+                Math.floor(pt.y),
+            );
         });
         //
         let writePixel = (pt: Vec2) => {

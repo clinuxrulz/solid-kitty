@@ -79,7 +79,11 @@ const PixelEditor: Component = () => {
             return undefined;
         }
         offCtx.putImageData(imageData, 0, 0);
-        return result;
+        return {
+            image: result,
+            imageData,
+            ctx: offCtx,
+        };
     });
     function drawOnCanvas() {
         let canvas2 = canvas();
@@ -99,7 +103,7 @@ const PixelEditor: Component = () => {
         ctx2.imageSmoothingEnabled = false;
         ctx2.scale(state.scale, state.scale);
         ctx2.translate(-state.pan.x, -state.pan.y);
-        ctx2.drawImage(image2, 0, 0, 10, 10);
+        ctx2.drawImage(image2.image, 0, 0, 10, 10);
         ctx2.restore();
     }
     let render = (() => {
@@ -124,7 +128,24 @@ const PixelEditor: Component = () => {
         screenPtToWorldPt,
         worldPtToScreenPt,
         writePixel(pt: Vec2, colour: Colour): void {
-            
+            let image2 = image();
+            if (image2 == undefined) {
+                return;
+            }
+            if (pt.x < 0 || pt.x >= image2.imageData.width) {
+                return;
+            }
+            if (pt.y < 0 || pt.y >= image2.imageData.height) {
+                return;
+            }
+            let data = image2.imageData.data;
+            let offset = (image2.imageData.width * pt.y + pt.x) << 2;
+            data[offset] = colour.r;
+            data[offset+1] = colour.g;
+            data[offset+2] = colour.b;
+            data[offset+3] = colour.a;
+            image2.ctx.putImageData(image2.imageData, 0, 0, pt.x, pt.y, 1, 1);
+            render();
         },
     };
     createComputed(on(
