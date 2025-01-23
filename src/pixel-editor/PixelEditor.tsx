@@ -1,7 +1,6 @@
 import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
-import { KOOPA_TROOPA_1_HEIGHT } from "../SmSprites";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -23,7 +22,7 @@ const PixelEditor: Component = () => {
         return screenPt.clone().multScalar(state.scale).add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
-        return worldPt.clone().sub(state.pan).multScalar(state.scale);
+        return worldPt.clone().sub(state.pan).multScalar(1.0 / state.scale);
     };
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
@@ -162,6 +161,26 @@ const PixelEditor: Component = () => {
             setState("panningFrom", undefined);
         });
     };
+    let zoomByFactor = (factor: number) => {
+        if (state.mousePos == undefined) {
+            return;
+        }
+        let pt = screenPtToWorldPt(state.mousePos);
+        if (pt == undefined) {
+            return;
+        }
+        let newPan =
+            state.pan.clone()
+                .multScalar(-1)
+                .sub(pt)
+                .multScalar(factor)
+                .add(pt)
+                .multScalar(-1);
+        batch(() => {
+            setState("pan", newPan);
+            setState("scale", state.scale * factor);
+        });
+    };
     let onMouseDown = (e: MouseEvent) => {
         if (!state.isPanning) {
             startPan();
@@ -185,6 +204,13 @@ const PixelEditor: Component = () => {
     let onMouseOut = (e: MouseEvent) => {
         setState("mousePos", undefined);
     };
+    let onWheel = (e: WheelEvent) => {
+        if (e.deltaY > 0) {
+            zoomByFactor(1.1);
+        } else if (e.deltaY < 0) {
+            zoomByFactor(1.0 / 1.1);
+        }
+    };
     return (
         <div
             style={{
@@ -197,6 +223,7 @@ const PixelEditor: Component = () => {
             onMouseUp={onMouseUp}
             onMouseMove={onMouseMove}
             onMouseOut={onMouseOut}
+            onWheel={onWheel}
         >
             <canvas
                 style={{
