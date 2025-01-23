@@ -30,7 +30,7 @@ export class Vec2 {
     }
 
     clone(): Vec2 {
-        return new Vec2(this.x, this.y);
+        return Vec2.create(this.x, this.y);
     }
 
     copy(other: Vec2): this {
