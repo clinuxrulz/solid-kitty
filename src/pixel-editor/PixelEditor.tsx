@@ -225,7 +225,10 @@ const PixelEditor: Component = () => {
                 }}
             >
                 <button
-                    class="btn btn-blue"
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                    }}
                 >
                     <i class="fa-solid fa-pencil"/>
                 </button>
