@@ -3,6 +3,9 @@ import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { ModeParams } from "./ModeParams";
 import { Colour } from "./Colour";
+import { IdleMode } from "./modes/IdleMode";
+import { DrawPixelsMode } from "./modes/DrawPixelsMode";
+import { Mode } from "./Mode";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -148,6 +151,15 @@ const PixelEditor: Component = () => {
             render();
         },
     };
+    let mode = createMemo<Mode>(() => {
+        switch (state.mode) {
+            case "Idle": {
+                return new IdleMode(modeParams);
+            }
+            case "Draw Pixels":
+                return new DrawPixelsMode(modeParams);
+        }
+    });
     createComputed(on(
         [
             () => state.pan,
@@ -250,6 +262,9 @@ const PixelEditor: Component = () => {
             zoomByFactor(1.1 / 1.0);
         }
     };
+    let onClick = (e: MouseEvent) => {
+        mode().click?.();
+    };
     return (
         <div
             style={{
@@ -285,6 +300,7 @@ const PixelEditor: Component = () => {
                 onMouseMove={onMouseMove}
                 onMouseOut={onMouseOut}
                 onWheel={onWheel}
+                onClick={onClick}
             >
                 <canvas
                     style={{
