@@ -308,6 +308,7 @@ const PixelEditor: Component = () => {
                     }}
                     ref={setCanvas}
                 />
+                {/* Debug stuff
                 <div
                     style={{
                         "position": "absolute",
@@ -322,6 +323,7 @@ const PixelEditor: Component = () => {
                         {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
                     </Show>
                 </div>
+                */}
             </div>
         </div>
     );
