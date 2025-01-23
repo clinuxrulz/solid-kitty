@@ -7,6 +7,7 @@ import { IdleMode } from "./modes/IdleMode";
 import { DrawPixelsMode } from "./modes/DrawPixelsMode";
 import { Mode } from "./Mode";
 import { UndoManager } from "./UndoManager";
+import ColourPicker from "./ColourPicker";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -383,6 +384,19 @@ const PixelEditor: Component = () => {
                     </Show>
                     */}
                 </div>
+                {/* Debug colour picker
+                <div
+                    style={{
+                        "position": "absolute",
+                        "left": "200px",
+                        "top": "200px",
+                        "width": "300px",
+                        "height": "300px",
+                    }}
+                >
+                    <ColourPicker/>
+                </div>
+                */}
             </div>
         </div>
     );
