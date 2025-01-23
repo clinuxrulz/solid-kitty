@@ -1,6 +1,17 @@
-import { Component, createComputed, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
+import { createStore } from "solid-js/store";
+import { Vec2 } from "../Vec2";
 
 const PixelEditor: Component = () => {
+    let [ state, setState, ] = createStore<{
+        pan: Vec2,
+        scale: number,
+        mousePos: Vec2 | undefined,
+    }>({
+        pan: new Vec2(-100, -100),
+        scale: 30.0,
+        mousePos: undefined,
+    });
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
         let canvas2 = canvas();
@@ -46,6 +57,9 @@ const PixelEditor: Component = () => {
             }
         }
         let offCtx = result.getContext("2d");
+        if (offCtx == undefined) {
+            return undefined;
+        }
         offCtx.putImageData(imageData, 0, 0);
         return result;
     });
@@ -58,10 +72,59 @@ const PixelEditor: Component = () => {
         if (image2 == undefined) {
             return;
         }
+        ctx2.save();
         ctx2.imageSmoothingEnabled = false;
-        ctx2.drawImage(image2, 50, 50, 300, 300);
-        ctx2.imageSmoothingEnabled = true;
+        ctx2.translate(-state.pan.x, -state.pan.y);
+        ctx2.scale(state.scale, state.scale);
+        ctx2.drawImage(image2, 0, 0, 10, 10);
+        ctx2.restore();
     }
+    let render = (() => {
+        let rendering = false;
+        return () => {
+            if (rendering) {
+                return;
+            }
+            rendering = true;
+            requestAnimationFrame(() => {
+                rendering = false;
+                drawOnCanvas();
+            });
+        };
+    })();
+    createComputed(on(
+        [
+            () => state.pan,
+            () => state.scale,
+        ],
+        () => {
+            render();
+        },
+    ));
+    createComputed(on(
+        () => state.mousePos,
+        () => {
+            if (state.mousePos == undefined) {
+                return;
+            }
+            setState("pan", state.mousePos.clone().multScalar(-1));
+        },
+    ));
+    let onMouseDown = (e: MouseEvent) => {};
+    let onMouseUp = (e: MouseEvent) => {};
+    let onMouseMove = (e: MouseEvent) => {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
+        let rect = canvas2.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        setState("mousePos", new Vec2(x, y));
+    };
+    let onMouseOut = (e: MouseEvent) => {
+        setState("mousePos", undefined);
+    };
     return (
         <div
             style={{
@@ -69,6 +132,10 @@ const PixelEditor: Component = () => {
                 "display": "flex",
                 "flex-direction": "column",
             }}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onMouseMove={onMouseMove}
+            onMouseOut={onMouseOut}
         >
             <canvas
                 style={{
