@@ -183,6 +183,9 @@ const PixelEditor: Component = () => {
                 return new DrawPixelsMode(modeParams);
         }
     });
+    let modeInstructions = createMemo(() => {
+        return mode().instructions;
+    });
     createComputed(on(
         [
             () => state.pan,
@@ -363,7 +366,6 @@ const PixelEditor: Component = () => {
                     }}
                     ref={setCanvas}
                 />
-                {/* Debug stuff
                 <div
                     style={{
                         "position": "absolute",
@@ -371,14 +373,16 @@ const PixelEditor: Component = () => {
                         "top": "0",
                     }}
                 >
+                    {modeInstructions()?.({})}
+                    {/* Debug stuff
                     <Show when={state.mousePos}>
                         {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
                     </Show>
                     <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
                         {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
                     </Show>
+                    */}
                 </div>
-                */}
             </div>
         </div>
     );

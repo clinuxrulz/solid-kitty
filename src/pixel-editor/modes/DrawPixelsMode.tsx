@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
@@ -6,6 +6,7 @@ import { Colour } from "../Colour";
 import { UndoUnit } from "../UndoManager";
 
 export class DrawPixelsMode implements Mode {
+    instructions: Component;
     click: () => void;
 
     constructor(params: ModeParams) {
@@ -44,6 +45,9 @@ export class DrawPixelsMode implements Mode {
             params.undoManager.pushUndoUnit(undoUnit);
         };
         //
+        this.instructions = () => {
+            return "Click to draw pixels, press escape when done.";
+        };
         this.click = () => {
             let pt = workingPoint();
             if (pt != undefined) {
