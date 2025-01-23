@@ -11,7 +11,7 @@ const PixelEditor: Component = () => {
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
     }>({
-        pan: new Vec2(-1000, -1000),
+        pan: new Vec2(-1, -1),
         scale: 30.0,
         mousePos: undefined,
         // panning states
@@ -19,10 +19,10 @@ const PixelEditor: Component = () => {
         panningFrom: undefined,
     });
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-        return screenPt.clone().multScalar(1.0 / state.scale).sub(state.pan);
+        return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
-        return worldPt.clone().add(state.pan).multScalar(state.scale);
+        return worldPt.clone().sub(state.pan).multScalar(state.scale);
     };
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
@@ -91,8 +91,8 @@ const PixelEditor: Component = () => {
         ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.save();
         ctx2.imageSmoothingEnabled = false;
-        ctx2.translate(-state.pan.x / state.scale, -state.pan.y / state.scale);
         ctx2.scale(state.scale, state.scale);
+        ctx2.translate(-state.pan.x, -state.pan.y);
         ctx2.drawImage(image2, 0, 0, 10, 10);
         ctx2.restore();
     }
