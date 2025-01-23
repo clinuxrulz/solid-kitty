@@ -64,6 +64,10 @@ const PixelEditor: Component = () => {
         return result;
     });
     function drawOnCanvas() {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
         let ctx2 = ctx();
         if (ctx2 == undefined) {
             return;
@@ -72,6 +76,7 @@ const PixelEditor: Component = () => {
         if (image2 == undefined) {
             return;
         }
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.save();
         ctx2.imageSmoothingEnabled = false;
         ctx2.translate(-state.pan.x, -state.pan.y);
