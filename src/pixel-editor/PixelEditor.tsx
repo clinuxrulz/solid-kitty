@@ -1,6 +1,8 @@
 import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
+import { ModeParams } from "./ModeParams";
+import { Colour } from "./Colour";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -10,13 +12,17 @@ const PixelEditor: Component = () => {
         // panning states
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
+        //
+        mode: "Idle" | "Draw Pixels",
     }>({
-        pan: new Vec2(-1, -1),
+        pan: Vec2.create(-1, -1),
         scale: 30.0,
         mousePos: undefined,
         // panning states
         isPanning: false,
         panningFrom: undefined,
+        //
+        mode: "Idle",
     });
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
         return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
@@ -109,6 +115,18 @@ const PixelEditor: Component = () => {
             });
         };
     })();
+    const SNAP_DIST = 10;
+    const SNAP_DIST_SQUARED = SNAP_DIST * SNAP_DIST;
+    let modeParams: ModeParams = {
+        snapDist: () => SNAP_DIST,
+        snapDistSquared: () => SNAP_DIST_SQUARED,
+        mousePos: () => state.mousePos,
+        screenPtToWorldPt,
+        worldPtToScreenPt,
+        writePixel(pt: Vec2, colour: Colour): void {
+            
+        },
+    };
     createComputed(on(
         [
             () => state.pan,
@@ -199,7 +217,7 @@ const PixelEditor: Component = () => {
         let rect = canvas2.getBoundingClientRect();
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
-        setState("mousePos", new Vec2(x, y));
+        setState("mousePos", Vec2.create(x, y));
     };
     let onMouseOut = (e: MouseEvent) => {
         setState("mousePos", undefined);
@@ -229,6 +247,7 @@ const PixelEditor: Component = () => {
                         "font-size": "20pt",
                         "padding": "5pt",
                     }}
+                    onClick={() => setState("mode", "Draw Pixels")}
                 >
                     <i class="fa-solid fa-pencil"/>
                 </button>

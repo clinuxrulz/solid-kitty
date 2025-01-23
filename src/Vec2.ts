@@ -1,15 +1,32 @@
 
+let vec2Pool: Vec2[] = [];
+
 export class Vec2 {
     x: number;
     y: number;
 
-    constructor(x: number, y: number) {
+    private constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
     }
 
+    static create(x: number, y: number): Vec2 {
+        let r = vec2Pool.pop();
+        if (r != undefined) {
+            r.x = x;
+            r.y = y;
+            return r;
+        }
+        r = new Vec2(x, y);
+        return r;
+    }
+
     static zero(): Vec2 {
-        return new Vec2(0.0, 0.0);
+        return Vec2.create(0, 0);
+    }
+
+    dispose() {
+        vec2Pool.push(this);
     }
 
     clone(): Vec2 {
