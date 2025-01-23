@@ -11,7 +11,7 @@ const PixelEditor: Component = () => {
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
     }>({
-        pan: new Vec2(-500, -500),
+        pan: new Vec2(-1000, -1000),
         scale: 30.0,
         mousePos: undefined,
         // panning states
@@ -19,10 +19,10 @@ const PixelEditor: Component = () => {
         panningFrom: undefined,
     });
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-        return screenPt.clone().multScalar(state.scale).add(state.pan);
+        return screenPt.clone().multScalar(1.0 / state.scale).sub(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
-        return worldPt.clone().sub(state.pan).multScalar(1.0 / state.scale);
+        return worldPt.clone().add(state.pan).multScalar(state.scale);
     };
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
@@ -170,12 +170,10 @@ const PixelEditor: Component = () => {
             return;
         }
         let newPan =
-            state.pan.clone()
-                .multScalar(-1)
-                .sub(pt)
-                .multScalar(factor)
-                .add(pt)
-                .multScalar(-1);
+            pt.clone()
+                .sub(state.pan)
+                .multScalar(factor - 1.0)
+                .add(state.pan);
         batch(() => {
             setState("pan", newPan);
             setState("scale", state.scale * factor);
