@@ -291,7 +291,7 @@ const PixelEditor: Component = () => {
                     style={{
                         "font-size": "20pt",
                         "padding": "5pt",
-                        "background-color": state.mode == "Draw Pixels" ? "blue" : null,
+                        "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Draw Pixels")}
                 >
