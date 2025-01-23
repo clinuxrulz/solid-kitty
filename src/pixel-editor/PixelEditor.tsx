@@ -130,6 +130,26 @@ const PixelEditor: Component = () => {
         mousePos: () => state.mousePos,
         screenPtToWorldPt,
         worldPtToScreenPt,
+        readPixel(pt: Vec2): Colour | undefined {
+            let image2 = image();
+            if (image2 == undefined) {
+                return undefined;
+            }
+            if (pt.x < 0 || pt.x >= image2.imageData.width) {
+                return;
+            }
+            if (pt.y < 0 || pt.y >= image2.imageData.height) {
+                return;
+            }
+            let data = image2.imageData.data;
+            let offset = (image2.imageData.width * pt.y + pt.x) << 2;
+            return new Colour(
+                data[offset],
+                data[offset+1],
+                data[offset+2],
+                data[offset+3],
+            );
+        },
         writePixel(pt: Vec2, colour: Colour): void {
             let image2 = image();
             if (image2 == undefined) {
