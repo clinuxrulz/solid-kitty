@@ -24,7 +24,7 @@ export class DrawPixelsMode implements Mode {
         });
         //
         let writePixel = (pt: Vec2) => {
-            params.writePixel(pt, new Colour(0, 0, 0, 0));
+            params.writePixel(pt, new Colour(0, 255, 0, 255));
         };
         //
         this.click = () => {
