@@ -1,17 +1,30 @@
-import { Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
+import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
+import { KOOPA_TROOPA_1_HEIGHT } from "../SmSprites";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
         pan: Vec2,
         scale: number,
         mousePos: Vec2 | undefined,
+        // panning states
+        isPanning: boolean,
+        panningFrom: Vec2 | undefined,
     }>({
         pan: new Vec2(-100, -100),
         scale: 30.0,
         mousePos: undefined,
+        // panning states
+        isPanning: false,
+        panningFrom: undefined,
     });
+    let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
+        return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
+    };
+    let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
+        return worldPt.clone().sub(state.pan).multScalar(state.scale);
+    };
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
         let canvas2 = canvas();
@@ -107,16 +120,58 @@ const PixelEditor: Component = () => {
         },
     ));
     createComputed(on(
-        () => state.mousePos,
+        [
+            () => state.isPanning,
+            () => state.panningFrom,
+            () => state.mousePos,
+        ],
         () => {
+            if (!state.isPanning) {
+                return;
+            }
+            if (state.panningFrom == undefined) {
+                return;
+            }
             if (state.mousePos == undefined) {
                 return;
             }
-            setState("pan", state.mousePos.clone().multScalar(-1));
+            let pt = screenPtToWorldPt(state.mousePos);
+            if (pt == undefined) {
+                return;
+            }
+            let delta = state.panningFrom.clone().sub(pt);
+            setState("pan", (pan) => pan.clone().add(delta));
         },
     ));
-    let onMouseDown = (e: MouseEvent) => {};
-    let onMouseUp = (e: MouseEvent) => {};
+    let startPan = () => {
+        if (state.mousePos == undefined) {
+            return;
+        }
+        let pt = screenPtToWorldPt(state.mousePos);
+        if (pt == undefined) {
+            return;
+        }
+        batch(() => {
+            setState("isPanning", true);
+            setState("panningFrom", pt);
+        });
+    };
+    let stopPan = () => {
+        batch(() => {
+            setState("isPanning", false);
+            setState("panningFrom", undefined);
+        });
+    };
+    let onMouseDown = (e: MouseEvent) => {
+        if (!state.isPanning) {
+            startPan();
+        }
+    };
+    let onMouseUp = (e: MouseEvent) => {
+        if (state.isPanning) {
+            stopPan();
+        }
+    };
     let onMouseMove = (e: MouseEvent) => {
         let canvas2 = canvas();
         if (canvas2 == undefined) {
