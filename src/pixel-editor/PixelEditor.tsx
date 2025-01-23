@@ -204,9 +204,9 @@ const PixelEditor: Component = () => {
     };
     let onWheel = (e: WheelEvent) => {
         if (e.deltaY > 0) {
-            zoomByFactor(1.1);
-        } else if (e.deltaY < 0) {
             zoomByFactor(1.0 / 1.1);
+        } else if (e.deltaY < 0) {
+            zoomByFactor(1.1 / 1.0);
         }
     };
     return (
