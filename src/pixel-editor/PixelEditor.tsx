@@ -169,11 +169,13 @@ const PixelEditor: Component = () => {
         if (pt == undefined) {
             return;
         }
-        let newPan =
-            pt.clone()
-                .sub(state.pan)
-                .multScalar(factor - 1.0)
-                .add(state.pan);
+        let newScale = state.scale * factor;
+        let newPan = pt.clone()
+            .sub(
+                state.mousePos
+                    .clone()
+                    .multScalar(1.0 / newScale)
+            );
         batch(() => {
             setState("pan", newPan);
             setState("scale", state.scale * factor);
