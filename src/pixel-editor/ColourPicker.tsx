@@ -128,7 +128,38 @@ const ColourPicker: Component = (props) => {
                 ctx.putImageData(brightnessImageData, 0, 0);
             },
         ));
-        return canvas;
+        let sliderCanvas = document.createElement("canvas");
+        sliderCanvas.setAttribute("width", "1");
+        sliderCanvas.setAttribute("height", `${size.y}`);
+        sliderCanvas.style.setProperty("flex-grow", "1");
+        let sliderCtx = sliderCanvas.getContext("2d");
+        if (sliderCtx == null) {
+            return;
+        }
+        let cursorPos = createMemo(() => Vec2.create(0, 0));
+        let sliderImageData = new ImageData(1, size.y);
+        createComputed(() => {
+            let cursorPos2 = cursorPos();
+            if (cursorPos2 == undefined) {
+                return;
+            }
+            let offset = (imageData.width * cursorPos2.y + cursorPos2.x) << 2;
+            let r = imageData.data[offset];
+            let g = imageData.data[offset+1];
+            let b = imageData.data[offset+2];
+            for (let i = 0; i < size.y; ++i) {
+                let offset = i<<2;
+                let r2 = Math.floor(r * (size.y-1-i) / (size.y-1));
+                let g2 = Math.floor(g * (size.y-1-i) / (size.y-1));
+                let b2 = Math.floor(b * (size.y-1-i) / (size.y-1));
+                sliderImageData.data[offset] = r2;
+                sliderImageData.data[offset+1] = g2;
+                sliderImageData.data[offset+2] = b2;
+                sliderImageData.data[offset+3] = 255;
+            }
+            sliderCtx.putImageData(sliderImageData, 0, 0);
+        });
+        return { canvas, sliderCanvas, size, };
     });
     /* Debug brightness changes
     let done = false;
@@ -150,16 +181,35 @@ const ColourPicker: Component = (props) => {
                 "flex-direction": "column",
             }}
         >
-            zzz
             <div
-                ref={setColourChartDiv}
                 style={{
                     "flex-grow": "1",
                     "display": "flex",
-                    "flex-direction": "column",
+                    "flex-direction": "row",
                 }}
             >
-                {canvas()}
+                <div
+                    ref={setColourChartDiv}
+                    style={{
+                        "flex-grow": "1",
+                        "display": "flex",
+                        "flex-direction": "column",
+                    }}
+                >
+                    {canvas()?.canvas}
+                </div>
+                <div
+                    style={{
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "width": "25px",
+                        "height": `${canvas()?.size.y ?? 0}px`,
+                        "margin-left": "15px",
+                        "overflow": "hidden",
+                    }}
+                >
+                    {canvas()?.sliderCanvas}
+                </div>
             </div>
         </div>
     );
