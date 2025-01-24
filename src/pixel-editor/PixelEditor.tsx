@@ -1,4 +1,4 @@
-import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js";
+import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { ModeParams } from "./ModeParams";
@@ -19,6 +19,8 @@ const PixelEditor: Component = () => {
         panningFrom: Vec2 | undefined,
         //
         mode: "Idle" | "Draw Pixels",
+        //
+        showColourPicker: boolean,
     }>({
         pan: Vec2.create(-1, -1),
         scale: 30.0,
@@ -28,6 +30,8 @@ const PixelEditor: Component = () => {
         panningFrom: undefined,
         //
         mode: "Idle",
+        //
+        showColourPicker: false,
     });
     const undoManager = new UndoManager();
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
@@ -36,6 +40,7 @@ const PixelEditor: Component = () => {
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
         return worldPt.clone().sub(state.pan).multScalar(state.scale);
     };
+    let [ colourPickerButton, setColourPickerButton, ] = createSignal<HTMLButtonElement>();
     let [ canvas, setCanvas, ] = createSignal<HTMLCanvasElement>();
     createComputed(() => {
         let canvas2 = canvas();
@@ -346,6 +351,19 @@ const PixelEditor: Component = () => {
                 >
                     <i class="fa-solid fa-pencil"/>
                 </button>
+                <button
+                    ref={setColourPickerButton}
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                        "background-color": state.showColourPicker ? "blue" : undefined,
+                    }}
+                    onClick={() => {
+                        setState("showColourPicker", (x) => !x);
+                    }}
+                >
+                    <i class="fa-solid fa-palette"></i>
+                </button>
             </div>
             <div
                 style={{
@@ -384,6 +402,39 @@ const PixelEditor: Component = () => {
                     </Show>
                     */}
                 </div>
+                <Show when={state.showColourPicker}>
+                    <Show when={colourPickerButton()}>
+                        {(btn) => {
+                            let colourDiv!: HTMLDivElement;
+                            let pt = createMemo(() => {
+                                let btn2 = btn();
+                                let rect = btn2.getBoundingClientRect();
+                                return Vec2.create(rect.left, rect.top);
+                            });
+                            onMount(() => {
+                                colourDiv.focus();
+                            });
+                            return (
+                                <div
+                                    ref={colourDiv}
+                                    style={{
+                                        "position": "absolute",
+                                        "left": `${pt().x + 20}px`,
+                                        "top": `${pt().y}px`,
+                                        "display": "flex",
+                                        "flex-direction": "column",
+                                        "width": "300px",
+                                        "height": "300px",
+                                    }}
+                                    tabIndex={0}
+                                    onFocusOut={() => setState("showColourPicker", false)}
+                                >
+                                    <ColourPicker/>
+                                </div>
+                            );
+                        }}
+                    </Show>
+                </Show>
                 {/* // Debug colour picker
                 <div
                     style={{
