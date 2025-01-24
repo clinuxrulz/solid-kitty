@@ -384,7 +384,7 @@ const PixelEditor: Component = () => {
                     </Show>
                     */}
                 </div>
-                {/* Debug colour picker
+                {/* // Debug colour picker
                 <div
                     style={{
                         "position": "absolute",
@@ -392,6 +392,8 @@ const PixelEditor: Component = () => {
                         "top": "200px",
                         "width": "300px",
                         "height": "300px",
+                        "display": "flex",
+                        "flex-direction": "column",
                     }}
                 >
                     <ColourPicker/>
