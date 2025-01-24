@@ -1,4 +1,4 @@
-import { Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, untrack } from "solid-js";
+import { batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, untrack } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
 import { Colour } from "./Colour";
@@ -247,6 +247,18 @@ const ColourPicker: Component<{
             }
         }
     ));
+    /*
+    createEffect(() => {
+        let c = state.userColour;
+        if (c == undefined) {
+            return;
+        }
+        let mv = Math.max(c.r, c.g, c.b);
+        let brightness = mv;
+        batch(() => {
+            setState("brightness", brightness);
+        });
+    });*/
     return (
         <div
             style={{
