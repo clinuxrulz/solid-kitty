@@ -8,6 +8,7 @@ import { DrawPixelsMode } from "./modes/DrawPixelsMode";
 import { Mode } from "./Mode";
 import { UndoManager } from "./UndoManager";
 import ColourPicker from "./ColourPicker";
+import { EyeDropperMode } from "./modes/EyeDropperMode";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -18,7 +19,7 @@ const PixelEditor: Component = () => {
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
         //
-        mode: "Idle" | "Draw Pixels",
+        mode: "Idle" | "Draw Pixels" | "Eye Dropper",
         //
         currentColour: Colour,
         showColourPicker: boolean,
@@ -142,6 +143,9 @@ const PixelEditor: Component = () => {
         screenPtToWorldPt,
         worldPtToScreenPt,
         currentColour: () => state.currentColour,
+        setCurrentColour(colour) {
+            setState("currentColour", colour);
+        },
         readPixel(pt: Vec2): Colour | undefined {
             let image2 = image();
             if (image2 == undefined) {
@@ -185,11 +189,13 @@ const PixelEditor: Component = () => {
     };
     let mode = createMemo<Mode>(() => {
         switch (state.mode) {
-            case "Idle": {
+            case "Idle":
                 return new IdleMode(modeParams);
-            }
             case "Draw Pixels":
                 return new DrawPixelsMode(modeParams);
+            case "Eye Dropper":
+                return new EyeDropperMode(modeParams);
+
         }
     });
     let modeInstructions = createMemo(() => {
@@ -366,6 +372,18 @@ const PixelEditor: Component = () => {
                     }}
                 >
                     <i class="fa-solid fa-palette"></i>
+                </button>
+                <button
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                        "background-color": state.mode == "Eye Dropper" ? "blue" : undefined,
+                    }}
+                    onClick={() => {
+                        setState("mode", "Eye Dropper");
+                    }}
+                >
+                    <i class="fa-solid fa-eye-dropper"></i>
                 </button>
             </div>
             <div
