@@ -245,15 +245,6 @@ const ColourPicker: Component<{
             return new Colour(r, g, b, 255);
         })
     );
-    createEffect(on(
-        colourInCanvas,
-        () => {
-            let c = colourInCanvas();
-            if (c != undefined) {
-                props.onColour?.(c);
-            }
-        }
-    ));
     let userRedFieldVal = createMemo(() => {
         if (state.userRedText == undefined) {
             return undefined;
@@ -298,6 +289,21 @@ const ColourPicker: Component<{
             255,
         );
     });
+    createEffect(on(
+        [
+            () => state.userColour,
+            currentColour,
+        ],
+        () => {
+            if (state.userColour != undefined) {
+                return;
+            }
+            let c = currentColour();
+            if (c != undefined) {
+                props.onColour?.(c);
+            }
+        }
+    ));
     /*
     createEffect(() => {
         let c = state.userColour;
