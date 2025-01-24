@@ -15,59 +15,64 @@ export class UndoManager {
     readonly pushUndoUnit: (undoUnit: UndoUnit) => void;
 
     constructor() {
-        let [ undos, setUndos, ] = createSignal<UndoUnit[]>([]);
-        let [ redos, setRedos, ] = createSignal<UndoUnit[]>([]);
-        let canUndo = createMemo(() => undos().length != 0);
-        let canRedo = createMemo(() => redos().length != 0);
-        let undoDisplayName = createMemo(() => {
-            let undos2 = undos();
-            if (undos2.length == 0) {
-                return undefined;
-            }
-            return undos2[undos2.length-1].displayName;
-        });
-        let redoDisplayName = createMemo(() => {
-            let redos2 = redos();
-            if (redos2.length == 0) {
-                return undefined;
-            }
-            return redos2[redos2.length-1].displayName;
-        });
+        /**
+         * This stack holds all the undo and all the redo units.
+         * Example Stage: (u is undo, r is redo)
+         * stack = [ u, u, r, r, ]
+         * stackPos = 1
+         */
+        let stack: UndoUnit[] = [];
+        /**
+         * This variable points to the undo position in the stack.
+         */
+        let stackPos = -1;
+        let [ canUndo, setCanUndo, ] = createSignal(false);
+        let [ canRedo, setCanRedo, ] = createSignal(false);
+        let [ undoDisplayName, setUndoDisplayName, ] = createSignal<string>();
+        let [ redoDisplayName, setRedoDisplayName, ] = createSignal<string>();
+        let updateSignals = () => {
+            batch(() => {
+                setCanUndo(() => stackPos != -1);
+                setCanRedo(() => stackPos < stack.length-1);
+                if (stackPos != -1) {
+                    let undo = stack[stackPos];
+                    setUndoDisplayName(undo.displayName);
+                } else {
+                    setUndoDisplayName(undefined);
+                }
+                if (stackPos < stack.length-1) {
+                    let redo = stack[stackPos + 1];
+                    setRedoDisplayName(redo.displayName);
+                } else {
+                    setRedoDisplayName(undefined);
+                }
+            });
+        };
         let undo = () => {
-            let undos2 = [...undos()];
-            let redos2 = [...redos()];
-            let undo = undos2.pop();
-            if (undo == undefined) {
+            if (stackPos == -1) {
                 return;
             }
+            let undo = stack[stackPos];
             undo.run(true);
-            redos2.push(undo);
-            batch(() => {
-                setUndos(undos2);
-                setRedos(redos2);
-            });
+            --stackPos;
+            updateSignals();
         };
         let redo = () => {
-            let undos2 = [...undos()];
-            let redos2 = [...redos()];
-            let redo = redos2.pop();
-            if (redo == undefined) {
+            if (stackPos >= stack.length-1) {
                 return;
             }
+            ++stackPos;
+            let redo = stack[stackPos];
             redo.run(false);
-            undos2.push(redo);
-            batch(() => {
-                setUndos(undos2);
-                setRedos(redos2);
-            });
+            updateSignals();
         };
         let pushUndoUnit = (undoUnit: UndoUnit) => {
-            let undos2 = [...undos()];
-            undos2.push(undoUnit);
-            batch(() => {
-                setUndos(undos2);
-                setRedos([]);
-            });
+            if (stackPos < stack.length-1) {
+                stack.splice(stackPos+1, stack.length-1 - stackPos);
+            }
+            ++stackPos;
+            stack.push(undoUnit);
+            updateSignals();
         };
         //
         this.canUndo = canUndo;
