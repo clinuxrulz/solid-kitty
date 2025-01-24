@@ -206,7 +206,10 @@ const ColourPicker: Component<{
         setState("userRedText", undefined);
         setState("userGreenText", undefined);
         setState("userBlueText", undefined);
-        setState("cursorPos", pt);
+        setState("cursorPos", Vec2.create(
+            Math.floor(pt.x),
+            Math.floor(pt.y),
+        ));
     });
     createEffect(() => {
         if (!state.brightnessMouseDown) {
