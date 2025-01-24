@@ -429,8 +429,6 @@ const PixelEditor: Component = () => {
                                         "width": "300px",
                                         "height": "300px",
                                     }}
-                                    tabIndex={0}
-                                    onFocusOut={() => setState("showColourPicker", false)}
                                 >
                                     <ColourPicker
                                         colour={state.currentColour}
