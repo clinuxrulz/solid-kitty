@@ -1,8 +1,12 @@
-import { Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup } from "solid-js";
+import { Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, untrack } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
+import { Colour } from "./Colour";
 
-const ColourPicker: Component = (props) => {
+const ColourPicker: Component<{
+    colour?: Colour,
+    onColour?: (colour: Colour) => void,
+}> = (props) => {
     let [ state, setState, ] = createStore<{
         cursorPos: Vec2,
         chartMousePos: Vec2 | undefined,
@@ -10,6 +14,7 @@ const ColourPicker: Component = (props) => {
         brightness: number,
         brightnessMousePos: Vec2 | undefined,
         brightnessMouseDown: boolean,
+        userColour: Colour | undefined,
     }>({
         cursorPos: Vec2.zero(),
         chartMousePos: undefined,
@@ -17,6 +22,7 @@ const ColourPicker: Component = (props) => {
         brightness: 255,
         brightnessMousePos: undefined,
         brightnessMouseDown: false,
+        userColour: untrack(() => props.colour),
     });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
     let [ colourChartSize, setColourChartSize, ] = createSignal<Vec2 | undefined>();
@@ -168,7 +174,7 @@ const ColourPicker: Component = (props) => {
             }
             sliderCtx.putImageData(sliderImageData, 0, 0);
         });
-        return { canvas, sliderCanvas, size, };
+        return { canvas, sliderCanvas, size, sliderImageData, };
     });
     /* Debug brightness changes
     let done = false;
@@ -204,8 +210,43 @@ const ColourPicker: Component = (props) => {
         if (sizeY == undefined) {
             return;
         }
-        setState("brightness", Math.floor(256 * (sizeY - pt.y) / sizeY));
+        setState("brightness", Math.max(0, Math.min(255, Math.floor(256 * (sizeY - pt.y) / sizeY))));
     });
+    let colourInCanvas = createMemo(on(
+        [
+            canvas,
+            () => state.cursorPos,
+            () => state.brightness,
+        ],
+        () => {
+            let canvas2 = canvas();
+            if (canvas2 == undefined) {
+                return undefined;
+            }
+            let i = Math.max(0, Math.min(canvas2.size.y, Math.floor((255-state.brightness) * canvas2.size.y / 256)));
+            let offset = i << 2;
+            let r = canvas2.sliderImageData.data[offset];
+            let g = canvas2.sliderImageData.data[offset+1];
+            let b = canvas2.sliderImageData.data[offset+2];
+            setState("userColour", undefined);
+            return new Colour(r, g, b, 255);
+        })
+    );
+    let currentColour = createMemo(() => {
+        if (state.userColour != undefined) {
+            return state.userColour;
+        }
+        return colourInCanvas();
+    });
+    createEffect(on(
+        colourInCanvas,
+        () => {
+            let c = colourInCanvas();
+            if (c != undefined) {
+                props.onColour?.(c);
+            }
+        }
+    ));
     return (
         <div
             style={{
@@ -324,6 +365,116 @@ const ColourPicker: Component = (props) => {
                         />
                     </svg>
                 </div>
+            </div>
+            <div
+                style={{
+                    "display": "flex",
+                    "flex-direction": "row",
+                }}
+            >
+                <div
+                    style={{
+                        "flex-grow": "1"
+                    }}
+                >
+                    <table>
+                        <thead/>
+                        <tbody>
+                            <tr>
+                                <td>Red:</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={state.userColour?.r ?? colourInCanvas()?.r}
+                                        onInput={(e) => {
+                                            let value = Number.parseInt(e.currentTarget.value);
+                                            if (!Number.isFinite(value)) {
+                                                return;
+                                            }
+                                            if (value < 0 || value > 255) {
+                                                return;
+                                            }
+                                            let c = currentColour();
+                                            let c2 = new Colour(
+                                                value,
+                                                c?.g ?? 0,
+                                                c?.b ?? 0,
+                                                255
+                                            );
+                                            setState("userColour", c2);
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Green:</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={state.userColour?.g ?? colourInCanvas()?.g}
+                                        onInput={(e) => {
+                                            let value = Number.parseInt(e.currentTarget.value);
+                                            if (!Number.isFinite(value)) {
+                                                return;
+                                            }
+                                            if (value < 0 || value > 255) {
+                                                return;
+                                            }
+                                            let c = currentColour();
+                                            let c2 = new Colour(
+                                                c?.r ?? 0,
+                                                value,
+                                                c?.b ?? 0,
+                                                255
+                                            );
+                                            setState("userColour", c2);
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Blue:</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={state.userColour?.b ?? colourInCanvas()?.b}
+                                        onInput={(e) => {
+                                            let value = Number.parseInt(e.currentTarget.value);
+                                            if (!Number.isFinite(value)) {
+                                                return;
+                                            }
+                                            if (value < 0 || value > 255) {
+                                                return;
+                                            }
+                                            let c = currentColour();
+                                            let c2 = new Colour(
+                                                c?.r ?? 0,
+                                                c?.g ?? 0,
+                                                value,
+                                                255
+                                            );
+                                            setState("userColour", c2);
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    style={{
+                        "width": "50px",
+                        "height": "50px",
+                        "background-color": (() => {
+                            let c = currentColour();
+                            if (c == undefined) {
+                                return undefined;
+                            }
+                            return `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`
+                        })(),
+                        "margin-top": "10px",
+                    }}
+                />
             </div>
         </div>
     );
