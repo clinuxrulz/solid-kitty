@@ -8,11 +8,15 @@ const ColourPicker: Component = (props) => {
         chartMousePos: Vec2 | undefined,
         chartMouseDown: boolean,
         brightness: number,
+        brightnessMousePos: Vec2 | undefined,
+        brightnessMouseDown: boolean,
     }>({
         cursorPos: Vec2.zero(),
         chartMousePos: undefined,
         chartMouseDown: false,
         brightness: 255,
+        brightnessMousePos: undefined,
+        brightnessMouseDown: false,
     });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
     let [ colourChartSize, setColourChartSize, ] = createSignal<Vec2 | undefined>();
@@ -188,6 +192,20 @@ const ColourPicker: Component = (props) => {
         }
         setState("cursorPos", pt);
     });
+    createEffect(() => {
+        if (!state.brightnessMouseDown) {
+            return;
+        }
+        let pt = state.brightnessMousePos;
+        if (pt == undefined) {
+            return;
+        }
+        let sizeY = canvas()?.size.y;
+        if (sizeY == undefined) {
+            return;
+        }
+        setState("brightness", Math.floor(256 * (sizeY - pt.y) / sizeY));
+    });
     return (
         <div
             style={{
@@ -250,7 +268,7 @@ const ColourPicker: Component = (props) => {
                         <circle
                             cx={state.cursorPos.x}
                             cy={state.cursorPos.y}
-                            r="10"
+                            r="5"
                             stroke="black"
                             stroke-width={2}
                             fill="none"
@@ -259,6 +277,7 @@ const ColourPicker: Component = (props) => {
                 </div>
                 <div
                     style={{
+                        "position": "relative",
                         "display": "flex",
                         "flex-direction": "row",
                         "width": "25px",
@@ -266,8 +285,44 @@ const ColourPicker: Component = (props) => {
                         "margin-left": "15px",
                         "overflow": "hidden",
                     }}
+                    onMouseMove={(e) => {
+                        let rect = e.currentTarget.getBoundingClientRect();
+                        let x = e.clientX - rect.left;
+                        let y = e.clientY - rect.top;
+                        setState("brightnessMousePos", Vec2.create(x, y));
+                    }}
+                    onMouseOut={(e) => {
+                        setState("brightnessMousePos", undefined);
+                    }}
+                    onMouseDown={() => {
+                        setState("brightnessMouseDown", true);
+                    }}
+                    onMouseUp={() => {
+                        setState("brightnessMouseDown", false);
+                    }}
                 >
                     {canvas()?.sliderCanvas}
+                    <svg
+                        width={25}
+                        height={canvas()?.size.y ?? 0}
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                        }}
+                    >
+                        <rect
+                            x={0}
+                            y={(canvas()?.size.y ?? 0) - state.brightness * (canvas()?.size.y ?? 0) / 255 - 5}
+                            width={24}
+                            height={10}
+                            fill="none"
+                            stroke="black"
+                            stroke-width={2}
+                        />
+                    </svg>
                 </div>
             </div>
         </div>
