@@ -15,6 +15,9 @@ const ColourPicker: Component<{
         brightnessMousePos: Vec2 | undefined,
         brightnessMouseDown: boolean,
         userColour: Colour | undefined,
+        userRedText: string | undefined,
+        userGreenText: string | undefined,
+        userBlueText: string | undefined,
     }>({
         cursorPos: Vec2.zero(),
         chartMousePos: undefined,
@@ -23,6 +26,9 @@ const ColourPicker: Component<{
         brightnessMousePos: undefined,
         brightnessMouseDown: false,
         userColour: untrack(() => props.colour),
+        userRedText: undefined,
+        userGreenText: undefined,
+        userBlueText: undefined,
     });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
     let [ colourChartSize, setColourChartSize, ] = createSignal<Vec2 | undefined>();
@@ -196,6 +202,10 @@ const ColourPicker: Component<{
         if (pt == undefined) {
             return;
         }
+        setState("userColour", undefined);
+        setState("userRedText", undefined);
+        setState("userGreenText", undefined);
+        setState("userBlueText", undefined);
         setState("cursorPos", pt);
     });
     createEffect(() => {
@@ -210,6 +220,10 @@ const ColourPicker: Component<{
         if (sizeY == undefined) {
             return;
         }
+        setState("userColour", undefined);
+        setState("userRedText", undefined);
+        setState("userGreenText", undefined);
+        setState("userBlueText", undefined);
         setState("brightness", Math.max(0, Math.min(255, Math.floor(256 * (sizeY - pt.y) / sizeY))));
     });
     let colourInCanvas = createMemo(on(
@@ -228,7 +242,6 @@ const ColourPicker: Component<{
             let r = canvas2.sliderImageData.data[offset];
             let g = canvas2.sliderImageData.data[offset+1];
             let b = canvas2.sliderImageData.data[offset+2];
-            setState("userColour", undefined);
             return new Colour(r, g, b, 255);
         })
     );
@@ -247,6 +260,36 @@ const ColourPicker: Component<{
             }
         }
     ));
+    let userRedFieldVal = createMemo(() => {
+        if (state.userRedText == undefined) {
+            return undefined;
+        }
+        let value = Number.parseFloat(state.userRedText);
+        if (!Number.isFinite(value)) {
+            return undefined;
+        }
+        return value;
+    });
+    let userGreenFieldVal = createMemo(() => {
+        if (state.userGreenText == undefined) {
+            return undefined;
+        }
+        let value = Number.parseFloat(state.userGreenText);
+        if (!Number.isFinite(value)) {
+            return undefined;
+        }
+        return value;
+    });
+    let userBlueFieldVal = createMemo(() => {
+        if (state.userBlueText == undefined) {
+            return undefined;
+        }
+        let value = Number.parseFloat(state.userBlueText);
+        if (!Number.isFinite(value)) {
+            return undefined;
+        }
+        return value;
+    });
     /*
     createEffect(() => {
         let c = state.userColour;
@@ -397,23 +440,9 @@ const ColourPicker: Component<{
                                 <td>
                                     <input
                                         type="text"
-                                        value={state.userColour?.r ?? colourInCanvas()?.r}
+                                        value={state.userRedText ?? state.userColour?.r ?? colourInCanvas()?.r}
                                         onInput={(e) => {
-                                            let value = Number.parseInt(e.currentTarget.value);
-                                            if (!Number.isFinite(value)) {
-                                                return;
-                                            }
-                                            if (value < 0 || value > 255) {
-                                                return;
-                                            }
-                                            let c = currentColour();
-                                            let c2 = new Colour(
-                                                value,
-                                                c?.g ?? 0,
-                                                c?.b ?? 0,
-                                                255
-                                            );
-                                            setState("userColour", c2);
+                                            setState("userRedText", e.currentTarget.value);
                                         }}
                                     />
                                 </td>
@@ -423,23 +452,9 @@ const ColourPicker: Component<{
                                 <td>
                                     <input
                                         type="text"
-                                        value={state.userColour?.g ?? colourInCanvas()?.g}
+                                        value={state.userGreenText ?? state.userColour?.g ?? colourInCanvas()?.g}
                                         onInput={(e) => {
-                                            let value = Number.parseInt(e.currentTarget.value);
-                                            if (!Number.isFinite(value)) {
-                                                return;
-                                            }
-                                            if (value < 0 || value > 255) {
-                                                return;
-                                            }
-                                            let c = currentColour();
-                                            let c2 = new Colour(
-                                                c?.r ?? 0,
-                                                value,
-                                                c?.b ?? 0,
-                                                255
-                                            );
-                                            setState("userColour", c2);
+                                            setState("userGreenText", e.currentTarget.value);
                                         }}
                                     />
                                 </td>
@@ -449,23 +464,9 @@ const ColourPicker: Component<{
                                 <td>
                                     <input
                                         type="text"
-                                        value={state.userColour?.b ?? colourInCanvas()?.b}
+                                        value={state.userBlueText ?? state.userColour?.b ?? colourInCanvas()?.b}
                                         onInput={(e) => {
-                                            let value = Number.parseInt(e.currentTarget.value);
-                                            if (!Number.isFinite(value)) {
-                                                return;
-                                            }
-                                            if (value < 0 || value > 255) {
-                                                return;
-                                            }
-                                            let c = currentColour();
-                                            let c2 = new Colour(
-                                                c?.r ?? 0,
-                                                c?.g ?? 0,
-                                                value,
-                                                255
-                                            );
-                                            setState("userColour", c2);
+                                            setState("userBlueText", e.currentTarget.value);
                                         }}
                                     />
                                 </td>
