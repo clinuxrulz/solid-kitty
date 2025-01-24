@@ -385,21 +385,26 @@ const ColourPicker: Component<{
                         "flex-grow": "1",
                         "display": "flex",
                         "flex-direction": "column",
+                        "touch-action": "none",
                     }}
-                    onMouseMove={(e) => {
+                    onPointerMove={(e) => {
                         let rect = e.currentTarget.getBoundingClientRect();
                         let x = e.clientX - rect.left;
                         let y = e.clientY - rect.top;
                         setState("chartMousePos", Vec2.create(x, y));
+                        e.preventDefault();
                     }}
-                    onMouseOut={(e) => {
+                    onPointerOut={(e) => {
                         setState("chartMousePos", undefined);
+                        e.preventDefault();
                     }}
-                    onMouseDown={() => {
+                    onPointerDown={(e) => {
                         setState("chartMouseDown", true);
+                        e.preventDefault();
                     }}
-                    onMouseUp={() => {
+                    onPointerUp={(e) => {
                         setState("chartMouseDown", false);
+                        e.preventDefault();
                     }}
                 >
                     <div
@@ -430,6 +435,7 @@ const ColourPicker: Component<{
                             stroke="black"
                             stroke-width={2}
                             fill="none"
+                            pointer-events="none"
                         />
                     </svg>
                 </div>
@@ -442,21 +448,26 @@ const ColourPicker: Component<{
                         "height": `${canvas()?.size.y ?? 0}px`,
                         "margin-left": "15px",
                         "overflow": "hidden",
+                        "touch-action": "none",
                     }}
-                    onMouseMove={(e) => {
+                    onPointerMove={(e) => {
                         let rect = e.currentTarget.getBoundingClientRect();
                         let x = e.clientX - rect.left;
                         let y = e.clientY - rect.top;
                         setState("brightnessMousePos", Vec2.create(x, y));
+                        e.preventDefault();
                     }}
-                    onMouseOut={(e) => {
+                    onPointerOut={(e) => {
                         setState("brightnessMousePos", undefined);
+                        e.preventDefault();
                     }}
-                    onMouseDown={() => {
+                    onPointerDown={(e) => {
                         setState("brightnessMouseDown", true);
+                        e.preventDefault();
                     }}
-                    onMouseUp={() => {
+                    onPointerUp={(e) => {
                         setState("brightnessMouseDown", false);
+                        e.preventDefault();
                     }}
                 >
                     {canvas()?.sliderCanvas}
@@ -479,6 +490,7 @@ const ColourPicker: Component<{
                             fill="none"
                             stroke="black"
                             stroke-width={2}
+                            pointer-events="none"
                         />
                     </svg>
                 </div>
