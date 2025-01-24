@@ -304,18 +304,27 @@ const ColourPicker: Component<{
             }
         }
     ));
-    /*
     createEffect(() => {
-        let c = state.userColour;
-        if (c == undefined) {
+        if (state.userColour == undefined &&
+            userRedFieldVal() == undefined &&
+            userGreenFieldVal() == undefined &&
+            userBlueFieldVal() == undefined
+        ) {
             return;
         }
-        let mv = Math.max(c.r, c.g, c.b);
+        let c = state.userColour;
+        let c2 = new Colour(
+            userRedFieldVal() ?? c?.r ?? 0,
+            userGreenFieldVal() ?? c?.g ?? 0,
+            userBlueFieldVal() ?? c?.b ?? 0,
+            255,
+        );
+        let mv = Math.max(c2.r, c2.g, c2.b);
         let brightness = mv;
         batch(() => {
             setState("brightness", brightness);
         });
-    });*/
+    });
     return (
         <div
             style={{
@@ -456,7 +465,11 @@ const ColourPicker: Component<{
                                         type="text"
                                         value={state.userRedText ?? state.userColour?.r ?? colourInCanvas()?.r}
                                         onInput={(e) => {
-                                            setState("userRedText", e.currentTarget.value);
+                                            batch(() => {
+                                                setState("userRedText", e.currentTarget.value);
+                                                setState("userGreenText", currentColour().g.toFixed(0));
+                                                setState("userBlueText", currentColour().b.toFixed(0));
+                                            });
                                         }}
                                     />
                                 </td>
@@ -468,7 +481,11 @@ const ColourPicker: Component<{
                                         type="text"
                                         value={state.userGreenText ?? state.userColour?.g ?? colourInCanvas()?.g}
                                         onInput={(e) => {
-                                            setState("userGreenText", e.currentTarget.value);
+                                            batch(() => {
+                                                setState("userRedText", currentColour().r.toFixed(0));
+                                                setState("userGreenText", e.currentTarget.value);
+                                                setState("userBlueText", currentColour().b.toFixed(0));
+                                            });
                                         }}
                                     />
                                 </td>
@@ -480,7 +497,11 @@ const ColourPicker: Component<{
                                         type="text"
                                         value={state.userBlueText ?? state.userColour?.b ?? colourInCanvas()?.b}
                                         onInput={(e) => {
-                                            setState("userBlueText", e.currentTarget.value);
+                                            batch(() => {
+                                                setState("userRedText", currentColour().r.toFixed(0));
+                                                setState("userGreenText", currentColour().g.toFixed(0));
+                                                setState("userBlueText", e.currentTarget.value);
+                                            });
                                         }}
                                     />
                                 </td>
