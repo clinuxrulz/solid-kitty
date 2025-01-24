@@ -195,6 +195,10 @@ const ColourPicker: Component<{
     requestAnimationFrame(brightnessAnimationUpdate);
     */
     createEffect(() => {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
         if (!state.chartMouseDown) {
             return;
         }
@@ -207,8 +211,8 @@ const ColourPicker: Component<{
         setState("userGreenText", undefined);
         setState("userBlueText", undefined);
         setState("cursorPos", Vec2.create(
-            Math.floor(pt.x),
-            Math.floor(pt.y),
+            Math.max(0, Math.min(canvas2.size.x, Math.floor(pt.x))),
+            Math.max(0, Math.min(canvas2.size.y, Math.floor(pt.y))),
         ));
     });
     createEffect(() => {
