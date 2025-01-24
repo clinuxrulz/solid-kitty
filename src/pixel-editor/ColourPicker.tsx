@@ -1,11 +1,17 @@
-import { Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, onCleanup } from "solid-js";
+import { Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
 
 const ColourPicker: Component = (props) => {
     let [ state, setState, ] = createStore<{
+        cursorPos: Vec2,
+        chartMousePos: Vec2 | undefined,
+        chartMouseDown: boolean,
         brightness: number,
     }>({
+        cursorPos: Vec2.zero(),
+        chartMousePos: undefined,
+        chartMouseDown: false,
         brightness: 255,
     });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
@@ -136,14 +142,13 @@ const ColourPicker: Component = (props) => {
         if (sliderCtx == null) {
             return;
         }
-        let cursorPos = createMemo(() => Vec2.create(0, 0));
         let sliderImageData = new ImageData(1, size.y);
         createComputed(() => {
-            let cursorPos2 = cursorPos();
-            if (cursorPos2 == undefined) {
+            let cursorPos = state.cursorPos;
+            if (cursorPos == undefined) {
                 return;
             }
-            let offset = (imageData.width * cursorPos2.y + cursorPos2.x) << 2;
+            let offset = (imageData.width * cursorPos.y + cursorPos.x) << 2;
             let r = imageData.data[offset];
             let g = imageData.data[offset+1];
             let b = imageData.data[offset+2];
@@ -173,6 +178,16 @@ const ColourPicker: Component = (props) => {
     };
     requestAnimationFrame(brightnessAnimationUpdate);
     */
+    createEffect(() => {
+        if (!state.chartMouseDown) {
+            return;
+        }
+        let pt = state.chartMousePos;
+        if (pt == undefined) {
+            return;
+        }
+        setState("cursorPos", pt);
+    });
     return (
         <div
             style={{
@@ -189,14 +204,58 @@ const ColourPicker: Component = (props) => {
                 }}
             >
                 <div
-                    ref={setColourChartDiv}
                     style={{
+                        "position": "relative",
                         "flex-grow": "1",
                         "display": "flex",
                         "flex-direction": "column",
                     }}
+                    onMouseMove={(e) => {
+                        let rect = e.currentTarget.getBoundingClientRect();
+                        let x = e.clientX - rect.left;
+                        let y = e.clientY - rect.top;
+                        setState("chartMousePos", Vec2.create(x, y));
+                    }}
+                    onMouseOut={(e) => {
+                        setState("chartMousePos", undefined);
+                    }}
+                    onMouseDown={() => {
+                        setState("chartMouseDown", true);
+                    }}
+                    onMouseUp={() => {
+                        setState("chartMouseDown", false);
+                    }}
                 >
-                    {canvas()?.canvas}
+                    <div
+                        ref={setColourChartDiv}
+                        style={{
+                            "flex-grow": "1",
+                            "display": "flex",
+                            "flex-direction": "column",
+                        }}
+                    >
+                        {canvas()?.canvas}
+                    </div>
+                    <svg
+                        width={canvas()?.size.x ?? 300}
+                        height={canvas()?.size.y ?? 300}
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                        }}
+                    >
+                        <circle
+                            cx={state.cursorPos.x}
+                            cy={state.cursorPos.y}
+                            r="10"
+                            stroke="black"
+                            stroke-width={2}
+                            fill="none"
+                        />
+                    </svg>
                 </div>
                 <div
                     style={{
