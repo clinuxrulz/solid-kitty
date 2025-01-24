@@ -30,7 +30,7 @@ export class DrawPixelsMode implements Mode {
             if (oldColour == undefined) {
                 return;
             }
-            let newColour = new Colour(0, 255, 0, 255);
+            let newColour = params.currentColour();
             params.writePixel(pt, newColour);
             let undoUnit: UndoUnit = {
                 displayName: "Draw Pixel",

@@ -20,6 +20,7 @@ const PixelEditor: Component = () => {
         //
         mode: "Idle" | "Draw Pixels",
         //
+        currentColour: Colour,
         showColourPicker: boolean,
     }>({
         pan: Vec2.create(-1, -1),
@@ -31,6 +32,7 @@ const PixelEditor: Component = () => {
         //
         mode: "Idle",
         //
+        currentColour: new Colour(0, 255, 0, 255),
         showColourPicker: false,
     });
     const undoManager = new UndoManager();
@@ -139,6 +141,7 @@ const PixelEditor: Component = () => {
         mousePos: () => state.mousePos,
         screenPtToWorldPt,
         worldPtToScreenPt,
+        currentColour: () => state.currentColour,
         readPixel(pt: Vec2): Colour | undefined {
             let image2 = image();
             if (image2 == undefined) {
@@ -429,7 +432,10 @@ const PixelEditor: Component = () => {
                                     tabIndex={0}
                                     onFocusOut={() => setState("showColourPicker", false)}
                                 >
-                                    <ColourPicker/>
+                                    <ColourPicker
+                                        colour={state.currentColour}
+                                        onColour={(c) => setState("currentColour", c)}
+                                    />
                                 </div>
                             );
                         }}
