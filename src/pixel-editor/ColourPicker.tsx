@@ -305,6 +305,10 @@ const ColourPicker: Component<{
         }
     ));
     createEffect(() => {
+        let canvas2 = canvas();
+        if (!canvas2) {
+            return;
+        }
         if (state.userColour == undefined &&
             userRedFieldVal() == undefined &&
             userGreenFieldVal() == undefined &&
@@ -320,8 +324,43 @@ const ColourPicker: Component<{
             255,
         );
         let mv = Math.max(c2.r, c2.g, c2.b);
+        let lv = Math.min(c2.r, c2.g, c2.b);
         let brightness = mv;
+        let s = 255 / (mv - lv);
+        if (!Number.isFinite(s)) {
+            return;
+        }
+        let r = Math.floor((c2.r - lv) * s);
+        let g = Math.floor((c2.g - lv) * s);
+        let b = Math.floor((c2.b - lv) * s);
+        // Phases:
+        // - red to yellow
+        // - yellow to green
+        // - green to cyan
+        // - cyan to blue
+        // - blue to purple
+        // - purple to red
+        let rm = c2.r == mv;
+        let gm = c2.g == mv;
+        let bm = c2.b == mv;
+        let hueIndex: number;
+        if (rm && !gm && b == 0) {
+            hueIndex = g;
+        } else if (!rm && gm && b == 0) {
+            hueIndex = 256 + (255 - r);
+        } else if (r == 0 && gm && !bm) {
+            hueIndex = 256*2 + b;
+        } else if (r == 0 && !gm && bm) {
+            hueIndex = 256*3 + (255 - g);
+        } else if (!rm && g == 0 && bm) {
+            hueIndex = 256*4 + r;
+        } else {
+            hueIndex = 256*5 + (255 - b);
+        }
+        let cursor_x = Math.floor(canvas2.size.x * hueIndex / (256*6));
+        let cursor_y = lv;
         batch(() => {
+            setState("cursorPos", Vec2.create(cursor_x, cursor_y));
             setState("brightness", brightness);
         });
     });
