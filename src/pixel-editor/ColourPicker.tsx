@@ -245,12 +245,6 @@ const ColourPicker: Component<{
             return new Colour(r, g, b, 255);
         })
     );
-    let currentColour = createMemo(() => {
-        if (state.userColour != undefined) {
-            return state.userColour;
-        }
-        return colourInCanvas();
-    });
     createEffect(on(
         colourInCanvas,
         () => {
@@ -268,7 +262,7 @@ const ColourPicker: Component<{
         if (!Number.isFinite(value)) {
             return undefined;
         }
-        return value;
+        return Math.max(0, Math.min(255, value));
     });
     let userGreenFieldVal = createMemo(() => {
         if (state.userGreenText == undefined) {
@@ -278,7 +272,7 @@ const ColourPicker: Component<{
         if (!Number.isFinite(value)) {
             return undefined;
         }
-        return value;
+        return Math.max(0, Math.min(255, value));
     });
     let userBlueFieldVal = createMemo(() => {
         if (state.userBlueText == undefined) {
@@ -288,7 +282,21 @@ const ColourPicker: Component<{
         if (!Number.isFinite(value)) {
             return undefined;
         }
-        return value;
+        return Math.max(0, Math.min(255, value));
+    });
+    let currentColour = createMemo(() => {
+        let c: Colour | undefined;
+        if (state.userColour != undefined) {
+            c = state.userColour;
+        } else {
+            c = colourInCanvas();
+        }
+        return new Colour(
+            userRedFieldVal() ?? c?.r ?? 0,
+            userGreenFieldVal() ?? c?.g ?? 0,
+            userBlueFieldVal() ?? c?.b ?? 0,
+            255,
+        );
     });
     /*
     createEffect(() => {
