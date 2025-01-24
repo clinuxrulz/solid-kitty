@@ -1,7 +1,13 @@
-import { Component, createComputed, createMemo, createSignal, JSX, mergeProps, onCleanup } from "solid-js";
+import { Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, onCleanup } from "solid-js";
 import { Vec2 } from "../Vec2";
+import { createStore } from "solid-js/store";
 
 const ColourPicker: Component = (props) => {
+    let [ state, setState, ] = createStore<{
+        brightness: number,
+    }>({
+        brightness: 255,
+    });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
     let [ colourChartSize, setColourChartSize, ] = createSignal<Vec2 | undefined>();
     createComputed(() => {
@@ -100,9 +106,42 @@ const ColourPicker: Component = (props) => {
                 offset += size.x << 2;
             }
         }
-        ctx.putImageData(imageData, 0, 0);
+        let brightnessImageData = new ImageData(size.x, size.y);
+        createComputed(on(
+            () => state.brightness,
+            () => {
+                let brightness = state.brightness;
+                let dataSize = (size.x * size.y) << 2;
+                for (let i = 0; i < dataSize; i += 4) {
+                    let r = imageData.data[i];
+                    let g = imageData.data[i+1];
+                    let b = imageData.data[i+2];
+                    let a = imageData.data[i+3];
+                    let r2 = Math.floor(r * brightness / 255.0);
+                    let g2 = Math.floor(g * brightness / 255.0);
+                    let b2 = Math.floor(b * brightness / 255.0);
+                    brightnessImageData.data[i] = r2;
+                    brightnessImageData.data[i+1] = g2;
+                    brightnessImageData.data[i+2] = b2;
+                    brightnessImageData.data[i+3] = a;
+                }
+                ctx.putImageData(brightnessImageData, 0, 0);
+            },
+        ));
         return canvas;
     });
+    /* Debug brightness changes
+    let done = false;
+    onCleanup(() => done = true);
+    let brightnessAnimationUpdate = () => {
+        if (done) {
+            return;
+        }
+        setState("brightness", (x) => (x + 1) & 255);
+        requestAnimationFrame(brightnessAnimationUpdate);
+    };
+    requestAnimationFrame(brightnessAnimationUpdate);
+    */
     return (
         <div
             style={{
