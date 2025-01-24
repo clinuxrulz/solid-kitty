@@ -4,6 +4,7 @@ import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
+import ColourPicker from './pixel-editor/ColourPicker';
 
 const App = lazy(() => import("./App"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
@@ -20,5 +21,21 @@ render(() => (
   <HashRouter>
     <Route path="/" component={App}/>
     <Route path="/pixel-editor" component={PixelEditor}/>
+    <Route path="/colour-picker" component={() => {
+      return (
+        <div
+          style={{
+            "width": "300px",
+            "height": "300px",
+            "display": "flex",
+            "flex-direction": "column",
+            "margin-left": "20px",
+            "margin-top": "20px",
+          }}
+        >
+          <ColourPicker/>
+        </div>
+      );
+    }}/>
   </HashRouter>
 ), root!);
