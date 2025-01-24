@@ -375,18 +375,18 @@ const PixelEditor: Component = () => {
                     "display": "flex",
                     "flex-direction": "column",
                 }}
-                onMouseDown={onMouseDown}
-                onMouseUp={onMouseUp}
-                onMouseMove={onMouseMove}
-                onMouseOut={onMouseOut}
-                onWheel={onWheel}
-                onClick={onClick}
             >
                 <canvas
                     style={{
                         "flex-grow": "1"
                     }}
                     ref={setCanvas}
+                    onMouseDown={onMouseDown}
+                    onMouseUp={onMouseUp}
+                    onMouseMove={onMouseMove}
+                    onMouseOut={onMouseOut}
+                    onWheel={onWheel}
+                    onClick={onClick}
                 />
                 <div
                     style={{
