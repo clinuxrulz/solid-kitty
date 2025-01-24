@@ -36,8 +36,9 @@ const ColourPicker: Component = (props) => {
             return;
         }
         let canvas = document.createElement("canvas");
+        canvas.setAttribute("width", `${size.x}`);
+        canvas.setAttribute("height", `${size.y}`);
         canvas.style.setProperty("flex-grow", "1");
-        size.y = 200;
         let ctx = canvas.getContext("2d");
         if (ctx == null) {
             return;
@@ -89,9 +90,12 @@ const ColourPicker: Component = (props) => {
             }
             let offset = j << 2;
             for (let i = 0; i < size.y; ++i) {
-                imageData.data[offset] = r;
-                imageData.data[offset+1] = g;
-                imageData.data[offset+2] = b;
+                let r2 = r + Math.floor((256-r) * i / size.y);
+                let g2 = g + Math.floor((256-g) * i / size.y);
+                let b2 = b + Math.floor((256-b) * i / size.y);
+                imageData.data[offset] = r2;
+                imageData.data[offset+1] = g2;
+                imageData.data[offset+2] = b2;
                 imageData.data[offset+3] = 255;
                 offset += size.x << 2;
             }
