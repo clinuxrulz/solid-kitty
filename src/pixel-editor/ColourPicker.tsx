@@ -298,6 +298,26 @@ const ColourPicker: Component<{
     });
     createEffect(on(
         [
+            () => props.colour,
+        ],
+        () => {
+            let c = currentColour();
+            if (c == undefined) {
+                return;
+            }
+            if (props.colour == undefined) {
+                return;
+            }
+            let c2 = props.colour;
+            if (c2.r == c.r && c2.g == c.g && c2.b == c.b && c2.a == c.a) {
+                return;
+            }
+            setState("userColour", c2);
+        },
+        { defer: true },
+    ));
+    createEffect(on(
+        [
             () => state.userColour,
             currentColour,
         ],
