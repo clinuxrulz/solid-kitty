@@ -211,8 +211,8 @@ const ColourPicker: Component<{
         setState("userGreenText", undefined);
         setState("userBlueText", undefined);
         setState("cursorPos", Vec2.create(
-            Math.max(0, Math.min(canvas2.size.x, Math.floor(pt.x))),
-            Math.max(0, Math.min(canvas2.size.y, Math.floor(pt.y))),
+            Math.max(0, Math.min(canvas2.size.x-1, Math.floor(pt.x))),
+            Math.max(0, Math.min(canvas2.size.y-1, Math.floor(pt.y))),
         ));
     });
     createEffect(() => {
