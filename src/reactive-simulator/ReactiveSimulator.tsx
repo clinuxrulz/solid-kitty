@@ -4,11 +4,18 @@ import { createStore } from "solid-js/store";
 
 type State = {
     nodes: Node[],
+    mode:
+        "Idle" |
+        "Add Node" |
+        "Add Double Link" |
+        "Add Single Link" |
+        "Mark Dirty",
 };
 
 const ReactiveSimulator: Component = () => {
     let [ state, setState, ] = createStore<State>({
         nodes: [],
+        mode: "Idle",
     });
     return (
         <div
@@ -48,6 +55,14 @@ const ReactiveSimulator: Component = () => {
                     }}
                 >
                     <i class="fa-solid fa-arrow-right-long"></i>
+                </button>
+                <button
+                    style={{
+                        "font-size": "24pt",
+                        "margin-left": "5px",
+                    }}
+                >
+                    <i class="fa-solid fa-poo"></i>
                 </button>
                 <button
                     style={{
