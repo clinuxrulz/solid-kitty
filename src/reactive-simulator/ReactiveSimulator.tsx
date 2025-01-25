@@ -1,4 +1,4 @@
-import { Component, createMemo, For, onCleanup } from "solid-js";
+import { Component, createMemo, createSignal, For, onCleanup } from "solid-js";
 import { Node } from "./Node";
 import { createStore } from "solid-js/store";
 import { ModeParams } from "./ModeParams";
@@ -8,8 +8,10 @@ import { AddLinkMode } from "./modes/AddLinkMode";
 import { MarkDirtyMode } from "./modes/MarkDirtyMode";
 import { RunningMode } from "./modes/RunningMode";
 import { Mode } from "./Mode";
+import { Vec2 } from "../Vec2";
 
 type State = {
+    mousePos: Vec2 | undefined,
     nodes: Node[],
     mode:
         "Idle" |
@@ -22,9 +24,17 @@ type State = {
 
 const ReactiveSimulator: Component = () => {
     let [ state, setState, ] = createStore<State>({
+        mousePos: Vec2.zero(),
         nodes: [],
         mode: "Idle",
     });
+    let screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
+        return pt;
+    };
+    let worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
+        return pt;
+    };
+    let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
     let keyDownListener = (e: KeyboardEvent) => {
         if (e.key == "Escape") {
             setState("mode", "Idle");
@@ -36,6 +46,9 @@ const ReactiveSimulator: Component = () => {
     });
     //
     let modeParams: ModeParams = {
+        mousePos: () => state.mousePos,
+        screenPtToWorldPt,
+        worldPtToScreenPt,
         nodes: () => state.nodes,
         addNode: (node) => {
             setState("nodes", [ ...state.nodes, node, ]);
@@ -71,6 +84,27 @@ const ReactiveSimulator: Component = () => {
     let highlightNodesSet = createMemo(() => {
         return new Set(mode().highlightNodes?.() ?? []);
     });
+    //
+    let onMouseMove = (e: MouseEvent) => {
+        let svg2 = svg();
+        if (svg2 == undefined) {
+            return;
+        }
+        let rect = svg2.getBoundingClientRect();
+        let pt = Vec2.create(
+            e.clientX - rect.left,
+            e.clientY - rect.top,
+        );
+        setState("mousePos", pt);
+    };
+    let onMouseOut = (e: MouseEvent) => {
+        let tmp = state.mousePos;
+        setState("mousePos", undefined);
+        tmp?.dispose?.();
+    };
+    let onClick = (e: MouseEvent) => {
+        mode().click?.();
+    };
     //
     return (
         <div
@@ -134,21 +168,43 @@ const ReactiveSimulator: Component = () => {
                 </button>
             </div>
             { /* Main View */}
-            <svg
+            <div
                 style={{
+                    "position": "relative",
                     "flex-grow": "1",
-                    "background-color": "lightgrey",
+                    "display": "flex",
+                    "flex-direction": "column",
                 }}
             >
-                <For each={state.nodes}>
-                    {(node) => {
-                        let isHighlighted = createMemo(() => highlightNodesSet().has(node));
-                        return (
-                            <node.Render isHighlighted={isHighlighted()}/>
-                        );
+                <svg
+                    ref={setSvg}
+                    style={{
+                        "flex-grow": "1",
+                        "background-color": "lightgrey",
                     }}
-                </For>
-            </svg>
+                    onMouseMove={onMouseMove}
+                    onMouseOut={onMouseOut}
+                    onClick={onClick}
+                >
+                    <For each={state.nodes}>
+                        {(node) => {
+                            let isHighlighted = createMemo(() => highlightNodesSet().has(node));
+                            return (
+                                <node.Render isHighlighted={isHighlighted()}/>
+                            );
+                        }}
+                    </For>
+                </svg>
+                <div
+                    style={{
+                        "position": "absolute",
+                        "left": "0",
+                        "top": "0",
+                    }}
+                >
+                    <Instructions/>
+                </div>
+            </div>
         </div>
     );
 };

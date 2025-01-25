@@ -4,4 +4,5 @@ import { Node } from "./Node";
 export interface Mode {
     instructions?: Component,
     highlightNodes?: Accessor<Node[]>,
+    click?: () => void,
 }
