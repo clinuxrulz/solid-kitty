@@ -56,7 +56,9 @@ export class RunningMode implements Mode {
     }
 
     stepAlgorithmn(state: AlgorithmnState) {
-        if (state.cursorAt[0]() == undefined) {
+        // If not cursor, pick a cursor
+        let cursorAt = state.cursorAt[0]();
+        if (cursorAt == undefined) {
             let node = state.nodesToVisit.pop();
             if (node == undefined) {
                 return;
