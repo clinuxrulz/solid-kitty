@@ -46,16 +46,16 @@ export class AddLinkMode implements Mode {
             }
             let node = selectableNodeUnderMouse();
             if (node != undefined) {
-                state.sourceNode.setState(
-                    "sinks",
-                    [ ...state.sourceNode.state.sinks, node, ],
-                );
                 if (type() == "Double") {
-                    node.setState(
-                        "sources",
-                        [ ...node.state.sources, state.sourceNode, ],
+                    state.sourceNode.setState(
+                        "sinks",
+                        [ ...state.sourceNode.state.sinks, node, ],
                     );
                 }
+                node.setState(
+                    "sources",
+                    [ ...node.state.sources, state.sourceNode, ],
+                );
                 setState("sourceNode", undefined);
             }
         };
