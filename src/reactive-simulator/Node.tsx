@@ -143,6 +143,11 @@ const DrawArrowedLine: Component<{
             stroke-width="2"
             pointer-events="none"
         />
+        <DrawArrowOnV2OfLine
+            v1={props.v1}
+            v2={props.v1.clone().add(props.v2).multScalar(0.5)}
+            arrowSize={props.arrowSize}
+        />
         <Show when={props.hasArrowStart}>
             <DrawArrowOnV2OfLine
                 v1={props.v2}
