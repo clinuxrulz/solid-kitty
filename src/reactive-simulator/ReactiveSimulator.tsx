@@ -133,6 +133,7 @@ const ReactiveSimulator: Component = () => {
                     style={{
                         "font-size": "24pt",
                         "margin-left": "5px",
+                        "background-color": state.mode == "Add Node" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Add Node")}
                 >
@@ -142,6 +143,7 @@ const ReactiveSimulator: Component = () => {
                     style={{
                         "font-size": "24pt",
                         "margin-left": "5px",
+                        "background-color": state.mode == "Add Double Link" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Add Double Link")}
                 >
@@ -151,6 +153,7 @@ const ReactiveSimulator: Component = () => {
                     style={{
                         "font-size": "24pt",
                         "margin-left": "5px",
+                        "background-color": state.mode == "Add Single Link" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Add Single Link")}
                 >
@@ -160,6 +163,7 @@ const ReactiveSimulator: Component = () => {
                     style={{
                         "font-size": "24pt",
                         "margin-left": "5px",
+                        "background-color": state.mode == "Mark Dirty" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Mark Dirty")}
                 >
@@ -169,6 +173,7 @@ const ReactiveSimulator: Component = () => {
                     style={{
                         "font-size": "24pt",
                         "margin-left": "5px",
+                        "background-color": state.mode == "Running" ? "blue" : undefined,
                     }}
                     onClick={() => setState("mode", "Running")}
                 >
