@@ -4,7 +4,8 @@ import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
-import ColourPicker from './pixel-editor/ColourPicker';
+const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
+const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
 
 const App = lazy(() => import("./App"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
@@ -37,5 +38,6 @@ render(() => (
         </div>
       );
     }}/>
+    <Route path="/reactive-sim" component={ReactiveSimulator}/>
   </HashRouter>
 ), root!);
