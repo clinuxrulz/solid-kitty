@@ -35,6 +35,13 @@ const ReactiveSimulator: Component = () => {
     });
     //
     let modeParams: ModeParams = {
+        nodes: () => state.nodes,
+        addNode: (node) => {
+            setState("nodes", [ ...state.nodes, node, ]);
+        },
+        removeNode: (node) => {
+            setState("nodes", state.nodes.filter((x) => x !== node));
+        },
         onDone: () => {
             setState("mode", "Idle");
         },
