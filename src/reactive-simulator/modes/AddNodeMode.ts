@@ -21,9 +21,9 @@ export class AddNodeMode implements Mode {
                     return;
                 }
                 let workingPt2 = workingPt as Accessor<NonNullable<ReturnType<typeof workingPt>>>;
-                let node = new Node({
-                    initPos: untrack(() => workingPt2())
-                });
+                let node = untrack(() => new Node({
+                    initPos: workingPt2().clone(),
+                }));
                 untrack(() => {
                     modeParams.addNode(node);
                 });
@@ -40,7 +40,7 @@ export class AddNodeMode implements Mode {
             });
         }
         this.instructions = () => {
-            return "Click where you would like to place the node.";
+            return "Click where you would like to place the nodes. Press escape when finished.";
         };
     }
 }

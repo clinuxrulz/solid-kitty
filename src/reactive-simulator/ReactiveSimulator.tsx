@@ -29,10 +29,10 @@ const ReactiveSimulator: Component = () => {
         mode: "Idle",
     });
     let screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
-        return pt;
+        return pt.clone();
     };
     let worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
-        return pt;
+        return pt.clone();
     };
     let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
     let keyDownListener = (e: KeyboardEvent) => {
