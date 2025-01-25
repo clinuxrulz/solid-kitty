@@ -7,6 +7,7 @@ import { AddNodeMode } from "./modes/AddNodeMode";
 import { AddLinkMode } from "./modes/AddLinkMode";
 import { MarkDirtyMode } from "./modes/MarkDirtyMode";
 import { RunningMode } from "./modes/RunningMode";
+import { Mode } from "./Mode";
 
 type State = {
     nodes: Node[],
@@ -47,7 +48,7 @@ const ReactiveSimulator: Component = () => {
         },
     };
     //
-    let mode = createMemo(() => {
+    let mode = createMemo<Mode>(() => {
         switch (state.mode) {
             case "Idle":
                 return new IdleMode(modeParams);
@@ -62,6 +63,13 @@ const ReactiveSimulator: Component = () => {
             case "Running":
                 return new RunningMode(modeParams);
         }
+    });
+    //
+    let Instructions: Component = () => {
+        return mode().instructions?.({});
+    };
+    let highlightNodesSet = createMemo(() => {
+        return new Set(mode().highlightNodes?.() ?? []);
     });
     //
     return (
@@ -133,7 +141,12 @@ const ReactiveSimulator: Component = () => {
                 }}
             >
                 <For each={state.nodes}>
-                    {(node) => (<node.Render/>)}
+                    {(node) => {
+                        let isHighlighted = createMemo(() => highlightNodesSet().has(node));
+                        return (
+                            <node.Render isHighlighted={isHighlighted()}/>
+                        );
+                    }}
                 </For>
             </svg>
         </div>

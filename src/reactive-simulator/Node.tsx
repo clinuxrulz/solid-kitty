@@ -48,14 +48,14 @@ export class Node {
         this.setState = setState;
     }
 
-    Render: Component = () => {
+    Render: Component<{ isHighlighted: boolean, }> = (props) => {
         return (<>
             <circle
                 cx={this.state.position.x}
                 cy={this.state.position.y}
                 r={NODE_RADIUS}
                 stroke="black"
-                stroke-width={2}
+                stroke-width={props.isHighlighted ? 6 : 2}
                 fill={
                     nodeFlagToColour(
                         this.state.flag,
