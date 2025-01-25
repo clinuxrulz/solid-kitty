@@ -1,8 +1,44 @@
+import { Accessor, Component, createComputed, createMemo, on, onCleanup, untrack } from "solid-js";
+import { Node } from "../Node";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 
 export class AddNodeMode implements Mode {
+    instructions: Component;
+
     constructor(modeParams: ModeParams) {
-        
+        let workingPt = createMemo(() => {
+            let mousePos = modeParams.mousePos();
+            if (mousePos == undefined) {
+                return undefined;
+            }
+            return modeParams.screenPtToWorldPt(mousePos);
+        });
+        {
+            let hasWorkingPt = createMemo(() => workingPt() != undefined);
+            createComputed(() => {
+                if (!hasWorkingPt()) {
+                    return;
+                }
+                let workingPt2 = workingPt as Accessor<NonNullable<ReturnType<typeof workingPt>>>;
+                let node = new Node({
+                    initPos: untrack(() => workingPt2())
+                });
+                modeParams.addNode(node);
+                onCleanup(() => {
+                    modeParams.removeNode(node);
+                });
+                createComputed(on(
+                    workingPt2,
+                    () => {
+                        node.setState("position", workingPt2().clone());
+                    },
+                    { defer: true, },
+                ));
+            });
+        }
+        this.instructions = () => {
+            return "Click where you would like to place the node.";
+        };
     }
 }
