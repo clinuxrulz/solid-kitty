@@ -68,6 +68,9 @@ export class RunningMode implements Mode {
             if (exeNode != undefined) {
                 exeNode.setState("flag", "Clean");
                 state.nodesToResetUnknown.push(exeNode);
+                for (let sink of exeNode.state.sinks) {
+                    state.nodesToVisit.push(sink);
+                }
                 state.executingNode[1](undefined);
                 state.stepCounter[1]((x) => x + 1);
                 return;
