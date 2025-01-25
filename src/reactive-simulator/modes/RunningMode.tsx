@@ -12,11 +12,13 @@ type AlgorithmnState = {
     nodesToResetUnknown: Node[]
     stepCounter: Signal<number>,
     cursorAt: Signal<Node | undefined>,
+    executingNode: Signal<Node | undefined>,
 };
 
 export class RunningMode implements Mode {
     instructions: Component;
     highlightNodes: Accessor<Node[]>;
+    selectedNodes: Accessor<Node[]>;
 
     constructor(modeParams: ModeParams) {
         // Gather all dirty nodes.
@@ -37,6 +39,7 @@ export class RunningMode implements Mode {
             nodesToResetUnknown: [],
             stepCounter: createSignal<number>(0),
             cursorAt: createSignal<Node | undefined>(undefined),
+            executingNode: createSignal<Node | undefined>(undefined),
         };
         let intervalId = setInterval(
             () => this.stepAlgorithmn(algorithmnState),
@@ -55,9 +58,21 @@ export class RunningMode implements Mode {
             );
         };
         this.highlightNodes = createMemo(() => opToArr(algorithmnState.cursorAt[0]()));
+        this.selectedNodes = createMemo(() => opToArr(algorithmnState.executingNode[0]()));
     }
 
     stepAlgorithmn(state: AlgorithmnState) {
+        // If executing a node, finish executing it.
+        {
+            let exeNode = state.executingNode[0]();
+            if (exeNode != undefined) {
+                exeNode.setState("flag", "Clean");
+                state.nodesToResetUnknown.push(exeNode);
+                state.executingNode[1](undefined);
+                state.stepCounter[1]((x) => x + 1);
+                return;
+            }
+        }
         // If not cursor, pick a cursor
         let cursorAt = state.cursorAt[0]();
         if (cursorAt == undefined) {
@@ -85,6 +100,13 @@ export class RunningMode implements Mode {
         if (cursorAt.state.flag == "Unknown") {
             cursorAt.setState("flag", "Clean");
             state.nodesToResetUnknown.push(cursorAt);
+            state.cursorAt[1](undefined);
+            state.stepCounter[1]((x) => x + 1);
+            return;
+        }
+        // If we are in dirty state, execute the node's update function.
+        if (cursorAt.state.flag == "Dirty") {
+            state.executingNode[1](cursorAt);
             state.cursorAt[1](undefined);
             state.stepCounter[1]((x) => x + 1);
             return;
