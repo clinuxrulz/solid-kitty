@@ -61,6 +61,7 @@ export class Node {
                         this.state.flag,
                     )
                 }
+                pointer-events="none"
             />
             <For each={this.state.sinks}>
                 {(sink) => {
@@ -139,6 +140,7 @@ const DrawArrowedLine: Component<{
             y2={props.v2.y}
             stroke="black"
             stroke-width="2"
+            pointer-events="none"
         />
         <Show when={props.hasArrowStart}>
             <DrawArrowOnV2OfLine
@@ -197,6 +199,7 @@ const DrawArrowOnV2OfLine: Component<{
                     transform={path2().transformStr}
                     d={path2().pathStr}
                     fill="black"
+                    pointer-events="none"
                 />
             )}
         </Show>
