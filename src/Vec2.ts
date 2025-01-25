@@ -56,4 +56,16 @@ export class Vec2 {
         this.y *= s;
         return this;
     }
+
+    lengthSquared(): number {
+        return this.x * this.x + this.y * this.y;
+    }
+
+    length(): number {
+        return Math.sqrt(this.lengthSquared());
+    }
+
+    normalize(): this {
+        return this.multScalar(1.0 / this.length());
+    }
 }
