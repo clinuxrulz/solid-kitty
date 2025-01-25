@@ -8,6 +8,7 @@ import { opToArr } from "../../util";
 const ALGORITHM_STEP_DELAY_MS = 1000;
 
 type AlgorithmnState = {
+    isDone: boolean,
     nodesToVisit: Node[],
     nodesToResetUnknown: Node[]
     stepCounter: Signal<number>,
@@ -35,6 +36,7 @@ export class RunningMode implements Mode {
         });
         //
         let algorithmnState: AlgorithmnState = {
+            isDone: false,
             nodesToVisit,
             nodesToResetUnknown: [],
             stepCounter: createSignal<number>(0),
@@ -42,7 +44,12 @@ export class RunningMode implements Mode {
             executingNode: createSignal<Node | undefined>(undefined),
         };
         let intervalId = setInterval(
-            () => this.stepAlgorithmn(algorithmnState),
+            () => {
+                this.stepAlgorithmn(algorithmnState);
+                if (algorithmnState.isDone) {
+                    modeParams.onDone();
+                }
+            },
             ALGORITHM_STEP_DELAY_MS,
         );
         onCleanup(() => {
@@ -118,6 +125,11 @@ export class RunningMode implements Mode {
             state.cursorAt[1](undefined);
             state.stepCounter[1]((x) => x + 1);
             return;
+        }
+        // If we make it here, we are done.
+        for (let node of state.nodesToResetUnknown) {
+            node.setState("flag", "Unknown");
+            state.isDone = true;
         }
     }
 }
