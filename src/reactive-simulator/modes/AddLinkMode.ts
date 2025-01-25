@@ -8,6 +8,7 @@ import { opToArr } from "../../util";
 export class AddLinkMode implements Mode {
     instructions: Component;
     highlightNodes: Accessor<Node[]>;
+    selectedNodes: Accessor<Node[]>;
     click: () => void;
 
     constructor(params: {
@@ -34,6 +35,7 @@ export class AddLinkMode implements Mode {
             "(Press escape when you are done.)";
         };
         this.highlightNodes = createMemo(() => opToArr(selectableNodeUnderMouse()));
+        this.selectedNodes = createMemo(() => opToArr(state.sourceNode));
         this.click = () => {
             if (state.sourceNode == undefined) {
                 let node = selectableNodeUnderMouse();

@@ -92,6 +92,9 @@ const ReactiveSimulator: Component = () => {
     let highlightNodesSet = createMemo(() => {
         return new Set(mode().highlightNodes?.() ?? []);
     });
+    let selectedNodeSet = createMemo(() => {
+        return new Set(mode().selectedNodes?.() ?? []);
+    });
     //
     let onMouseMove = (e: MouseEvent) => {
         let svg2 = svg();
@@ -202,8 +205,12 @@ const ReactiveSimulator: Component = () => {
                     <For each={state.nodes}>
                         {(node) => {
                             let isHighlighted = createMemo(() => highlightNodesSet().has(node));
+                            let isSelected = createMemo(() => selectedNodeSet().has(node));
                             return (
-                                <node.Render isHighlighted={isHighlighted()}/>
+                                <node.Render
+                                    isHighlighted={isHighlighted()}
+                                    isSelected={isSelected()}
+                                />
                             );
                         }}
                     </For>
