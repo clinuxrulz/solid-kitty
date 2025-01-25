@@ -1,10 +1,11 @@
-import { Accessor, Component, createComputed, createMemo, on, onCleanup, untrack } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createSignal, on, onCleanup, untrack } from "solid-js";
 import { Node } from "../Node";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 
 export class AddNodeMode implements Mode {
     instructions: Component;
+    click: () => void;
 
     constructor(modeParams: ModeParams) {
         let workingPt = createMemo(() => {
@@ -14,9 +15,15 @@ export class AddNodeMode implements Mode {
             }
             return modeParams.screenPtToWorldPt(mousePos);
         });
+        let [ bounce, setBounce, ] = createSignal(0);
+        let triggerBounce = () => {
+            setBounce((x) => 1 - x);
+        };
+        let insertNode: () => void = () => {};
         {
             let hasWorkingPt = createMemo(() => workingPt() != undefined);
             createComputed(() => {
+                let _ = bounce();
                 if (!hasWorkingPt()) {
                     return;
                 }
@@ -27,7 +34,16 @@ export class AddNodeMode implements Mode {
                 untrack(() => {
                     modeParams.addNode(node);
                 });
+                let keepIt = false;
+                insertNode = () => {
+                    keepIt = true;
+                    triggerBounce();
+                };
                 onCleanup(() => {
+                    insertNode = () => {};
+                    if (keepIt) {
+                        return;
+                    }
                     modeParams.removeNode(node);
                 });
                 createComputed(on(
@@ -41,6 +57,9 @@ export class AddNodeMode implements Mode {
         }
         this.instructions = () => {
             return "Click where you would like to place the nodes. Press escape when finished.";
+        };
+        this.click = () => {
+            insertNode();
         };
     }
 }
