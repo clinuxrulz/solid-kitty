@@ -23,7 +23,7 @@ export const nodeFlagToColour = (() => {
 
 export const NODE_RADIUS = 20;
 export const NODE_RADIUS_SQUARED = NODE_RADIUS * NODE_RADIUS;
-const ARROW_SIZE = 8;
+const ARROW_SIZE = 20;
 
 type State = {
     position: Vec2,
@@ -179,10 +179,10 @@ const DrawArrowOnV2OfLine: Component<{
         let arrowHeight = 0.5 * props.arrowSize * Math.sqrt(3);
         let pt = u.clone().multScalar(-arrowHeight).add(props.v2);
         let transformStr =
-            `matrix ` +
-                `${u.x} ${u.y} ` +
-                `${v.x} ${v.y} ` +
-                `${pt.x} ${pt.y}`;
+            `matrix(` +
+                `${u.x},${u.y},` +
+                `${v.x},${v.y},` +
+                `${pt.x},${pt.y})`;
         let pathStr =
             `M 0 ${-0.5 * props.arrowSize} ` +
             `L ${arrowHeight} 0 ` +
