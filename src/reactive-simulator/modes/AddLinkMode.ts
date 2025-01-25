@@ -31,7 +31,7 @@ export class AddLinkMode implements Mode {
                 } else {
                     return "Select target node.";
                 }
-            }) + "\r\n" +
+            })() + " " +
             "(Press escape when you are done.)";
         };
         this.highlightNodes = createMemo(() => opToArr(selectableNodeUnderMouse()));
