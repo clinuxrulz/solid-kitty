@@ -9,6 +9,7 @@ import { MarkDirtyMode } from "./modes/MarkDirtyMode";
 import { RunningMode } from "./modes/RunningMode";
 import { Mode } from "./Mode";
 import { Vec2 } from "../Vec2";
+import { PickingSystem } from "./systems/PickingSystem";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -45,6 +46,12 @@ const ReactiveSimulator: Component = () => {
         document.removeEventListener("keydown", keyDownListener);
     });
     //
+    let pickingSystem = new PickingSystem({
+        mousePos: () => state.mousePos,
+        screenPtToWorldPt,
+        nodes: () => state.nodes,
+    });
+    //
     let modeParams: ModeParams = {
         mousePos: () => state.mousePos,
         screenPtToWorldPt,
@@ -59,6 +66,7 @@ const ReactiveSimulator: Component = () => {
         onDone: () => {
             setState("mode", "Idle");
         },
+        pickingSystem,
     };
     //
     let mode = createMemo<Mode>(() => {

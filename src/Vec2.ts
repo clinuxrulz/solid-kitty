@@ -57,6 +57,16 @@ export class Vec2 {
         return this;
     }
 
+    distanceSquared(other: Vec2): number {
+        let dx = other.x - this.x;
+        let dy = other.y - this.y;
+        return dx * dx + dy * dy;
+    }
+
+    distance(other: Vec2): number {
+        return Math.sqrt(this.distanceSquared(other));
+    }
+
     lengthSquared(): number {
         return this.x * this.x + this.y * this.y;
     }

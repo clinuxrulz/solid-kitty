@@ -21,7 +21,8 @@ export const nodeFlagToColour = (() => {
     };    
 })();
 
-const NODE_RADIUS = 20;
+export const NODE_RADIUS = 20;
+export const NODE_RADIUS_SQUARED = NODE_RADIUS * NODE_RADIUS;
 const ARROW_SIZE = 8;
 
 type State = {

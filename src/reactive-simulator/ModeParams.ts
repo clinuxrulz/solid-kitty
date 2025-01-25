@@ -1,6 +1,7 @@
 import { Accessor } from "solid-js";
 import { Node } from "./Node";
 import { Vec2 } from "../Vec2";
+import { PickingSystem } from "./systems/PickingSystem";
 
 export type ModeParams = {
     mousePos: Accessor<Vec2 | undefined>,
@@ -10,4 +11,5 @@ export type ModeParams = {
     addNode: (node: Node) => void,
     removeNode: (node: Node) => void,
     onDone: () => void,
+    pickingSystem: PickingSystem,
 };
