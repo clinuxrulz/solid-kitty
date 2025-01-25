@@ -79,7 +79,7 @@ const ReactiveSimulator: Component = () => {
     });
     //
     let Instructions: Component = () => {
-        return mode().instructions?.({});
+        return <>{mode().instructions?.({})}</>;
     };
     let highlightNodesSet = createMemo(() => {
         return new Set(mode().highlightNodes?.() ?? []);

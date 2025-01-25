@@ -24,7 +24,9 @@ export class AddNodeMode implements Mode {
                 let node = new Node({
                     initPos: untrack(() => workingPt2())
                 });
-                modeParams.addNode(node);
+                untrack(() => {
+                    modeParams.addNode(node);
+                });
                 onCleanup(() => {
                     modeParams.removeNode(node);
                 });
