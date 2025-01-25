@@ -99,24 +99,24 @@ export class Node {
                         return source.state.sinks.some((x) => x === this);
                     });
                     let verts = createMemo(() => {
-                        let u = source.state.position.clone().sub(this.state.position).normalize();
+                        let u = this.state.position.clone().sub(source.state.position).normalize();
                         if (!Number.isFinite(u.x)) {
                             return undefined;
                         }
-                        let v1 = u.clone().multScalar(NODE_RADIUS).add(this.state.position);
-                        let v2 = u.clone().multScalar(-NODE_RADIUS).add(source.state.position);
+                        let v1 = u.clone().multScalar(-NODE_RADIUS).add(source.state.position);
+                        let v2 = u.clone().multScalar(NODE_RADIUS).add(this.state.position);
                         return { v1, v2 };
                     });
                     return (
                         <Show when={isAlreadyRendered() ? undefined : verts()}>
                             {(verts2) => (
                                 <DrawArrowedLine
-                                v1={verts2().v1}
-                                v2={verts2().v2}
-                                hasArrowStart={false}
-                                hasArrowEnd={true}
-                                arrowSize={ARROW_SIZE}
-                            />
+                                    v1={verts2().v1}
+                                    v2={verts2().v2}
+                                    hasArrowStart={true}
+                                    hasArrowEnd={false}
+                                    arrowSize={ARROW_SIZE}
+                                />
                         )}
                         </Show>
                     );

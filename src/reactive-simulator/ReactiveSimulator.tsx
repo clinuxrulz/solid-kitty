@@ -160,7 +160,7 @@ const ReactiveSimulator: Component = () => {
                     }}
                     onClick={() => setState("mode", "Add Single Link")}
                 >
-                    <i class="fa-solid fa-arrow-right-long"></i>
+                    <i class="fa-solid fa-arrow-left-long"></i>
                 </button>
                 <button
                     style={{
