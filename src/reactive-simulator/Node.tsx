@@ -133,6 +133,15 @@ const DrawArrowedLine: Component<{
     hasArrowEnd: boolean,
     arrowSize: number,
 }> = (props) => {
+    let midArrowV2 = createMemo(() => {
+        let u = props.v2.clone().sub(props.v1).normalize();
+        if (!Number.isFinite(u.x)) {
+            return props.v1.clone().add(props.v2).multScalar(0.5);
+        }
+        return u.clone().multScalar(0.25 * ARROW_SIZE * Math.sqrt(3)).add(
+            props.v1.clone().add(props.v2).multScalar(0.5)
+        );
+    });
     return (<>
         <line
             x1={props.v1.x}
@@ -145,7 +154,7 @@ const DrawArrowedLine: Component<{
         />
         <DrawArrowOnV2OfLine
             v1={props.v1}
-            v2={props.v1.clone().add(props.v2).multScalar(0.5)}
+            v2={midArrowV2()}
             arrowSize={props.arrowSize}
         />
         <Show when={props.hasArrowStart}>
