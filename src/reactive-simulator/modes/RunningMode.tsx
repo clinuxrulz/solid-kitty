@@ -9,6 +9,7 @@ const ALGORITHM_STEP_DELAY_MS = 1000;
 
 type AlgorithmnState = {
     nodesToVisit: Node[],
+    nodesToResetUnknown: Node[]
     stepCounter: Signal<number>,
     cursorAt: Signal<Node | undefined>,
 };
@@ -33,6 +34,7 @@ export class RunningMode implements Mode {
         //
         let algorithmnState: AlgorithmnState = {
             nodesToVisit,
+            nodesToResetUnknown: [],
             stepCounter: createSignal<number>(0),
             cursorAt: createSignal<Node | undefined>(undefined),
         };
@@ -64,6 +66,26 @@ export class RunningMode implements Mode {
                 return;
             }
             state.cursorAt[1](node);
+            state.stepCounter[1]((x) => x + 1);
+            return;
+        }
+        // Check for any sources in an unknown or dirty state.
+        for (let source of cursorAt.state.sources) {
+            if (source.state.flag != "Clean") {
+                // If found, add the current cursor in nodesToVisit incase we can not path back,
+                // and make the found node the current cursor
+                state.nodesToVisit.push(cursorAt);
+                state.cursorAt[1](source);
+                state.stepCounter[1]((x) => x + 1);
+                return;
+            }
+        }
+        // If we make it here, all sources are clean.
+        // If we are in unknown state, mark ourself as clean.
+        if (cursorAt.state.flag == "Unknown") {
+            cursorAt.setState("flag", "Clean");
+            state.nodesToResetUnknown.push(cursorAt);
+            state.cursorAt[1](undefined);
             state.stepCounter[1]((x) => x + 1);
             return;
         }
