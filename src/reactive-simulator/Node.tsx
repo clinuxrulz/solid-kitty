@@ -103,8 +103,8 @@ export class Node {
                         if (!Number.isFinite(u.x)) {
                             return undefined;
                         }
-                        let v1 = u.clone().multScalar(-NODE_RADIUS).add(source.state.position);
-                        let v2 = u.clone().multScalar(NODE_RADIUS).add(this.state.position);
+                        let v1 = u.clone().multScalar(NODE_RADIUS).add(source.state.position);
+                        let v2 = u.clone().multScalar(-NODE_RADIUS).add(this.state.position);
                         return { v1, v2 };
                     });
                     return (
