@@ -46,6 +46,9 @@ export class RunningMode implements Mode {
             ALGORITHM_STEP_DELAY_MS,
         );
         onCleanup(() => {
+            for (let node of algorithmnState.nodesToResetUnknown) {
+                node.setState("flag", "Unknown");
+            }
             clearInterval(intervalId);
         });
         //
