@@ -1,6 +1,12 @@
-import { Component, For } from "solid-js";
+import { Component, createMemo, For, onCleanup } from "solid-js";
 import { Node } from "./Node";
 import { createStore } from "solid-js/store";
+import { ModeParams } from "./ModeParams";
+import { IdleMode } from "./modes/IdleMode";
+import { AddNodeMode } from "./modes/AddNodeMode";
+import { AddLinkMode } from "./modes/AddLinkMode";
+import { MarkDirtyMode } from "./modes/MarkDirtyMode";
+import { RunningMode } from "./modes/RunningMode";
 
 type State = {
     nodes: Node[],
@@ -9,7 +15,8 @@ type State = {
         "Add Node" |
         "Add Double Link" |
         "Add Single Link" |
-        "Mark Dirty",
+        "Mark Dirty" |
+        "Running",
 };
 
 const ReactiveSimulator: Component = () => {
@@ -17,6 +24,39 @@ const ReactiveSimulator: Component = () => {
         nodes: [],
         mode: "Idle",
     });
+    let keyDownListener = (e: KeyboardEvent) => {
+        if (e.key == "Escape") {
+            setState("mode", "Idle");
+        }
+    };
+    document.addEventListener("keydown", keyDownListener);
+    onCleanup(() => {
+        document.removeEventListener("keydown", keyDownListener);
+    });
+    //
+    let modeParams: ModeParams = {
+        onDone: () => {
+            setState("mode", "Idle");
+        },
+    };
+    //
+    let mode = createMemo(() => {
+        switch (state.mode) {
+            case "Idle":
+                return new IdleMode(modeParams);
+            case "Add Node":
+                return new AddNodeMode(modeParams);
+            case "Add Double Link":
+                return new AddLinkMode({ modeParams, type: "Double", });
+            case "Add Single Link":
+                return new AddLinkMode({ modeParams, type: "Single", });
+            case "Mark Dirty":
+                return new MarkDirtyMode(modeParams);
+            case "Running":
+                return new RunningMode(modeParams);
+        }
+    });
+    //
     return (
         <div
             style={{
@@ -37,6 +77,7 @@ const ReactiveSimulator: Component = () => {
                         "font-size": "24pt",
                         "margin-left": "5px",
                     }}
+                    onClick={() => setState("mode", "Add Node")}
                 >
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
@@ -45,6 +86,7 @@ const ReactiveSimulator: Component = () => {
                         "font-size": "24pt",
                         "margin-left": "5px",
                     }}
+                    onClick={() => setState("mode", "Add Double Link")}
                 >
                     <i class="fa-solid fa-arrows-left-right"></i>
                 </button>
@@ -53,6 +95,7 @@ const ReactiveSimulator: Component = () => {
                         "font-size": "24pt",
                         "margin-left": "5px",
                     }}
+                    onClick={() => setState("mode", "Add Single Link")}
                 >
                     <i class="fa-solid fa-arrow-right-long"></i>
                 </button>
@@ -61,6 +104,7 @@ const ReactiveSimulator: Component = () => {
                         "font-size": "24pt",
                         "margin-left": "5px",
                     }}
+                    onClick={() => setState("mode", "Mark Dirty")}
                 >
                     <i class="fa-solid fa-poo"></i>
                 </button>
@@ -69,6 +113,7 @@ const ReactiveSimulator: Component = () => {
                         "font-size": "24pt",
                         "margin-left": "5px",
                     }}
+                    onClick={() => setState("mode", "Running")}
                 >
                     <i class="fa-solid fa-person-running"></i>
                 </button>
