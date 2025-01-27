@@ -472,98 +472,121 @@ const PixelEditor: Component = () => {
                     "display": "flex",
                     "flex-direction": "column",
                 }}
-                onMouseDown={onMouseDown}
-                onMouseUp={onMouseUp}
-                onMouseMove={onMouseMove}
-                onMouseOut={onMouseOut}
-                onWheel={onWheel}
-                onClick={onClick}
             >
-                <canvas
-                    style={{
-                        "flex-grow": "1"
-                    }}
-                    ref={setCanvas}
-                />
                 <div
                     style={{
-                        "position": "absolute",
-                        "left": "0",
-                        "top": "0",
+                        "flex-grow": "1",
+                        "display": "flex",
+                        "flex-direction": "column",
                     }}
+                    onMouseDown={onMouseDown}
+                    onMouseUp={onMouseUp}
+                    onMouseMove={onMouseMove}
+                    onMouseOut={onMouseOut}
+                    onWheel={onWheel}
+                    onClick={onClick}
                 >
-                    {modeInstructions()?.({})}
-                    {/* Debug stuff
-                    <Show when={state.mousePos}>
-                        {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
-                    </Show>
-                    <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
-                        {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
-                    </Show>
+                    <canvas
+                        style={{
+                            "flex-grow": "1"
+                        }}
+                        ref={setCanvas}
+                    />
+                    <div
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                        }}
+                    >
+                        {modeInstructions()?.({})}
+                        {/* Debug stuff
+                        <Show when={state.mousePos}>
+                            {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}<br/></>)}
+                        </Show>
+                        <Show when={state.mousePos != undefined ? screenPtToWorldPt(state.mousePos) : undefined}>
+                            {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
+                        </Show>
+                        */}
+                    </div>
+                    <div
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                            "overflow": "hidden",
+                        }}
+                    >
+                        {(() => {
+                            let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
+                            onMount(() => {
+                                let svg2 = svg()!;
+                                let parent = svg2?.parentElement!;
+                                let resizeObserver = new ResizeObserver(() => {
+                                    let rect = parent.getBoundingClientRect();
+                                    svg2.setAttribute("width", `${rect.width}`);
+                                    svg2.setAttribute("height", `${rect.height}`);
+                                });
+                                resizeObserver.observe(parent);
+                                onCleanup(() => {
+                                    resizeObserver.unobserve(parent);
+                                    resizeObserver.disconnect();
+                                });
+                            });
+                            let pt1 = createMemo(() => worldPtToScreenPt(state.minPt));
+                            let pt2 = createMemo(() => worldPtToScreenPt(state.minPt.clone().add(state.size)));
+                            let rect = createMemo(() => {
+                                let pt12 = pt1();
+                                if (pt12 == undefined) {
+                                    return undefined;
+                                }
+                                let pt22 = pt2();
+                                if (pt22 == undefined) {
+                                    return undefined;
+                                }
+                                return {
+                                    pt: pt12,
+                                    size: pt22.clone().sub(pt12),
+                                };
+                            });
+                            return (
+                                <svg
+                                    ref={setSvg}
+                                >
+                                    <Show when={rect()}>
+                                        {(rect2) => (
+                                            <rect
+                                                x={rect2().pt.x}
+                                                y={rect2().pt.y}
+                                                width={rect2().size.x}
+                                                height={rect2().size.y}
+                                                stroke="black"
+                                                stroke-width={2}
+                                                fill="none"
+                                            />
+                                        )}
+                                    </Show>
+                                </svg>
+                            );
+                        })()}
+                    </div>
+                    {/* // Debug colour picker
+                    <div
+                        style={{
+                            "position": "absolute",
+                            "left": "200px",
+                            "top": "200px",
+                            "width": "300px",
+                            "height": "300px",
+                            "display": "flex",
+                            "flex-direction": "column",
+                        }}
+                    >
+                        <ColourPicker/>
+                    </div>
                     */}
-                </div>
-                <div
-                    style={{
-                        "position": "absolute",
-                        "left": "0",
-                        "top": "0",
-                        "right": "0",
-                        "bottom": "0",
-                        "overflow": "hidden",
-                    }}
-                >
-                    {(() => {
-                        let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
-                        onMount(() => {
-                            let svg2 = svg()!;
-                            let parent = svg2?.parentElement!;
-                            let resizeObserver = new ResizeObserver(() => {
-                                let rect = parent.getBoundingClientRect();
-                                svg2.setAttribute("width", `${rect.width}`);
-                                svg2.setAttribute("height", `${rect.height}`);
-                            });
-                            resizeObserver.observe(parent);
-                            onCleanup(() => {
-                                resizeObserver.unobserve(parent);
-                                resizeObserver.disconnect();
-                            });
-                        });
-                        let pt1 = createMemo(() => worldPtToScreenPt(state.minPt));
-                        let pt2 = createMemo(() => worldPtToScreenPt(state.minPt.clone().add(state.size)));
-                        let rect = createMemo(() => {
-                            let pt12 = pt1();
-                            if (pt12 == undefined) {
-                                return undefined;
-                            }
-                            let pt22 = pt2();
-                            if (pt22 == undefined) {
-                                return undefined;
-                            }
-                            return {
-                                pt: pt12,
-                                size: pt22.clone().sub(pt12),
-                            };
-                        });
-                        return (
-                            <svg
-                                ref={setSvg}
-                            >
-                                <Show when={rect()}>
-                                    {(rect2) => (
-                                        <rect
-                                            x={rect2().pt.x}
-                                            y={rect2().pt.y}
-                                            width={rect2().size.x}
-                                            height={rect2().size.y}
-                                            stroke="black"
-                                            stroke-width={2}
-                                            fill="none"
-                                        />
-                                    )}
-                                </Show>
-                            </svg>
-                        );
-                    })()}
                 </div>
                 <Show when={state.showColourPicker}>
                     <Show when={colourPickerButton()}>
@@ -599,21 +622,6 @@ const PixelEditor: Component = () => {
                         }}
                     </Show>
                 </Show>
-                {/* // Debug colour picker
-                <div
-                    style={{
-                        "position": "absolute",
-                        "left": "200px",
-                        "top": "200px",
-                        "width": "300px",
-                        "height": "300px",
-                        "display": "flex",
-                        "flex-direction": "column",
-                    }}
-                >
-                    <ColourPicker/>
-                </div>
-                */}
             </div>
         </div>
     );
