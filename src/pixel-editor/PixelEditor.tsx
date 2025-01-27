@@ -1,4 +1,4 @@
-import { batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, onMount, Setter, Show, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { ModeParams } from "./ModeParams";
@@ -12,9 +12,12 @@ import { EyeDropperMode } from "./modes/EyeDropperMode";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
+        minPt: Vec2,
+        size: Vec2,
+        //
+        mousePos: Vec2 | undefined,
         pan: Vec2,
         scale: number,
-        mousePos: Vec2 | undefined,
         // panning states
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
@@ -24,9 +27,12 @@ const PixelEditor: Component = () => {
         currentColour: Colour,
         showColourPicker: boolean,
     }>({
+        minPt: Vec2.zero(),
+        size: Vec2.create(10, 10),
+        //
+        mousePos: undefined,
         pan: Vec2.create(-1, -1),
         scale: 30.0,
-        mousePos: undefined,
         // panning states
         isPanning: false,
         panningFrom: undefined,
@@ -71,20 +77,16 @@ const PixelEditor: Component = () => {
         }
         return canvas2.getContext("2d");
     });
-    let image = createMemo(() => {
-        let ctx2 = ctx();
-        if (ctx2 == undefined) {
-            return undefined;
-        }
-        let imageData = new ImageData(10,10);
-        let result = new OffscreenCanvas(10, 10);
+    let makeInitImage = (params: { size: Vec2, }) => {
+        let imageData = new ImageData(params.size.x, params.size.y);
+        let result = new OffscreenCanvas(params.size.x, params.size.y);
         let data = imageData.data;
         let at = 0;
-        for (let i = 0; i < 10; ++i) {
-            for (let j = 0; j < 10; ++j) {
-                data[at++] = i*20;
+        for (let i = 0; i < params.size.y; ++i) {
+            for (let j = 0; j < params.size.x; ++j) {
+                data[at++] = (i*20) & 255;
                 data[at++] = 0;
-                data[at++] = j*20;
+                data[at++] = (j*20) & 255;
                 data[at++] = 255;
             }
         }
@@ -98,7 +100,49 @@ const PixelEditor: Component = () => {
             imageData,
             ctx: offCtx,
         };
-    });
+    };
+    let [ image, setImage ] = createSignal(untrack(() => makeInitImage({ size: state.size, })));
+    let resizeImage = (params: {
+        minPt: Vec2,
+        size: Vec2,
+    }): {
+        image: OffscreenCanvas;
+        imageData: ImageData;
+        ctx: OffscreenCanvasRenderingContext2D;
+    } | undefined => {
+        let result = (() => {
+            let lastImage = image();
+            if (lastImage == undefined) {
+                let newImage = makeInitImage({ size: params.size, });
+                if (newImage != undefined) {
+                    setImage(newImage);
+                }
+                return newImage;
+            }
+            let result = new OffscreenCanvas(params.size.x, params.size.y);
+            let offCtx = result.getContext("2d");
+            if (offCtx == undefined) {
+                return undefined;
+            }
+            offCtx.putImageData(
+                lastImage.imageData,
+                state.minPt.x - params.minPt.x,
+                state.minPt.y - params.minPt.y
+            );
+            let imageData = offCtx.getImageData(0, 0, result.width, result.height);
+            return {
+                image: result,
+                imageData,
+                ctx: offCtx,
+            };
+        })();
+        batch(() => {
+            setState("minPt", params.minPt);
+            setState("size", params.size);
+        });
+        setImage(result);
+        return result;
+    }
     function drawOnCanvas() {
         let canvas2 = canvas();
         if (canvas2 == undefined) {
@@ -117,7 +161,7 @@ const PixelEditor: Component = () => {
         ctx2.imageSmoothingEnabled = false;
         ctx2.scale(state.scale, state.scale);
         ctx2.translate(-state.pan.x, -state.pan.y);
-        ctx2.drawImage(image2.image, 0, 0, 10, 10);
+        ctx2.drawImage(image2.image, state.minPt.x, state.minPt.y, state.size.x, state.size.y);
         ctx2.restore();
     }
     let render = (() => {
@@ -151,11 +195,11 @@ const PixelEditor: Component = () => {
             if (image2 == undefined) {
                 return undefined;
             }
-            if (pt.x < 0 || pt.x >= image2.imageData.width) {
-                return;
-            }
-            if (pt.y < 0 || pt.y >= image2.imageData.height) {
-                return;
+            if (
+                pt.x < state.minPt.x || pt.x >= state.minPt.x + image2.imageData.width ||
+                pt.y < state.minPt.y || pt.y >= state.minPt.y + image2.imageData.height
+            ) {
+                return new Colour(0, 0, 0, 0);
             }
             let data = image2.imageData.data;
             let offset = (image2.imageData.width * pt.y + pt.x) << 2;
@@ -171,19 +215,54 @@ const PixelEditor: Component = () => {
             if (image2 == undefined) {
                 return;
             }
-            if (pt.x < 0 || pt.x >= image2.imageData.width) {
+            let minPt: Vec2;
+            let size: Vec2;
+            let image3: typeof image2 | undefined;
+            if (
+                pt.x < state.minPt.x || pt.x >= state.minPt.x + image2.imageData.width ||
+                pt.y < state.minPt.y || pt.y >= state.minPt.y + image2.imageData.height
+            ) {
+                minPt = Vec2.create(
+                    Math.min(state.minPt.x, pt.x),
+                    Math.min(state.minPt.y, pt.y),
+                );
+                size = Vec2.create(
+                    Math.max(
+                        state.size.x + (state.minPt.x - minPt.x),
+                        -state.minPt.x + pt.x + 1
+                    ),
+                    Math.max(
+                        state.size.y + (state.minPt.y - minPt.y),
+                        -state.minPt.y + pt.y + 1
+                    ),
+                );
+                image3 = resizeImage({
+                    minPt,
+                    size,
+                });
+            } else {
+                minPt = state.minPt;
+                size = state.size;
+                image3 = image2;
+            }
+            if (image3 == undefined) {
                 return;
             }
-            if (pt.y < 0 || pt.y >= image2.imageData.height) {
-                return;
-            }
-            let data = image2.imageData.data;
-            let offset = (image2.imageData.width * pt.y + pt.x) << 2;
+            let data = image3.imageData.data;
+            let offset = (image3.imageData.width * (pt.y - minPt.y) + (pt.x - minPt.x)) << 2;
             data[offset] = colour.r;
             data[offset+1] = colour.g;
             data[offset+2] = colour.b;
             data[offset+3] = colour.a;
-            image2.ctx.putImageData(image2.imageData, 0, 0, pt.x, pt.y, 1, 1);
+            image3.ctx.putImageData(
+                image3.imageData,
+                0,
+                0,
+                pt.x - minPt.x,
+                pt.y - minPt.y,
+                1,
+                1
+            );
             render();
         },
     };
@@ -393,18 +472,18 @@ const PixelEditor: Component = () => {
                     "display": "flex",
                     "flex-direction": "column",
                 }}
+                onMouseDown={onMouseDown}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+                onMouseOut={onMouseOut}
+                onWheel={onWheel}
+                onClick={onClick}
             >
                 <canvas
                     style={{
                         "flex-grow": "1"
                     }}
                     ref={setCanvas}
-                    onMouseDown={onMouseDown}
-                    onMouseUp={onMouseUp}
-                    onMouseMove={onMouseMove}
-                    onMouseOut={onMouseOut}
-                    onWheel={onWheel}
-                    onClick={onClick}
                 />
                 <div
                     style={{
@@ -422,6 +501,69 @@ const PixelEditor: Component = () => {
                         {(pt) => (<>{`${pt().x.toFixed(0)}, ${pt().y.toFixed(0)}`}</>)}
                     </Show>
                     */}
+                </div>
+                <div
+                    style={{
+                        "position": "absolute",
+                        "left": "0",
+                        "top": "0",
+                        "right": "0",
+                        "bottom": "0",
+                        "overflow": "hidden",
+                    }}
+                >
+                    {(() => {
+                        let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
+                        onMount(() => {
+                            let svg2 = svg()!;
+                            let parent = svg2?.parentElement!;
+                            let resizeObserver = new ResizeObserver(() => {
+                                let rect = parent.getBoundingClientRect();
+                                svg2.setAttribute("width", `${rect.width}`);
+                                svg2.setAttribute("height", `${rect.height}`);
+                            });
+                            resizeObserver.observe(parent);
+                            onCleanup(() => {
+                                resizeObserver.unobserve(parent);
+                                resizeObserver.disconnect();
+                            });
+                        });
+                        let pt1 = createMemo(() => worldPtToScreenPt(state.minPt));
+                        let pt2 = createMemo(() => worldPtToScreenPt(state.minPt.clone().add(state.size)));
+                        let rect = createMemo(() => {
+                            let pt12 = pt1();
+                            if (pt12 == undefined) {
+                                return undefined;
+                            }
+                            let pt22 = pt2();
+                            if (pt22 == undefined) {
+                                return undefined;
+                            }
+                            return {
+                                pt: pt12,
+                                size: pt22.clone().sub(pt12),
+                            };
+                        });
+                        return (
+                            <svg
+                                ref={setSvg}
+                            >
+                                <Show when={rect()}>
+                                    {(rect2) => (
+                                        <rect
+                                            x={rect2().pt.x}
+                                            y={rect2().pt.y}
+                                            width={rect2().size.x}
+                                            height={rect2().size.y}
+                                            stroke="black"
+                                            stroke-width={2}
+                                            fill="none"
+                                        />
+                                    )}
+                                </Show>
+                            </svg>
+                        );
+                    })()}
                 </div>
                 <Show when={state.showColourPicker}>
                     <Show when={colourPickerButton()}>
