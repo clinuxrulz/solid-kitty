@@ -9,6 +9,7 @@ import { Mode } from "./Mode";
 import { UndoManager } from "./UndoManager";
 import ColourPicker from "./ColourPicker";
 import { EyeDropperMode } from "./modes/EyeDropperMode";
+import { ErasePixelsMode } from "./modes/ErasePixelsMode";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -22,7 +23,11 @@ const PixelEditor: Component = () => {
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
         //
-        mode: "Idle" | "Draw Pixels" | "Eye Dropper",
+        mode:
+            "Idle" |
+            "Draw Pixels" |
+            "Erase Pixels" |
+            "Eye Dropper",
         //
         currentColour: Colour,
         showColourPicker: boolean,
@@ -272,6 +277,8 @@ const PixelEditor: Component = () => {
                 return new IdleMode(modeParams);
             case "Draw Pixels":
                 return new DrawPixelsMode(modeParams);
+            case "Erase Pixels":
+                return new ErasePixelsMode(modeParams);
             case "Eye Dropper":
                 return new EyeDropperMode(modeParams);
 
@@ -441,6 +448,16 @@ const PixelEditor: Component = () => {
                     onClick={() => setState("mode", "Draw Pixels")}
                 >
                     <i class="fa-solid fa-pencil"/>
+                </button>
+                <button
+                    style={{
+                        "font-size": "20pt",
+                        "padding": "5pt",
+                        "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
+                    }}
+                    onClick={() => setState("mode", "Erase Pixels")}
+                >
+                    <i class="fa-solid fa-eraser"></i>
                 </button>
                 <button
                     ref={setColourPickerButton}
