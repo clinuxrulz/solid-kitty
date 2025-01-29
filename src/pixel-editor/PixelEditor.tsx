@@ -636,6 +636,9 @@ const PixelEditor: Component = () => {
                                         "flex-direction": "column",
                                         "width": "300px",
                                         "height": "300px",
+                                        "background-color": "white",
+                                        "padding": "20px",
+                                        "border": "1px solid black",
                                     }}
                                 >
                                     <ColourPicker

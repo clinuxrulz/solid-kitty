@@ -18,6 +18,7 @@ const ColourPicker: Component<{
         userRedText: string | undefined,
         userGreenText: string | undefined,
         userBlueText: string | undefined,
+        userAlphaText: string | undefined,
     }>({
         cursorPos: Vec2.zero(),
         chartMousePos: undefined,
@@ -29,6 +30,7 @@ const ColourPicker: Component<{
         userRedText: undefined,
         userGreenText: undefined,
         userBlueText: undefined,
+        userAlphaText: undefined,
     });
     let [ colourChartDiv, setColourChartDiv, ] = createSignal<HTMLDivElement>();
     let [ colourChartSize, setColourChartSize, ] = createSignal<Vec2 | undefined>();
@@ -277,6 +279,16 @@ const ColourPicker: Component<{
             return undefined;
         }
         let value = Number.parseFloat(state.userBlueText);
+        if (!Number.isFinite(value)) {
+            return undefined;
+        }
+        return Math.max(0, Math.min(255, value));
+    });
+    let userAlphaFieldVal = createMemo(() => {
+        if (state.userAlphaText == undefined) {
+            return undefined;
+        }
+        let value = Number.parseFloat(state.userAlphaText);
         if (!Number.isFinite(value)) {
             return undefined;
         }
@@ -551,6 +563,7 @@ const ColourPicker: Component<{
                                                 setState("userRedText", e.currentTarget.value);
                                                 setState("userGreenText", currentColour().g.toFixed(0));
                                                 setState("userBlueText", currentColour().b.toFixed(0));
+                                                setState("userAlphaText", currentColour().a.toFixed(0));
                                             });
                                         }}
                                     />
@@ -567,6 +580,7 @@ const ColourPicker: Component<{
                                                 setState("userRedText", currentColour().r.toFixed(0));
                                                 setState("userGreenText", e.currentTarget.value);
                                                 setState("userBlueText", currentColour().b.toFixed(0));
+                                                setState("userAlphaText", currentColour().a.toFixed(0));
                                             });
                                         }}
                                     />
@@ -583,6 +597,24 @@ const ColourPicker: Component<{
                                                 setState("userRedText", currentColour().r.toFixed(0));
                                                 setState("userGreenText", currentColour().g.toFixed(0));
                                                 setState("userBlueText", e.currentTarget.value);
+                                                setState("userAlphaText", currentColour().a.toFixed(0));
+                                            });
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Alpha:</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={state.userAlphaText ?? state.userColour?.a ?? colourInCanvas()?.a}
+                                        onInput={(e) => {
+                                            batch(() => {
+                                                setState("userRedText", currentColour().r.toFixed(0));
+                                                setState("userGreenText", currentColour().g.toFixed(0));
+                                                setState("userBlueText", currentColour().b.toFixed(0));
+                                                setState("userAlphaText", e.currentTarget.value);
                                             });
                                         }}
                                     />
