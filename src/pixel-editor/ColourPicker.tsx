@@ -14,6 +14,7 @@ const ColourPicker: Component<{
         brightness: number,
         brightnessMousePos: Vec2 | undefined,
         brightnessMouseDown: boolean,
+        alpha: number,
         alphaMousePos: Vec2 | undefined,
         alphaMouseDown: boolean,
         userColour: Colour | undefined,
@@ -28,6 +29,7 @@ const ColourPicker: Component<{
         brightness: 255,
         brightnessMousePos: undefined,
         brightnessMouseDown: false,
+        alpha: 255,
         alphaMousePos: undefined,
         alphaMouseDown: false,
         userColour: untrack(() => props.colour),
@@ -275,11 +277,31 @@ const ColourPicker: Component<{
         setState("userBlueText", undefined);
         setState("brightness", Math.max(0, Math.min(255, Math.floor(256 * (sizeY - pt.y) / sizeY))));
     });
+    createEffect(() => {
+        if (!state.alphaMouseDown) {
+            return;
+        }
+        let pt = state.alphaMousePos;
+        if (pt == undefined) {
+            return;
+        }
+        let sizeY = canvas()?.size.y;
+        if (sizeY == undefined) {
+            return;
+        }
+        setState("userColour", undefined);
+        setState("userRedText", undefined);
+        setState("userGreenText", undefined);
+        setState("userBlueText", undefined);
+        setState("userAlphaText", undefined);
+        setState("alpha", Math.max(0, Math.min(255, Math.floor(256 * (sizeY - pt.y) / sizeY))));
+    });
     let colourInCanvas = createMemo(on(
         [
             canvas,
             () => state.cursorPos,
             () => state.brightness,
+            () => state.alpha,
         ],
         () => {
             let canvas2 = canvas();
@@ -291,7 +313,8 @@ const ColourPicker: Component<{
             let r = canvas2.sliderImageData.data[offset];
             let g = canvas2.sliderImageData.data[offset+1];
             let b = canvas2.sliderImageData.data[offset+2];
-            return new Colour(r, g, b, 255);
+            let a = state.alpha;
+            return new Colour(r, g, b, a);
         })
     );
     let userRedFieldVal = createMemo(() => {
@@ -345,7 +368,7 @@ const ColourPicker: Component<{
             userRedFieldVal() ?? c?.r ?? 0,
             userGreenFieldVal() ?? c?.g ?? 0,
             userBlueFieldVal() ?? c?.b ?? 0,
-            255,
+            userAlphaFieldVal() ?? c?.a ?? 255,
         );
     });
     createEffect(on(
@@ -391,7 +414,8 @@ const ColourPicker: Component<{
         if (state.userColour == undefined &&
             userRedFieldVal() == undefined &&
             userGreenFieldVal() == undefined &&
-            userBlueFieldVal() == undefined
+            userBlueFieldVal() == undefined &&
+            userAlphaFieldVal() == undefined
         ) {
             return;
         }
@@ -400,7 +424,7 @@ const ColourPicker: Component<{
             userRedFieldVal() ?? c?.r ?? 0,
             userGreenFieldVal() ?? c?.g ?? 0,
             userBlueFieldVal() ?? c?.b ?? 0,
-            255,
+            userAlphaFieldVal() ?? c?.a ?? 255,
         );
         let mv = Math.max(c2.r, c2.g, c2.b);
         let lv = Math.min(c2.r, c2.g, c2.b);
@@ -441,6 +465,7 @@ const ColourPicker: Component<{
         batch(() => {
             setState("cursorPos", Vec2.create(cursor_x, cursor_y));
             setState("brightness", brightness);
+            setState("alpha", c2.a);
         });
     });
     return (
@@ -624,7 +649,7 @@ const ColourPicker: Component<{
                     >
                         <rect
                             x={0}
-                            y={(canvas()?.size.y ?? 0) - state.brightness * (canvas()?.size.y ?? 0) / 255 - 5}
+                            y={(canvas()?.size.y ?? 0) - state.alpha * (canvas()?.size.y ?? 0) / 255 - 5}
                             width={24}
                             height={10}
                             fill="none"
