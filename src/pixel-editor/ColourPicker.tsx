@@ -189,6 +189,15 @@ const ColourPicker: Component<{
             sliderCtx.putImageData(sliderImageData, 0, 0);
         });
         let alphaSliderCanvas = document.createElement("canvas");
+        alphaSliderCanvas.style.setProperty(
+            "background-image", "linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)"
+        );
+        alphaSliderCanvas.style.setProperty(
+            "background-size", "20px 20px"
+        );
+        alphaSliderCanvas.style.setProperty(
+            "background-position", "0 0, 0 10px, 10px -10px, -10px 0px"
+        );
         alphaSliderCanvas.setAttribute("width", "1");
         alphaSliderCanvas.setAttribute("height", `${size.y}`);
         alphaSliderCanvas.style.setProperty("flex-grow", "1");
