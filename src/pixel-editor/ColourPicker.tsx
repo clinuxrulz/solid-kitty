@@ -14,6 +14,8 @@ const ColourPicker: Component<{
         brightness: number,
         brightnessMousePos: Vec2 | undefined,
         brightnessMouseDown: boolean,
+        alphaMousePos: Vec2 | undefined,
+        alphaMouseDown: boolean,
         userColour: Colour | undefined,
         userRedText: string | undefined,
         userGreenText: string | undefined,
@@ -26,6 +28,8 @@ const ColourPicker: Component<{
         brightness: 255,
         brightnessMousePos: undefined,
         brightnessMouseDown: false,
+        alphaMousePos: undefined,
+        alphaMouseDown: false,
         userColour: untrack(() => props.colour),
         userRedText: undefined,
         userGreenText: undefined,
@@ -182,7 +186,43 @@ const ColourPicker: Component<{
             }
             sliderCtx.putImageData(sliderImageData, 0, 0);
         });
-        return { canvas, sliderCanvas, size, sliderImageData, };
+        let alphaSliderCanvas = document.createElement("canvas");
+        alphaSliderCanvas.setAttribute("width", "1");
+        alphaSliderCanvas.setAttribute("height", `${size.y}`);
+        alphaSliderCanvas.style.setProperty("flex-grow", "1");
+        let alphaSliderCtx = alphaSliderCanvas.getContext("2d");
+        if (alphaSliderCtx == null) {
+            return;
+        }
+        let alphaSliderImageData = new ImageData(1, size.y);
+        createComputed(() => {
+            let cursorPos = state.cursorPos;
+            if (cursorPos == undefined) {
+                return;
+            }
+            let offset = (imageData.width * cursorPos.y + cursorPos.x) << 2;
+            let r = imageData.data[offset];
+            let g = imageData.data[offset+1];
+            let b = imageData.data[offset+2];
+            let a = imageData.data[offset+3];
+            for (let i = 0; i < size.y; ++i) {
+                let offset = i<<2;
+                let a2 = Math.floor(a * (size.y-1-i) / (size.y-1));
+                alphaSliderImageData.data[offset] = r;
+                alphaSliderImageData.data[offset+1] = g;
+                alphaSliderImageData.data[offset+2] = b;
+                alphaSliderImageData.data[offset+3] = a2;
+            }
+            alphaSliderCtx.putImageData(alphaSliderImageData, 0, 0);
+        });
+        return {
+            canvas,
+            sliderCanvas,
+            alphaSliderCanvas,
+            size,
+            sliderImageData,
+            alphaSliderImageData,
+        };
     });
     /* Debug brightness changes
     let done = false;
@@ -514,6 +554,63 @@ const ColourPicker: Component<{
                     }}
                 >
                     {canvas()?.sliderCanvas}
+                    <svg
+                        width={25}
+                        height={canvas()?.size.y ?? 0}
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                        }}
+                    >
+                        <rect
+                            x={0}
+                            y={(canvas()?.size.y ?? 0) - state.brightness * (canvas()?.size.y ?? 0) / 255 - 5}
+                            width={24}
+                            height={10}
+                            fill="none"
+                            stroke="black"
+                            stroke-width={2}
+                            pointer-events="none"
+                        />
+                    </svg>
+                </div>
+                <div
+                    style={{
+                        "position": "relative",
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "width": "25px",
+                        "height": `${canvas()?.size.y ?? 0}px`,
+                        "margin-left": "15px",
+                        "overflow": "hidden",
+                        "touch-action": "none",
+                    }}
+                    onPointerMove={(e) => {
+                        let rect = e.currentTarget.getBoundingClientRect();
+                        let x = e.clientX - rect.left;
+                        let y = e.clientY - rect.top;
+                        setState("alphaMousePos", Vec2.create(x, y));
+                        e.preventDefault();
+                    }}
+                    onPointerOut={(e) => {
+                        setState("alphaMousePos", undefined);
+                        e.preventDefault();
+                    }}
+                    onPointerDown={(e) => {
+                        setState("alphaMouseDown", true);
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        e.preventDefault();
+                    }}
+                    onPointerUp={(e) => {
+                        setState("alphaMouseDown", false);
+                        e.currentTarget.releasePointerCapture(e.pointerId);
+                        e.preventDefault();
+                    }}
+                >
+                    {canvas()?.alphaSliderCanvas}
                     <svg
                         width={25}
                         height={canvas()?.size.y ?? 0}
