@@ -10,6 +10,7 @@ import { UndoManager } from "./UndoManager";
 import ColourPicker from "./ColourPicker";
 import { EyeDropperMode } from "./modes/EyeDropperMode";
 import { ErasePixelsMode } from "./modes/ErasePixelsMode";
+import { StaticRouter } from "@solidjs/router";
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -27,6 +28,11 @@ const PixelEditor: Component = () => {
         // panning states
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
+        //
+        isTouchPanZoom: boolean,
+        touchPanZoomFrom: Vec2 | undefined,
+        touchPanZoomInitScale: number | undefined,
+        touchPanZoomInitGap: number | undefined,
         //
         mode:
             "Idle" |
@@ -48,6 +54,11 @@ const PixelEditor: Component = () => {
         // panning states
         isPanning: false,
         panningFrom: undefined,
+        //
+        isTouchPanZoom: false,
+        touchPanZoomFrom: undefined,
+        touchPanZoomInitScale: undefined,
+        touchPanZoomInitGap: undefined,
         //
         mode: "Idle",
         //
@@ -369,6 +380,80 @@ const PixelEditor: Component = () => {
             setState("scale", state.scale * factor);
         });
     };
+    createComputed(on(
+        [
+            () => state.isTouchPanZoom,
+            () => state.touchPanZoomFrom,
+            () => state.touchPanZoomInitGap,
+            () => state.touchPanZoomInitScale,
+            () => state.touches,
+            () => state.mousePos,
+        ],
+        () => {
+            if (!state.isTouchPanZoom) {
+                return;
+            }
+            if (state.touchPanZoomFrom == undefined) {
+                return;
+            }
+            if (state.mousePos == undefined) {
+                return;
+            }
+            if (state.touchPanZoomInitScale == undefined) {
+                return;
+            }
+            let pt = screenPtToWorldPt(state.mousePos);
+            if (pt == undefined) {
+                return;
+            }
+            let gap: number | undefined;
+            if (state.touches.length != 2) {
+                gap = undefined;
+            } else {
+                gap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+            }
+            let delta = state.touchPanZoomFrom.clone().sub(pt);
+            setState("pan", (pan) => pan.clone().add(delta));
+            if (state.touchPanZoomInitGap != undefined && gap != undefined) {
+                let newScale = state.touchPanZoomInitScale * gap / state.touchPanZoomInitGap;
+                setState("scale", newScale);
+            }
+        },
+    ));
+    let startTouchPanZoom = () => {
+        if (state.touches.length == 0) {
+            return;
+        }
+        let mid = Vec2.zero();
+        for (let touch of state.touches) {
+            mid.add(touch.pos);
+        }
+        mid.multScalar(1.0 / state.touches.length);
+        let initGap: number | undefined;
+        if (state.touches.length != 2) {
+            initGap = undefined;
+        } else {
+            initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+        }
+        let pt = screenPtToWorldPt(mid);
+        if (pt == undefined) {
+            return;
+        }
+        batch(() => {
+            setState("isTouchPanZoom", true);
+            setState("touchPanZoomFrom", pt);
+            setState("touchPanZoomInitGap", initGap);
+            setState("touchPanZoomInitScale", state.scale);
+        });
+    };
+    let stopTouchPanZoom = () => {
+        batch(() => {
+            setState("isTouchPanZoom", false);
+            setState("touchPanZoomFrom", undefined);
+            setState("touchPanZoomInitGap", undefined);
+            setState("touchPanZoomInitScale", undefined);
+        });
+    };
     let onMouseDown = (e: MouseEvent) => {
         if (!state.isPanning) {
             startPan();
@@ -425,15 +510,16 @@ const PixelEditor: Component = () => {
             avg = avg.add(pos);
         }
         avg = avg.multScalar(1.0 / e.targetTouches.length);
+        if (state.isTouchPanZoom) {
+            stopTouchPanZoom();
+        }
         setState("touches", touches);
         setState("mousePos", avg);
-        if (!state.isPanning) {
-            startPan();
-        }
+        startTouchPanZoom();
     };
     let onTouchEnd = (e: TouchEvent) => {
-        if (state.isPanning) {
-            stopPan();
+        if (state.isTouchPanZoom) {
+            stopTouchPanZoom()
         }
         setState("touches", []);
     };
@@ -457,6 +543,12 @@ const PixelEditor: Component = () => {
             avg = avg.add(pos);
         }
         avg = avg.multScalar(1.0 / e.targetTouches.length);
+        if (state.isTouchPanZoom && state.touches.length != 2 && touches.length == 2) {
+            let initGap = touches[1].pos.distance(touches[0].pos);
+            setState("touchPanZoomFrom", avg);
+            setState("touchPanZoomInitGap", initGap);
+            setState("touchPanZoomInitScale", state.scale);
+        }
         setState("touches", touches);
         setState("mousePos", avg);
         e.preventDefault();
