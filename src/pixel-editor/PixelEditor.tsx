@@ -445,7 +445,13 @@ const PixelEditor: Component = () => {
                         "padding": "5pt",
                         "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
                     }}
-                    onClick={() => setState("mode", "Draw Pixels")}
+                    onClick={() => {
+                        if (state.mode == "Draw Pixels") {
+                            setState("mode", "Idle");
+                        } else {
+                            setState("mode", "Draw Pixels");
+                        }
+                    }}
                 >
                     <i class="fa-solid fa-pencil"/>
                 </button>
@@ -455,7 +461,13 @@ const PixelEditor: Component = () => {
                         "padding": "5pt",
                         "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
                     }}
-                    onClick={() => setState("mode", "Erase Pixels")}
+                    onClick={() => {
+                        if (state.mode == "Erase Pixels") {
+                            setState("mode", "Idle");
+                        } else {
+                            setState("mode", "Erase Pixels");
+                        }
+                    }}
                 >
                     <i class="fa-solid fa-eraser"></i>
                 </button>
@@ -479,7 +491,11 @@ const PixelEditor: Component = () => {
                         "background-color": state.mode == "Eye Dropper" ? "blue" : undefined,
                     }}
                     onClick={() => {
-                        setState("mode", "Eye Dropper");
+                        if (state.mode == "Eye Dropper") {
+                            setState("mode", "Idle");
+                        } else {
+                            setState("mode", "Eye Dropper");
+                        }
                     }}
                 >
                     <i class="fa-solid fa-eye-dropper"></i>
