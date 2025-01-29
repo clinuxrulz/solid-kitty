@@ -477,6 +477,31 @@ const ColourPicker: Component<{
             setState("alpha", c2.a);
         });
     });
+    let [ colourPreviewDiv, setColourPreviewDiv ] = createSignal<HTMLDivElement>();
+    let [ colourPreviewDivWidth, setColourPreviewDivWidth ] = createSignal<number>(50);
+    createEffect(on(
+        colourPreviewDiv,
+        () => {
+            let div = colourPreviewDiv();
+            if (div == undefined) {
+                return;
+            }
+            let resizeOberser = new ResizeObserver(
+                () => {
+                    let rect = div.getBoundingClientRect();
+                    console.log(rect);
+                    if (rect.width != rect.height) {
+                        setColourPreviewDivWidth(rect.height);
+                    }
+                },
+            );
+            resizeOberser.observe(div);
+            onCleanup(() => {
+                resizeOberser.unobserve(div);
+                resizeOberser.disconnect();
+            });
+        },
+    ));
     return (
         <div
             style={{
@@ -755,9 +780,11 @@ const ColourPicker: Component<{
                     </table>
                 </div>
                 <div
+                    ref={setColourPreviewDiv}
                     style={{
-                        "width": "50px",
-                        "height": "50px",
+                        "width": `${colourPreviewDivWidth()}px`,
+                        //"width": "50px",
+                        //"height": "50px",
                         "background-image": "linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)",
                         "background-size": "20px 20px",
                         "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
