@@ -700,11 +700,8 @@ const ColourPicker: Component<{
                     "flex-direction": "row",
                 }}
             >
-                <div
-                    style={{
-                        "flex-grow": "1"
-                    }}
-                >
+                <div style={{"flex-grow": "1"}}></div>
+                <div>
                     <table>
                         <thead/>
                         <tbody>
@@ -722,6 +719,7 @@ const ColourPicker: Component<{
                                                 setState("userAlphaText", currentColour().a.toFixed(0));
                                             });
                                         }}
+                                        size="4"
                                     />
                                 </td>
                             </tr>
@@ -739,6 +737,7 @@ const ColourPicker: Component<{
                                                 setState("userAlphaText", currentColour().a.toFixed(0));
                                             });
                                         }}
+                                        size="4"
                                     />
                                 </td>
                             </tr>
@@ -756,6 +755,7 @@ const ColourPicker: Component<{
                                                 setState("userAlphaText", currentColour().a.toFixed(0));
                                             });
                                         }}
+                                        size="4"
                                     />
                                 </td>
                             </tr>
@@ -773,6 +773,7 @@ const ColourPicker: Component<{
                                                 setState("userAlphaText", e.currentTarget.value);
                                             });
                                         }}
+                                        size="4"
                                     />
                                 </td>
                             </tr>
@@ -783,12 +784,12 @@ const ColourPicker: Component<{
                     ref={setColourPreviewDiv}
                     style={{
                         "width": `${colourPreviewDivWidth()}px`,
-                        //"width": "50px",
-                        //"height": "50px",
                         "background-image": "linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)",
                         "background-size": "20px 20px",
                         "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
                         "margin-top": "10px",
+                        "margin-bottom": "10px",
+                        "margin-left": "10px",
                         "display": "flex",
                         "flex-direction": "column",
                     }}
