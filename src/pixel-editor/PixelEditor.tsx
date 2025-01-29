@@ -19,6 +19,11 @@ const PixelEditor: Component = () => {
         mousePos: Vec2 | undefined,
         pan: Vec2,
         scale: number,
+        //
+        touches: {
+            id: number,
+            pos: Vec2,
+        }[],
         // panning states
         isPanning: boolean,
         panningFrom: Vec2 | undefined,
@@ -38,6 +43,8 @@ const PixelEditor: Component = () => {
         mousePos: undefined,
         pan: Vec2.create(-1, -1),
         scale: 30.0,
+        //
+        touches: [],
         // panning states
         isPanning: false,
         panningFrom: undefined,
@@ -395,6 +402,65 @@ const PixelEditor: Component = () => {
     let onClick = (e: MouseEvent) => {
         mode().click?.();
     };
+    let onTouchStart = (e: TouchEvent) => {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
+        let rect = canvas2.getBoundingClientRect();
+        let touches: { id: number, pos: Vec2, }[] = [];
+        if (e.targetTouches.length == 0) {
+            return;
+        }
+        let avg = Vec2.zero();
+        for (let touch of e.targetTouches) {
+            let pos = Vec2.create(
+                touch.clientX - rect.left,
+                touch.clientY - rect.top,
+            );
+            touches.push({
+                id: touch.identifier,
+                pos,
+            });
+            avg = avg.add(pos);
+        }
+        avg = avg.multScalar(1.0 / e.targetTouches.length);
+        setState("touches", touches);
+        setState("mousePos", avg);
+        if (!state.isPanning) {
+            startPan();
+        }
+    };
+    let onTouchEnd = (e: TouchEvent) => {
+        if (state.isPanning) {
+            stopPan();
+        }
+        setState("touches", []);
+    };
+    let onTouchMove = (e: TouchEvent) => {
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
+        let rect = canvas2.getBoundingClientRect();
+        let touches: { id: number, pos: Vec2, }[] = [];
+        let avg = Vec2.zero();
+        for (let touch of e.targetTouches) {
+            let pos = Vec2.create(
+                touch.clientX - rect.left,
+                touch.clientY - rect.top,
+            );
+            touches.push({
+                id: touch.identifier,
+                pos,
+            });
+            avg = avg.add(pos);
+        }
+        avg = avg.multScalar(1.0 / e.targetTouches.length);
+        setState("touches", touches);
+        setState("mousePos", avg);
+        e.preventDefault();
+    };
     let onKeyDown = (e: KeyboardEvent) => {
         if (e.key == "Escape") {
             setState("mode", "Idle");
@@ -521,6 +587,9 @@ const PixelEditor: Component = () => {
                     onMouseOut={onMouseOut}
                     onWheel={onWheel}
                     onClick={onClick}
+                    onTouchStart={onTouchStart}
+                    onTouchEnd={onTouchEnd}
+                    onTouchMove={onTouchMove}
                 >
                     <canvas
                         style={{
