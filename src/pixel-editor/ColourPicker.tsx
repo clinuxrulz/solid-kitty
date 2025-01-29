@@ -427,10 +427,12 @@ const ColourPicker: Component<{
                     }}
                     onPointerDown={(e) => {
                         setState("chartMouseDown", true);
+                        e.currentTarget.setPointerCapture(e.pointerId);
                         e.preventDefault();
                     }}
                     onPointerUp={(e) => {
                         setState("chartMouseDown", false);
+                        e.currentTarget.releasePointerCapture(e.pointerId);
                         e.preventDefault();
                     }}
                 >
@@ -490,10 +492,12 @@ const ColourPicker: Component<{
                     }}
                     onPointerDown={(e) => {
                         setState("brightnessMouseDown", true);
+                        e.currentTarget.setPointerCapture(e.pointerId);
                         e.preventDefault();
                     }}
                     onPointerUp={(e) => {
                         setState("brightnessMouseDown", false);
+                        e.currentTarget.releasePointerCapture(e.pointerId);
                         e.preventDefault();
                     }}
                 >
