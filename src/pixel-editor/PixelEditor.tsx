@@ -161,21 +161,10 @@ const PixelEditor: Component = () => {
     let makeInitImage = (params: { size: Vec2, }) => {
         let imageData = new ImageData(params.size.x, params.size.y);
         let result = new OffscreenCanvas(params.size.x, params.size.y);
-        let data = imageData.data;
-        let at = 0;
-        for (let i = 0; i < params.size.y; ++i) {
-            for (let j = 0; j < params.size.x; ++j) {
-                data[at++] = (i*20) & 255;
-                data[at++] = 0;
-                data[at++] = (j*20) & 255;
-                data[at++] = 255;
-            }
-        }
         let offCtx = result.getContext("2d");
         if (offCtx == undefined) {
             return undefined;
         }
-        offCtx.putImageData(imageData, 0, 0);
         return {
             image: result,
             imageData,
