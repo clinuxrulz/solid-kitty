@@ -45,6 +45,8 @@ const PixelEditor: Component = () => {
         //
         currentColour: Colour,
         showColourPicker: boolean,
+        //
+        autoSaving: boolean,
     }>({
         minPt: Vec2.zero(),
         size: Vec2.create(10, 10),
@@ -67,6 +69,8 @@ const PixelEditor: Component = () => {
         //
         currentColour: new Colour(0, 255, 0, 255),
         showColourPicker: false,
+        //
+        autoSaving: false,
     });
     const undoManager = new UndoManager();
     let storage: Accessor<Storage | undefined>;
@@ -95,6 +99,7 @@ const PixelEditor: Component = () => {
             if (autoSaveTimerId != undefined) {
                 clearTimeout(autoSaveTimerId);
             }
+            setState("autoSaving", true);
             autoSaveTimerId = setTimeout(() => {
                 isAutoSaving = true;
                 let image2 = image();
@@ -111,6 +116,7 @@ const PixelEditor: Component = () => {
                     if (r.type == "Err") {
                         console.log(r.message);
                     }
+                    setState("autoSaving", false);
                     isAutoSaving = false;
                 })();
             }, AUTO_SAVE_TIMEOUT);
@@ -808,6 +814,7 @@ const PixelEditor: Component = () => {
                             "top": "0",
                         }}
                     >
+                        {state.autoSaving ? <>Saving...<br/></> : undefined}
                         {modeInstructions()?.({})}
                         {/* Debug stuff
                         <Show when={state.mousePos}>
