@@ -1,4 +1,4 @@
-import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, on, onCleanup, onMount, Setter, Show, untrack } from "solid-js";
+import { Accessor, batch, Component, createComputed, createEffect, createMemo, createResource, createSignal, on, onCleanup, onMount, Setter, Show, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { ModeParams } from "./ModeParams";
@@ -11,6 +11,9 @@ import ColourPicker from "./ColourPicker";
 import { EyeDropperMode } from "./modes/EyeDropperMode";
 import { ErasePixelsMode } from "./modes/ErasePixelsMode";
 import { StaticRouter } from "@solidjs/router";
+import { Storage } from "./Storage";
+
+const AUTO_SAVE_TIMEOUT = 2000;
 
 const PixelEditor: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -66,6 +69,53 @@ const PixelEditor: Component = () => {
         showColourPicker: false,
     });
     const undoManager = new UndoManager();
+    let storage: Accessor<Storage | undefined>;
+    {
+        let [ storage_, ] = createResource(Storage.init);
+        storage = createMemo(() => {
+            let x = storage_();
+            if (x == undefined) {
+                return undefined;
+            }
+            if (x.type == "Err") {
+                console.log("Load storage error: " + x.message);
+                return undefined;
+            }
+            return x.value;
+        });
+    }
+    let triggerAutoSave: () => void;
+    {
+        let isAutoSaving = false;
+        let autoSaveTimerId: number | undefined = undefined;
+        triggerAutoSave = () => {
+            if (isAutoSaving) {
+                return;
+            }
+            if (autoSaveTimerId != undefined) {
+                clearTimeout(autoSaveTimerId);
+            }
+            autoSaveTimerId = setTimeout(() => {
+                isAutoSaving = true;
+                let image2 = image();
+                if (image2 == undefined) {
+                    return;
+                }
+                let storage2 = storage();
+                if (storage2 == undefined) {
+                    return;
+                }
+                (async () => {
+                    let blob = await image2.image.convertToBlob();
+                    let r = await storage2.saveWork(blob);
+                    if (r.type == "Err") {
+                        console.log(r.message);
+                    }
+                    isAutoSaving = false;
+                })();
+            }, AUTO_SAVE_TIMEOUT);
+        };
+    }
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
         return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
     };
@@ -166,6 +216,60 @@ const PixelEditor: Component = () => {
         setImage(result);
         return result;
     }
+    let canvasLoaded = createMemo(() => image() != undefined);
+    createComputed(() => {
+        if (!canvasLoaded()) {
+            return;
+        }
+        let image2 = untrack(() => image());
+        if (image2 == undefined) {
+            return;
+        }
+        let storage2 = storage();
+        if (storage2 == undefined) {
+            return;
+        }
+        let [ previousWork, ] = createResource(() => storage2.loadPreviousWork());
+        createComputed(() => {
+            let previousWork2 = previousWork();
+            if (previousWork2 == undefined) {
+                return;
+            }
+            if (previousWork2.type == "Err") {
+                console.log(previousWork2.message);
+                return;
+            }
+            let previousWork3 = previousWork2.value;
+            if (previousWork3 == undefined) {
+                return;
+            }
+            let url = URL.createObjectURL(previousWork3);
+            let image3 = new Image();
+            image3.src = url;
+            image3.onerror = () => {
+                console.log("Failed to load previous work");
+            };
+            image3.onload = () => {
+                let x = resizeImage({
+                    minPt: Vec2.zero(),
+                    size: Vec2.create(
+                        image3.width,
+                        image3.height,
+                    ),
+                });
+                if (x == undefined) {
+                    return;
+                }
+                x.ctx.drawImage(image3, 0, 0);
+                let imageData = x.ctx.getImageData(0, 0, image3.width, image3.height);
+                setImage({
+                    image: x.image,
+                    imageData,
+                    ctx: x.ctx,
+                });
+            };
+        });
+    });
     function drawOnCanvas() {
         let canvas2 = canvas();
         if (canvas2 == undefined) {
@@ -287,6 +391,7 @@ const PixelEditor: Component = () => {
                 1
             );
             render();
+            triggerAutoSave();
         },
     };
     let mode = createMemo<Mode>(() => {
