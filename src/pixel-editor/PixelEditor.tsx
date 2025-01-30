@@ -281,6 +281,7 @@ const PixelEditor: Component = () => {
                     imageData,
                     ctx: x.ctx,
                 });
+                render();
             };
         });
     });
