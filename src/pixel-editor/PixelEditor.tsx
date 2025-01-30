@@ -46,6 +46,7 @@ const PixelEditor: Component = () => {
         currentColour: Colour,
         showColourPicker: boolean,
         //
+        isLoading: boolean,
         autoSaving: boolean,
     }>({
         minPt: Vec2.zero(),
@@ -70,6 +71,7 @@ const PixelEditor: Component = () => {
         currentColour: new Colour(0, 255, 0, 255),
         showColourPicker: false,
         //
+        isLoading: false,
         autoSaving: false,
     });
     const undoManager = new UndoManager();
@@ -235,27 +237,33 @@ const PixelEditor: Component = () => {
         if (storage2 == undefined) {
             return;
         }
+        setState("isLoading", true);
         let [ previousWork, ] = createResource(() => storage2.loadPreviousWork());
         createComputed(() => {
             let previousWork2 = previousWork();
             if (previousWork2 == undefined) {
+                setState("isLoading", false);
                 return;
             }
             if (previousWork2.type == "Err") {
+                setState("isLoading", false);
                 console.log(previousWork2.message);
                 return;
             }
             let previousWork3 = previousWork2.value;
             if (previousWork3 == undefined) {
+                setState("isLoading", false);
                 return;
             }
             let url = URL.createObjectURL(previousWork3);
             let image3 = new Image();
             image3.src = url;
             image3.onerror = () => {
+                setState("isLoading", false);
                 console.log("Failed to load previous work");
             };
             image3.onload = () => {
+                setState("isLoading", false);
                 let x = resizeImage({
                     minPt: Vec2.zero(),
                     size: Vec2.create(
@@ -814,6 +822,7 @@ const PixelEditor: Component = () => {
                             "top": "0",
                         }}
                     >
+                        {state.isLoading ? <>Loading...<br/></> : undefined}
                         {state.autoSaving ? <>Saving...<br/></> : undefined}
                         {modeInstructions()?.({})}
                         {/* Debug stuff
