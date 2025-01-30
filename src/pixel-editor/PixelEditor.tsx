@@ -413,11 +413,14 @@ const PixelEditor: Component = () => {
                 gap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
             }
             let delta = state.touchPanZoomFrom.clone().sub(pt);
-            setState("pan", (pan) => pan.clone().add(delta));
-            if (state.touchPanZoomInitGap != undefined && gap != undefined) {
-                let newScale = state.touchPanZoomInitScale * gap / state.touchPanZoomInitGap;
-                setState("scale", newScale);
-            }
+            let initScale = state.touchPanZoomInitScale;
+            batch(() => {
+                setState("pan", (pan) => pan.clone().add(delta));
+                if (state.touchPanZoomInitGap != undefined && gap != undefined) {
+                    let newScale = initScale * gap / state.touchPanZoomInitGap;
+                    setState("scale", newScale);
+                }
+            });
         },
     ));
     let startTouchPanZoom = () => {
@@ -516,12 +519,14 @@ const PixelEditor: Component = () => {
         setState("touches", touches);
         setState("mousePos", avg);
         startTouchPanZoom();
+        e.preventDefault();
     };
     let onTouchEnd = (e: TouchEvent) => {
         if (state.isTouchPanZoom) {
             stopTouchPanZoom()
         }
         setState("touches", []);
+        e.preventDefault();
     };
     let onTouchMove = (e: TouchEvent) => {
         let canvas2 = canvas();
@@ -543,14 +548,16 @@ const PixelEditor: Component = () => {
             avg = avg.add(pos);
         }
         avg = avg.multScalar(1.0 / e.targetTouches.length);
-        if (state.isTouchPanZoom && state.touches.length != 2 && touches.length == 2) {
-            let initGap = touches[1].pos.distance(touches[0].pos);
-            setState("touchPanZoomFrom", avg);
-            setState("touchPanZoomInitGap", initGap);
-            setState("touchPanZoomInitScale", state.scale);
-        }
-        setState("touches", touches);
-        setState("mousePos", avg);
+        batch(() => {
+            if (state.isTouchPanZoom && state.touches.length != 2 && touches.length == 2) {
+                let initGap = touches[1].pos.distance(touches[0].pos);
+                setState("touchPanZoomFrom", avg);
+                setState("touchPanZoomInitGap", initGap);
+                setState("touchPanZoomInitScale", state.scale);
+            }
+            setState("touches", touches);
+            setState("mousePos", avg);
+        });
         e.preventDefault();
     };
     let onKeyDown = (e: KeyboardEvent) => {
@@ -679,9 +686,9 @@ const PixelEditor: Component = () => {
                     onMouseOut={onMouseOut}
                     onWheel={onWheel}
                     onClick={onClick}
-                    onTouchStart={onTouchStart}
-                    onTouchEnd={onTouchEnd}
-                    onTouchMove={onTouchMove}
+                    on:touchstart={{ passive: true, handleEvent: onTouchStart, }}
+                    on:touchend={{ passive: true, handleEvent: onTouchEnd, }}
+                    on:touchmove={{ passive: true, handleEvent: onTouchMove, }}
                 >
                     <canvas
                         style={{
