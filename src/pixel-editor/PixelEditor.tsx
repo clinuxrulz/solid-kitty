@@ -688,7 +688,7 @@ const PixelEditor: Component = () => {
                     onClick={onClick}
                     on:touchstart={{ passive: true, handleEvent: onTouchStart, }}
                     on:touchend={{ passive: true, handleEvent: onTouchEnd, }}
-                    on:touchmove={{ passive: true, handleEvent: onTouchMove, }}
+                    on:touchmove={{ passive: false, handleEvent: onTouchMove, }}
                 >
                     <canvas
                         style={{
