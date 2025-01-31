@@ -141,7 +141,7 @@ function throttleUpdate(params: {
 
 let whiteToTransparentFilter = new PixiRemoveBgColourFilter();
 
-const App: Component = () => {
+const KittyDemo: Component = () => {
   let [ windowSize, setWindowSize, ] = createStore<{
     width: number,
     height: number,
@@ -616,5 +616,5 @@ function TestSprites(props: {
   );
 }
 */
-export default App;
+export default KittyDemo;
 
