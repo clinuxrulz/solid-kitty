@@ -754,6 +754,41 @@ const PixelEditor: Component = () => {
                                 type="file"
                                 accept="image/png"
                                 hidden
+                                onInput={() => {
+                                    if (fileInput.files?.length != 1) {
+                                        return;
+                                    }
+                                    let file = fileInput.files[0];
+                                    let url = URL.createObjectURL(file);
+                                    let image2 = new Image();
+                                    image2.src = url;
+                                    URL.revokeObjectURL(url);
+                                    image2.onerror = () => {
+                                        console.log("Failed to load image.");
+                                    };
+                                    image2.onload = () => {
+                                        let x = resizeImage({
+                                            minPt: Vec2.zero(),
+                                            size: Vec2.create(
+                                                image2.width,
+                                                image2.height,
+                                            ),
+                                        });
+                                        if (x == undefined) {
+                                            return;
+                                        }
+                                        x.ctx.drawImage(image2, 0, 0);
+                                        let imageData = x.ctx.getImageData(0, 0, image2.width, image2.height);
+                                        setImage({
+                                            image: x.image,
+                                            imageData,
+                                            ctx: x.ctx,
+                                        });
+                                        render();
+                                        undoManager.clear();
+                                        triggerAutoSave();
+                                    };
+                                }}
                             />
                         </>);
                     })()}
