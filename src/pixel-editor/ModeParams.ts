@@ -1,5 +1,5 @@
 import { Accessor } from "solid-js";
-import { Colour } from "./Colour";
+import { Colour } from "../Colour";
 import { Vec2 } from "../Vec2";
 import { UndoManager } from "./UndoManager";
 

@@ -50,7 +50,7 @@ let nextMoreDataCallbackId = 0;
 
 let GME!: GME_Module;
 // @ts-ignore
-import initGME from "../libgme/gme.js";
+import initGME from "../../libgme/gme.js";
 
 self.addEventListener("message", (e) => {
     let callbackId = e.data.callbackId;

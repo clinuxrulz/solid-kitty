@@ -3,7 +3,7 @@ import { Mode } from "../Mode";
 import { Node } from "../Node";
 import { ModeParams } from "../ModeParams";
 import { Accessor, Component, createMemo, createSignal, onCleanup, Signal } from "solid-js";
-import { opToArr } from "../../util";
+import { opToArr } from "../../kitty-demo/util";
 
 const ALGORITHM_STEP_DELAY_MS = 1000;
 

@@ -4,10 +4,10 @@ import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
+import App from './App';
 const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
 const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
-
-const App = lazy(() => import("./App"));
+const KittyDemoApp = lazy(() => import("./kitty-demo/App"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 
 const root = document.getElementById('root');
@@ -21,6 +21,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 render(() => (
   <HashRouter>
     <Route path="/" component={App}/>
+    <Route path="/kitty-demo" component={KittyDemoApp}/>
     <Route path="/pixel-editor" component={PixelEditor}/>
     <Route path="/colour-picker" component={() => {
       return (

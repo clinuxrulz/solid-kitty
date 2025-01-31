@@ -2,7 +2,7 @@ import { Component, createMemo, Show } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
-import { Colour } from "../Colour";
+import { Colour } from "../../Colour";
 import { UndoUnit } from "../UndoManager";
 
 export class DrawPixelsMode implements Mode {

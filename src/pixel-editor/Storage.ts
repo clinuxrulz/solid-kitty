@@ -1,4 +1,4 @@
-import { err, ok, Result } from "../Result";
+import { err, ok, Result } from "../kitty-demo/Result";
 
 export class Storage {
     db: IDBDatabase;

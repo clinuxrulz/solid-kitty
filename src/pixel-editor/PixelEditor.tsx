@@ -2,7 +2,7 @@ import { Accessor, batch, Component, createComputed, createEffect, createMemo, c
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { ModeParams } from "./ModeParams";
-import { Colour } from "./Colour";
+import { Colour } from "../Colour";
 import { IdleMode } from "./modes/IdleMode";
 import { DrawPixelsMode } from "./modes/DrawPixelsMode";
 import { Mode } from "./Mode";

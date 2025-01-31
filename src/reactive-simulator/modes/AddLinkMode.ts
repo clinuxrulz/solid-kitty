@@ -3,7 +3,7 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Accessor, Component, createMemo } from "solid-js";
 import { Node } from "../Node";
-import { opToArr } from "../../util";
+import { opToArr } from "../../kitty-demo/util";
 
 export class AddLinkMode implements Mode {
     instructions: Component;

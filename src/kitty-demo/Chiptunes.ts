@@ -49,7 +49,7 @@ interface GME_Module {
 
 let GME: GME_Module;
 // @ts-ignore
-import initGME from "../libgme/gme.js";
+import initGME from "../../libgme/gme.js";
 GME = await initGME();
 
 export class Chiptunes {
