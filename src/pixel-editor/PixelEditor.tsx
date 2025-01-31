@@ -762,8 +762,8 @@ const PixelEditor: Component = () => {
                                     let url = URL.createObjectURL(file);
                                     let image2 = new Image();
                                     image2.src = url;
-                                    URL.revokeObjectURL(url);
                                     image2.onerror = () => {
+                                        URL.revokeObjectURL(url);
                                         console.log("Failed to load image.");
                                     };
                                     image2.onload = () => {
@@ -775,6 +775,7 @@ const PixelEditor: Component = () => {
                                             ),
                                         });
                                         if (x == undefined) {
+                                            URL.revokeObjectURL(url);
                                             return;
                                         }
                                         x.ctx.drawImage(image2, 0, 0);
@@ -787,6 +788,7 @@ const PixelEditor: Component = () => {
                                         render();
                                         undoManager.clear();
                                         triggerAutoSave();
+                                        URL.revokeObjectURL(url);
                                     };
                                 }}
                             />
