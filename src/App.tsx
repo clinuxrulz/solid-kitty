@@ -9,6 +9,7 @@ const App: Component = (props) => {
             <div
                 style={{
                     "margin-left": "10px",
+                    "margin-top": "10px",
                     "display": "inline-block",
                 }}
             >
