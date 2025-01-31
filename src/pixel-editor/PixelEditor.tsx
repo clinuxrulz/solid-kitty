@@ -752,6 +752,7 @@ const PixelEditor: Component = () => {
                             <input
                                 ref={fileInput}
                                 type="file"
+                                accept="image/png"
                                 hidden
                             />
                         </>);
