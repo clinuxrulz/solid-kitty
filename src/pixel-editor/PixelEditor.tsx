@@ -730,11 +730,18 @@ const PixelEditor: Component = () => {
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
-                            "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
                         }}
                         onClick={() => saveDrawing()}
                     >
                         <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                    >
+                        <i class="fa-solid fa-folder-open"></i>
                     </button>
                     <button
                         style={{
