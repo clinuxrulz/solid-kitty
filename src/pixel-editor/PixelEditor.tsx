@@ -12,6 +12,7 @@ import { EyeDropperMode } from "./modes/EyeDropperMode";
 import { ErasePixelsMode } from "./modes/ErasePixelsMode";
 import { StaticRouter } from "@solidjs/router";
 import { Storage } from "./Storage";
+import * as FileSaver from "file-saver";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -696,6 +697,14 @@ const PixelEditor: Component = () => {
             triggerAutoSave();
         });
     };
+    let saveDrawing = async () => {
+        let image2 = image();
+        if (image2 == undefined) {
+            return;
+        }
+        let blob = await image2.image.convertToBlob({ type: "image/png", });
+        FileSaver.saveAs(blob, "sprite-sheet.png");
+    };
     //
     return (
         <div
@@ -717,6 +726,16 @@ const PixelEditor: Component = () => {
                         "grid-template-columns": "auto auto",
                     }}
                 >
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
+                        }}
+                        onClick={() => saveDrawing()}
+                    >
+                        <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
                     <button
                         style={{
                             "font-size": "20pt",
