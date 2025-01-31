@@ -7,7 +7,7 @@ import { lazy } from 'solid-js';
 import App from './App';
 const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
 const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
-const KittyDemoApp = lazy(() => import("./kitty-demo/App"));
+const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 
 const root = document.getElementById('root');
