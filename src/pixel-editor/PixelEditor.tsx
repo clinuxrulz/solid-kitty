@@ -681,6 +681,7 @@ const PixelEditor: Component = () => {
     return (
         <div
             style={{
+                "position": "relative",
                 "flex-grow": "1",
                 "display": "flex",
                 "flex-direction": "row",
@@ -688,92 +689,105 @@ const PixelEditor: Component = () => {
         >
             <div
                 style={{
-                    "display": "flex",
-                    "flex-direction": "column",
-                    "background-color": "black",
+                    "background-color": "dimgray",
                 }}
             >
-                <button
+                <div
                     style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                    }}
-                    disabled={!undoManager.canUndo()}
-                    onClick={() => undoManager.undo()}
-                >
-                    <i class="fas fa-undo"></i>
-                </button>
-                <button
-                    style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                    }}
-                    disabled={!undoManager.canRedo()}
-                    onClick={() => undoManager.redo()}
-                >
-                    <i class="fas fa-redo"></i>
-                </button>
-                <button
-                    style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                        "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
-                    }}
-                    onClick={() => {
-                        if (state.mode == "Draw Pixels") {
-                            setState("mode", "Idle");
-                        } else {
-                            setState("mode", "Draw Pixels");
-                        }
+                        "display": "grid",
+                        "grid-template-columns": "auto auto",
                     }}
                 >
-                    <i class="fa-solid fa-pencil"/>
-                </button>
-                <button
-                    style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                        "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
-                    }}
-                    onClick={() => {
-                        if (state.mode == "Erase Pixels") {
-                            setState("mode", "Idle");
-                        } else {
-                            setState("mode", "Erase Pixels");
-                        }
-                    }}
-                >
-                    <i class="fa-solid fa-eraser"></i>
-                </button>
-                <button
-                    ref={setColourPickerButton}
-                    style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                        "background-color": state.showColourPicker ? "blue" : undefined,
-                    }}
-                    onClick={() => {
-                        setState("showColourPicker", (x) => !x);
-                    }}
-                >
-                    <i class="fa-solid fa-palette"></i>
-                </button>
-                <button
-                    style={{
-                        "font-size": "20pt",
-                        "padding": "5pt",
-                        "background-color": state.mode == "Eye Dropper" ? "blue" : undefined,
-                    }}
-                    onClick={() => {
-                        if (state.mode == "Eye Dropper") {
-                            setState("mode", "Idle");
-                        } else {
-                            setState("mode", "Eye Dropper");
-                        }
-                    }}
-                >
-                    <i class="fa-solid fa-eye-dropper"></i>
-                </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                        disabled={!undoManager.canUndo()}
+                        onClick={() => undoManager.undo()}
+                    >
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                        disabled={!undoManager.canRedo()}
+                        onClick={() => undoManager.redo()}
+                    >
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                    >
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Draw Pixels" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            if (state.mode == "Draw Pixels") {
+                                setState("mode", "Idle");
+                            } else {
+                                setState("mode", "Draw Pixels");
+                            }
+                        }}
+                    >
+                        <i class="fa-solid fa-pencil"/>
+                    </button>
+                    <button
+                        ref={setColourPickerButton}
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.showColourPicker ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("showColourPicker", (x) => !x);
+                        }}
+                    >
+                        <i class="fa-solid fa-palette"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            if (state.mode == "Erase Pixels") {
+                                setState("mode", "Idle");
+                            } else {
+                                setState("mode", "Erase Pixels");
+                            }
+                        }}
+                    >
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Eye Dropper" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            if (state.mode == "Eye Dropper") {
+                                setState("mode", "Idle");
+                            } else {
+                                setState("mode", "Eye Dropper");
+                            }
+                        }}
+                    >
+                        <i class="fa-solid fa-eye-dropper"></i>
+                    </button>
+                </div>
             </div>
             <div
                 style={{
@@ -908,44 +922,44 @@ const PixelEditor: Component = () => {
                     </div>
                     */}
                 </div>
-                <Show when={state.showColourPicker}>
-                    <Show when={colourPickerButton()}>
-                        {(btn) => {
-                            let colourDiv!: HTMLDivElement;
-                            let pt = createMemo(() => {
-                                let btn2 = btn();
-                                let rect = btn2.getBoundingClientRect();
-                                return Vec2.create(rect.left, rect.top);
-                            });
-                            onMount(() => {
-                                colourDiv.focus();
-                            });
-                            return (
-                                <div
-                                    ref={colourDiv}
-                                    style={{
-                                        "position": "absolute",
-                                        "left": `${pt().x + 20}px`,
-                                        "top": `${pt().y}px`,
-                                        "display": "flex",
-                                        "flex-direction": "column",
-                                        "width": "300px",
-                                        "height": "300px",
-                                        "background-color": "white",
-                                        "padding": "20px",
-                                        "border": "1px solid black",
-                                    }}
-                                >
-                                    <ColourPicker
-                                        colour={state.currentColour}
-                                        onColour={(c) => setState("currentColour", c)}
-                                    />
-                                </div>
-                            );
-                        }}
-                    </Show>
-                </Show>
             </div>
+            <Show when={state.showColourPicker}>
+                <Show when={colourPickerButton()}>
+                    {(btn) => {
+                        let colourDiv!: HTMLDivElement;
+                        let pt = createMemo(() => {
+                            let btn2 = btn();
+                            let rect = btn2.getBoundingClientRect();
+                            return Vec2.create(rect.right, rect.top);
+                        });
+                        onMount(() => {
+                            colourDiv.focus();
+                        });
+                        return (
+                            <div
+                                ref={colourDiv}
+                                style={{
+                                    "position": "absolute",
+                                    "left": `${pt().x}px`,
+                                    "top": `${pt().y}px`,
+                                    "display": "flex",
+                                    "flex-direction": "column",
+                                    "width": "300px",
+                                    "height": "300px",
+                                    "background-color": "white",
+                                    "padding": "20px",
+                                    "border": "1px solid black",
+                                }}
+                            >
+                                <ColourPicker
+                                    colour={state.currentColour}
+                                    onColour={(c) => setState("currentColour", c)}
+                                />
+                            </div>
+                        );
+                    }}
+                </Show>
+            </Show>
         </div>
     );
 };
