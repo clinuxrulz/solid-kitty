@@ -735,14 +735,31 @@ const PixelEditor: Component = () => {
                     >
                         <i class="fa-solid fa-floppy-disk"></i>
                     </button>
-                    <button
-                        style={{
-                            "font-size": "20pt",
-                            "padding": "5pt",
-                        }}
-                    >
-                        <i class="fa-solid fa-folder-open"></i>
-                    </button>
+                    {(() => {
+                        let fileInput!: HTMLInputElement;
+                        return (<>
+                            <button
+                                style={{
+                                    "font-size": "20pt",
+                                    "padding": "5pt",
+                                }}
+                                onClick={() => {
+                                    fileInput.click();
+                                }}
+                            >
+                                <i class="fa-solid fa-folder-open"></i>
+                            </button>
+                            <input
+                                ref={fileInput}
+                                type="file"
+                                hidden
+                            />
+                        </>);
+                    })()}
+                        {/*
+                    <ion-button onclick="document.querySelector('#uploader').click()">pop file chooser</ion-button>
+<input type="file" id="uploader" hidden>
+                         */}
                     <button
                         style={{
                             "font-size": "20pt",
