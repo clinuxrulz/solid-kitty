@@ -678,6 +678,25 @@ const PixelEditor: Component = () => {
     onCleanup(() => {
         document.removeEventListener("keydown", onKeyDown);
     });
+    //
+    let deleteDrawing = () => {
+        if (!window.confirm("Are you sure you want to delete this drawing and start again?")) {
+            return;
+        }
+        let initSize = Vec2.create(10, 10);
+        let image2 = makeInitImage({ size: initSize, });
+        if (image2 == undefined) {
+            return;
+        }
+        batch(() => {
+            setState("size", initSize);
+            setImage(image2);
+            undoManager.clear();
+            render();
+            triggerAutoSave();
+        });
+    };
+    //
     return (
         <div
             style={{
@@ -723,6 +742,7 @@ const PixelEditor: Component = () => {
                             "font-size": "20pt",
                             "padding": "5pt",
                         }}
+                        onClick={() => deleteDrawing()}
                     >
                         <i class="fa-solid fa-trash-can"></i>
                     </button>

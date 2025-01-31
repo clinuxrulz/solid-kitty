@@ -13,6 +13,7 @@ export class UndoManager {
     readonly undo: () => void;
     readonly redo: () => void;
     readonly pushUndoUnit: (undoUnit: UndoUnit) => void;
+    readonly clear: () => void;
 
     constructor() {
         /**
@@ -72,6 +73,11 @@ export class UndoManager {
             }
             ++stackPos;
             stack.push(undoUnit);
+            updateSignals();
+        };
+        this.clear = () => {
+            stack.splice(0, stack.length);
+            stackPos = -1;
             updateSignals();
         };
         //
