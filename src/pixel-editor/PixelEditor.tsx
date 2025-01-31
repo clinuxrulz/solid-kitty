@@ -333,7 +333,7 @@ const PixelEditor: Component = () => {
                 return new Colour(0, 0, 0, 0);
             }
             let data = image2.imageData.data;
-            let offset = (image2.imageData.width * (pt.y + state.minPt.y) + (pt.x + state.minPt.x)) << 2;
+            let offset = (image2.imageData.width * (pt.y - state.minPt.y) + (pt.x - state.minPt.x)) << 2;
             return new Colour(
                 data[offset],
                 data[offset+1],
