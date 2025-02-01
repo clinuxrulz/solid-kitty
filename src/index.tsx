@@ -7,10 +7,11 @@ import './index.css';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { lazy } from 'solid-js';
 import App from './App';
-const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
-const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
+const LevelBuilder = lazy(() => import("./level-builder/LevelBuilder"));
+const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
+const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
 
 const root = document.getElementById('root');
 
@@ -25,6 +26,7 @@ render(() => (
     <Route path="/" component={App}/>
     <Route path="/kitty-demo" component={KittyDemoApp}/>
     <Route path="/pixel-editor" component={PixelEditor}/>
+    <Route path="/level-builder" component={LevelBuilder}/>
     <Route path="/colour-picker" component={() => {
       return (
         <div

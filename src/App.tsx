@@ -33,6 +33,12 @@ const App: Component = (props) => {
                     </button>
                     <button
                         class="btn"
+                        onClick={() => navigate("/level-builder")}
+                    >
+                        Level Builder
+                    </button>
+                    <button
+                        class="btn"
                         onClick={() => navigate("/colour-picker")}
                     >
                         Colour Picker
@@ -44,19 +50,7 @@ const App: Component = (props) => {
                         Reactive Simulator
                     </button>
                 </div>
-            </div><br/>
-            <b>Test Tabs:</b><br/>
-            <ul class="nav-tabs">
-                <li class="nav-item">
-                    <a href="#" class="nav-link-selected">Tab 1</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">Tab 2</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">Tab 3</a>
-                </li>
-            </ul>
+            </div>
         </div>
     );
 };
