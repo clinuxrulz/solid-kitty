@@ -61,7 +61,6 @@ export class TilesetList {
             };
         };
         let removeTileset = (tileset: (typeof this.state.tilesets)[0]) => {
-            debugger;
             this.setState("tilesets", produce((tilesets) => {
                 let idx = tilesets.findIndex((tileset2) => tileset2.id === tileset.id);
                 if (idx == -1) {
