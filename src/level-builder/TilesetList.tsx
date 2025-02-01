@@ -1,9 +1,10 @@
-import { Component, JSX, onMount } from "solid-js";
+import { Component, createUniqueId, For, JSX, onMount } from "solid-js";
 import { Vec2 } from "../Vec2";
-import { createStore, SetStoreFunction, Store } from "solid-js/store";
+import { createStore, produce, SetStoreFunction, Store } from "solid-js/store";
 
 type State = {
     tilesets: {
+        id: string,
         name: string,
         image: HTMLImageElement,
         blockTable: {
@@ -34,7 +35,41 @@ export class TilesetList {
             addTilesetInput.click();
             addTilesetInput.value = "";
         };
-        let loadTileset = (file: File) => {};
+        let onAddTileset = (file: File) => {
+            let url = URL.createObjectURL(file);
+            let image = new Image();
+            image.src = url;
+            image.onerror = () => {
+                URL.revokeObjectURL(url);
+            };
+            image.onload = () => {
+                try {
+                    this.setState(
+                        "tilesets",
+                        produce((tilesets) => {
+                            tilesets.push({
+                                id: createUniqueId(),
+                                name: file.name,
+                                image,
+                                blockTable: [],
+                            });
+                        })
+                    );
+                } finally {
+                    URL.revokeObjectURL(url);
+                }
+            };
+        };
+        let removeTileset = (tileset: (typeof this.state.tilesets)[0]) => {
+            debugger;
+            this.setState("tilesets", produce((tilesets) => {
+                let idx = tilesets.findIndex((tileset2) => tileset2.id === tileset.id);
+                if (idx == -1) {
+                    return;
+                }
+                tilesets.splice(idx, 1);
+            }));
+        }
         //
         return (
             <div
@@ -66,39 +101,38 @@ export class TilesetList {
                         type="file"
                         hidden
                         accept="image/png"
+                        onInput={(e) => {
+                            if (addTilesetInput.files?.length != 1) {
+                                return;
+                            }
+                            onAddTileset(addTilesetInput.files[0]);
+                        }}
                     />
                 </div>
                 <div
                     class="list-container-2"
                 >
-                    <div
-                        role="button"
-                        class="list-item-selected"
-                    >
-                        Tileset 1
-                        <div class="list-item-button-container">
-                            <button
-                                class="list-item-button text-right"
-                                type="button"
+                    <For each={this.state.tilesets}>
+                        {(tileset) => (
+                            <div
+                                role="button"
+                                class="list-item"
                             >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div
-                        role="button"
-                        class="list-item"
-                    >
-                        Tileset 2
-                        <div class="list-item-button-container">
-                            <button
-                                class="list-item-button text-right"
-                                type="button"
-                            >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
+                                {tileset.name}
+                                <div class="list-item-button-container">
+                                    <button
+                                        class="list-item-button text-right"
+                                        type="button"
+                                        onClick={() => {
+                                            removeTileset(tileset);
+                                        }}
+                                    >
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </For>
                 </div>
             </div>
         );
