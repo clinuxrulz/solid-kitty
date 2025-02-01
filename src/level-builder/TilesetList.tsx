@@ -1,8 +1,9 @@
-import { Component, createUniqueId, For, JSX, onMount } from "solid-js";
+import { batch, Component, createSelector, createUniqueId, For, JSX, onMount } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore, produce, SetStoreFunction, Store } from "solid-js/store";
 
 type State = {
+    selectedTilesetById: string | undefined,
     tilesets: {
         id: string,
         name: string,
@@ -21,6 +22,7 @@ export class TilesetList {
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
+            selectedTilesetById: undefined,
             tilesets: [],
         });
         this.state = state;
@@ -60,16 +62,28 @@ export class TilesetList {
                 }
             };
         };
+        let selectTileset = (tilesetId: string) => {
+            if (!this.state.tilesets.some((x) => x.id == tilesetId)) {
+                return;
+            }
+            this.setState("selectedTilesetById", tilesetId);
+        };
         let removeTileset = (tileset: (typeof this.state.tilesets)[0]) => {
-            this.setState("tilesets", produce((tilesets) => {
-                let idx = tilesets.findIndex((tileset2) => tileset2.id === tileset.id);
-                if (idx == -1) {
-                    return;
+            batch(() => {
+                if (this.state.selectedTilesetById == tileset.id) {
+                    this.setState("selectedTilesetById", undefined);
                 }
-                tilesets.splice(idx, 1);
-            }));
+                this.setState("tilesets", produce((tilesets) => {
+                    let idx = tilesets.findIndex((tileset2) => tileset2.id === tileset.id);
+                    if (idx == -1) {
+                        return;
+                    }
+                    tilesets.splice(idx, 1);
+                }));
+            });
         }
         //
+        let isSelected = createSelector(() => this.state.selectedTilesetById);
         return (
             <div
                 style={props.style}
@@ -115,7 +129,10 @@ export class TilesetList {
                         {(tileset) => (
                             <div
                                 role="button"
-                                class="list-item"
+                                class={isSelected(tileset.id) ? "list-item-selected" : "list-item"}
+                                onClick={() => {
+                                    selectTileset(tileset.id);
+                                }}
                             >
                                 {tileset.name}
                                 <div class="list-item-button-container">
