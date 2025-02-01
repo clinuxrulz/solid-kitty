@@ -76,24 +76,28 @@ export class TilesetList {
                         class="list-item-selected"
                     >
                         Tileset 1
-                        <button
-                            class="list-item-button"
-                            type="button"
-                        >
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                        <div class="list-item-button-container">
+                            <button
+                                class="list-item-button text-right"
+                                type="button"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                     <div
                         role="button"
                         class="list-item"
                     >
                         Tileset 2
-                        <button
-                            class="list-item-button"
-                            type="button"
-                        >
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                        <div class="list-item-button-container">
+                            <button
+                                class="list-item-button text-right"
+                                type="button"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
