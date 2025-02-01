@@ -33,7 +33,47 @@ export class TilesetList {
             <div
                 style={props.style}
             >
-                list of tilesets
+                <b>Tilesets:</b>
+                <div
+                    class="list-container-1"
+                >
+                <nav
+                    class="list-container-2"
+                >
+                    <div
+                        role="button"
+                        class="list-item-selected"
+                    >
+                        Tileset 1
+                        <div
+                            class="list-item-button-container"
+                        >
+                            <button
+                                class="list-item-button"
+                                type="button"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div
+                        role="button"
+                        class="list-item"
+                    >
+                        Tileset 2
+                        <div
+                            class="list-item-button-container"
+                        >
+                            <button
+                                class="list-item-button"
+                                type="button"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+                </div>
             </div>
         );
     };
