@@ -33,7 +33,27 @@ export class TilesetList {
             <div
                 style={props.style}
             >
-                <b>Tilesets:</b>
+                <div
+                    style={{
+                        "display": "flex",
+                        "flex-direction": "row",
+                        "align-items": "flex-end",
+                    }}
+                >
+                    <div
+                        style={{
+                            "flex-grow": "1",
+                            "margin-bottom": "5px",
+                        }}
+                    >
+                        <b>Tilesets:</b>
+                    </div>
+                    <button
+                        class="btn"
+                    >
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </button>
+                </div>
                 <div
                     class="list-container-1"
                 >
