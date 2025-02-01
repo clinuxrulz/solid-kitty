@@ -19,7 +19,7 @@ type State = {
 export class TilesetList {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    private selectedTileset: Accessor<State["tilesets"][0] | undefined>;
+    selectedTileset: Accessor<State["tilesets"][0] | undefined>;
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
