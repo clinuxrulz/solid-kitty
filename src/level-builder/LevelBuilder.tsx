@@ -30,13 +30,17 @@ const LevelBuilder: Component = () => {
             <ul class="nav-tabs">
                 <li class="nav-item">
                     <button
-                        class="nav-link-selected"
+                        class={state.selectedTab == "Tilesets" ? "nav-link-selected" : "nav-link"}
+                        onClick={() => setState("selectedTab", "Tilesets")}
                     >
                         Tilesets
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link">
+                    <button
+                        class={state.selectedTab == "Levels" ? "nav-link-selected" : "nav-link"}
+                        onClick={() => setState("selectedTab", "Levels")}
+                    >
                         Levels
                     </button>
                 </li>
