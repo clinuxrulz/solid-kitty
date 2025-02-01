@@ -1,25 +1,17 @@
-import { Component, Switch } from "solid-js";
+import { Component, Match, Switch } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
+import { Tilesets } from "./Tilesets";
 
 type State = {
     selectedTab: "Tilesets" | "Levels",
-    tilesets: {
-        name: string,
-        image: HTMLImageElement,
-        blockTable: {
-            name: string,
-            pos: Vec2,
-            size: Vec2,
-        }[],
-    }[],
 };
 
 const LevelBuilder: Component = () => {
     let [ state, setState, ] = createStore<State>({
         selectedTab: "Tilesets",
-        tilesets: [],
     });
+    let tilesets = new Tilesets();
     return (
         <div style={{
             "flex-grow": "1",
@@ -45,6 +37,18 @@ const LevelBuilder: Component = () => {
                     </button>
                 </li>
             </ul>
+            <Switch>
+                <Match when={state.selectedTab == "Tilesets"}>
+                    <tilesets.Render
+                        style={{
+                            "flex-grow": "1",
+                        }}
+                    />
+                </Match>
+                <Match when={state.selectedTab == "Levels"}>
+                    <></>
+                </Match>
+            </Switch>
         </div>
     );
 };
