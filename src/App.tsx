@@ -24,13 +24,13 @@ const App: Component = (props) => {
                         onClick={() => navigate("/kitty-demo")}
                     >
                         Kitty Demo
-                    </button><br/>
+                    </button>
                     <button
                         class="btn"
                         onClick={() => navigate("/pixel-editor")}
                     >
                         Pixel Editor
-                    </button><br/>
+                    </button>
                     <button
                         class="btn"
                         onClick={() => navigate("/colour-picker")}
