@@ -896,7 +896,11 @@ const PixelEditor: Component = () => {
                     "flex-grow": "1",
                     "display": "flex",
                     "flex-direction": "column",
-                }}
+                    "background-color": "#DDD",
+                    "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
+                    "background-size": "20px 20px",
+                    "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+            }}
             >
                 <div
                     style={{
