@@ -1,5 +1,6 @@
 /* @refresh reload */
 import "uno.css";
+import "@unocss/reset/tailwind.css";
 import { render } from 'solid-js/web';
 import { HashRouter, Route } from '@solidjs/router';
 import './index.css';
