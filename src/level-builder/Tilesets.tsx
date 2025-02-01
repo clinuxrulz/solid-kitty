@@ -1,29 +1,23 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { Component, JSX } from "solid-js";
+import { TilesetList } from "./TilesetList";
 
 type State = {
-    tilesets: {
-        name: string,
-        image: HTMLImageElement,
-        blockTable: {
-            name: string,
-            pos: Vec2,
-            size: Vec2,
-        }[],
-    }[],
 };
 
 export class Tilesets {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
+    private tilesetList: TilesetList;
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
-            tilesets: [],
         });
+        let tilesetList = new TilesetList();
         this.state = state;
         this.setState = setState;
+        this.tilesetList = tilesetList;
     }
 
     readonly Render: Component<{
@@ -40,9 +34,7 @@ export class Tilesets {
                         "flex-direction": "row",
                     }}
                 >
-                    <div>
-                        list of tilesets
-                    </div>
+                    <this.tilesetList.Render/>
                     {/* a visual divider */}
                     <div
                         style={{
