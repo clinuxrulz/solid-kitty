@@ -1,4 +1,4 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, onMount } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
@@ -29,6 +29,13 @@ export class TilesetList {
     readonly Render: Component<{
         style?: JSX.CSSProperties | string,
     }> = (props) => {
+        let addTilesetInput!: HTMLInputElement;
+        let addTileset = () => {
+            addTilesetInput.click();
+            addTilesetInput.value = "";
+        };
+        let loadTileset = (file: File) => {};
+        //
         return (
             <div
                 style={props.style}
@@ -50,14 +57,18 @@ export class TilesetList {
                     </div>
                     <button
                         class="btn"
+                        onClick={addTileset}
                     >
                         <i class="fa-solid fa-circle-plus"></i>
                     </button>
+                    <input
+                        ref={addTilesetInput}
+                        type="file"
+                        hidden
+                        accept="image/png"
+                    />
                 </div>
                 <div
-                    class="list-container-1"
-                >
-                <nav
                     class="list-container-2"
                 >
                     <div
@@ -65,34 +76,25 @@ export class TilesetList {
                         class="list-item-selected"
                     >
                         Tileset 1
-                        <div
-                            class="list-item-button-container"
+                        <button
+                            class="list-item-button"
+                            type="button"
                         >
-                            <button
-                                class="list-item-button"
-                                type="button"
-                            >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
                     <div
                         role="button"
                         class="list-item"
                     >
                         Tileset 2
-                        <div
-                            class="list-item-button-container"
+                        <button
+                            class="list-item-button"
+                            type="button"
                         >
-                            <button
-                                class="list-item-button"
-                                type="button"
-                            >
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
-                </nav>
                 </div>
             </div>
         );
