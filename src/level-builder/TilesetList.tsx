@@ -1,4 +1,4 @@
-import { batch, Component, createSelector, createUniqueId, For, JSX, onMount } from "solid-js";
+import { Accessor, batch, Component, createMemo, createSelector, createUniqueId, For, JSX, onMount } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore, produce, SetStoreFunction, Store } from "solid-js/store";
 
@@ -19,14 +19,24 @@ type State = {
 export class TilesetList {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
+    private selectedTileset: Accessor<State["tilesets"][0] | undefined>;
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
             selectedTilesetById: undefined,
             tilesets: [],
         });
+        //
+        let selectedTileset: Accessor<State["tilesets"][0] | undefined> = createMemo(() => {
+            if (state.selectedTilesetById == undefined) {
+                return undefined;
+            }
+            return state.tilesets.find((x) => x.id === state.selectedTilesetById);
+        });
+        //
         this.state = state;
         this.setState = setState;
+        this.selectedTileset = selectedTileset;
     }
 
     readonly Render: Component<{
