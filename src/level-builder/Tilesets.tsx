@@ -1,6 +1,6 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
-import { Component, JSX, Show } from "solid-js";
+import { Component, createMemo, JSX, Show } from "solid-js";
 import { TilesetList } from "./TilesetList";
 import { Tileset } from "./Tileset";
 
@@ -24,6 +24,12 @@ export class Tilesets {
     readonly Render: Component<{
         style?: JSX.CSSProperties | string,
     }> = (props) => {
+        let selectedTilesetImage = createMemo(() =>
+            this.tilesetList.selectedTileset()?.image
+        );
+        let tileset = new Tileset({
+            image: selectedTilesetImage,
+        });
         return (
             <div style={props.style}>
                 <div
@@ -46,20 +52,11 @@ export class Tilesets {
                         }}
                     />
                     {/* the current tileset content */}
-                    <div
+                    <tileset.Render
                         style={{
                             "flex-grow": "1",
                         }}
-                    >
-                        <Show when={this.tilesetList.selectedTileset()}>
-                            {(tileset) => {
-                                let tileset2 = new Tileset({
-                                    image: () => tileset().image
-                                });
-                                return (<tileset2.Render/>);
-                            }}
-                        </Show>
-                    </div>
+                    />
                 </div>
             </div>
         );

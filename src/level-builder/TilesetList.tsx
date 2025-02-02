@@ -51,10 +51,12 @@ export class TilesetList {
             let url = URL.createObjectURL(file);
             let image = new Image();
             image.src = url;
+            image.style.setProperty("image-rendering", "pixelated");
             image.onerror = () => {
                 URL.revokeObjectURL(url);
             };
             image.onload = () => {
+                image.onload = null;
                 try {
                     this.setState(
                         "tilesets",
