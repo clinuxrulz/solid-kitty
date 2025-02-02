@@ -1,4 +1,4 @@
-import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, on, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, Show } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
@@ -313,10 +313,19 @@ export class TextureAtlas {
         };
         //
         let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
+        let style2 = mergeProps(
+            {
+                "background-color": "#DDD",
+                "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
+                "background-size": "20px 20px",
+                "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+            },
+            props.style,
+        );
         return (
             <svg
                 ref={setSvg}
-                style={props.style}
+                style={style2}
                 onMouseDown={onMouseDown}
                 onMouseUp={onMouseUp}
                 onMouseMove={onMouseMove}
