@@ -60,6 +60,7 @@ export class TextureAtlasList {
             let image = new Image();
             image.src = url;
             image.style.setProperty("image-rendering", "pixelated");
+            image.style.setProperty("pointer-events", "none");
             image.onerror = () => {
                 URL.revokeObjectURL(url);
             };
