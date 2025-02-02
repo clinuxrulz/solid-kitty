@@ -10,26 +10,28 @@ type State = {
 export class TextureAtlases {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    private tilesetList: TextureAtlasList;
+    private textureAtlasList: TextureAtlasList;
+    private textureAtlas: TextureAtlas;
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
         });
-        let tilesetList = new TextureAtlasList();
+        let textureAtlasList = new TextureAtlasList();
+        let selectedTilesetImage = createMemo(() =>
+            textureAtlasList.selectedTileset()?.image
+        );
+        let textureAtlas = new TextureAtlas({
+            image: selectedTilesetImage,
+        });
         this.state = state;
         this.setState = setState;
-        this.tilesetList = tilesetList;
+        this.textureAtlasList = textureAtlasList;
+        this.textureAtlas = textureAtlas;
     }
 
     readonly Render: Component<{
         style?: JSX.CSSProperties | string,
     }> = (props) => {
-        let selectedTilesetImage = createMemo(() =>
-            this.tilesetList.selectedTileset()?.image
-        );
-        let tileset = new TextureAtlas({
-            image: selectedTilesetImage,
-        });
         return (
             <div style={props.style}>
                 <div
@@ -41,7 +43,7 @@ export class TextureAtlases {
                         "flex-direction": "row",
                     }}
                 >
-                    <this.tilesetList.Render/>
+                    <this.textureAtlasList.Render/>
                     {/* a visual divider */}
                     <div
                         style={{
@@ -52,7 +54,7 @@ export class TextureAtlases {
                         }}
                     />
                     {/* the current tileset content */}
-                    <tileset.Render
+                    <this.textureAtlas.Render
                         style={{
                             "flex-grow": "1",
                         }}
