@@ -16,7 +16,7 @@ type State = {
     }[],
 };
 
-export class TilesetList {
+export class TextureAtlasList {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
     selectedTileset: Accessor<State["tilesets"][0] | undefined>;
@@ -113,7 +113,7 @@ export class TilesetList {
                             "margin-bottom": "5px",
                         }}
                     >
-                        <b>Tilesets:</b>
+                        <b>Texture Atlases:</b>
                     </div>
                     <button
                         class="btn"

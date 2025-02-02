@@ -22,7 +22,7 @@ type State = {
     //
 };
 
-export class Tileset {
+export class TextureAtlas {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
     private image: Accessor<HTMLImageElement | undefined>;

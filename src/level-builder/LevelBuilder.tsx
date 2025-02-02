@@ -1,17 +1,17 @@
 import { Component, Match, Switch } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
-import { Tilesets } from "./Tilesets";
+import { TextureAtlases } from "./TextureAtlases";
 
 type State = {
-    selectedTab: "Tilesets" | "Levels",
+    selectedTab: "Texture Atlases" | "Levels",
 };
 
 const LevelBuilder: Component = () => {
     let [ state, setState, ] = createStore<State>({
-        selectedTab: "Tilesets",
+        selectedTab: "Texture Atlases",
     });
-    let tilesets = new Tilesets();
+    let textureAtlases = new TextureAtlases();
     return (
         <div style={{
             "flex-grow": "1",
@@ -22,10 +22,10 @@ const LevelBuilder: Component = () => {
             <ul class="nav-tabs">
                 <li class="nav-item">
                     <button
-                        class={state.selectedTab == "Tilesets" ? "nav-link-selected" : "nav-link"}
-                        onClick={() => setState("selectedTab", "Tilesets")}
+                        class={state.selectedTab == "Texture Atlases" ? "nav-link-selected" : "nav-link"}
+                        onClick={() => setState("selectedTab", "Texture Atlases")}
                     >
-                        Tilesets
+                        Texture Atlases
                     </button>
                 </li>
                 <li class="nav-item">
@@ -38,8 +38,8 @@ const LevelBuilder: Component = () => {
                 </li>
             </ul>
             <Switch>
-                <Match when={state.selectedTab == "Tilesets"}>
-                    <tilesets.Render
+                <Match when={state.selectedTab == "Texture Atlases"}>
+                    <textureAtlases.Render
                         style={{
                             "flex-grow": "1",
                         }}

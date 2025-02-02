@@ -1,21 +1,21 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { Component, createMemo, JSX, Show } from "solid-js";
-import { TilesetList } from "./TilesetList";
-import { Tileset } from "./Tileset";
+import { TextureAtlasList } from "./TextureAtlasList";
+import { TextureAtlas } from "./TextureAtlas";
 
 type State = {
 };
 
-export class Tilesets {
+export class TextureAtlases {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    private tilesetList: TilesetList;
+    private tilesetList: TextureAtlasList;
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
         });
-        let tilesetList = new TilesetList();
+        let tilesetList = new TextureAtlasList();
         this.state = state;
         this.setState = setState;
         this.tilesetList = tilesetList;
@@ -27,7 +27,7 @@ export class Tilesets {
         let selectedTilesetImage = createMemo(() =>
             this.tilesetList.selectedTileset()?.image
         );
-        let tileset = new Tileset({
+        let tileset = new TextureAtlas({
             image: selectedTilesetImage,
         });
         return (
