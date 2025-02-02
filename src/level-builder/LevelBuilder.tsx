@@ -1,4 +1,4 @@
-import { Component, Match, Switch } from "solid-js";
+import { Component, Match, onCleanup, Switch } from "solid-js";
 import { Vec2 } from "../Vec2";
 import { createStore } from "solid-js/store";
 import { TextureAtlases } from "./TextureAtlases";
@@ -12,6 +12,9 @@ const LevelBuilder: Component = () => {
         selectedTab: "Texture Atlases",
     });
     let textureAtlases = new TextureAtlases();
+    onCleanup(() => {
+        textureAtlases.dispose();
+    });
     return (
         <div style={{
             "flex-grow": "1",

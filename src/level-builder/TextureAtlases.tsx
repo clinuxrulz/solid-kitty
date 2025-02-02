@@ -22,11 +22,16 @@ export class TextureAtlases {
         );
         let textureAtlas = new TextureAtlas({
             image: selectedTilesetImage,
+            size: createMemo(() => textureAtlasList.selectedTileset()?.size),
         });
         this.state = state;
         this.setState = setState;
         this.textureAtlasList = textureAtlasList;
         this.textureAtlas = textureAtlas;
+    }
+
+    dispose() {
+        this.textureAtlasList.dispose();
     }
 
     readonly Render: Component<{

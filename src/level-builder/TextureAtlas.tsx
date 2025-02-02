@@ -26,11 +26,13 @@ export class TextureAtlas {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
     private image: Accessor<HTMLImageElement | undefined>;
+    private size: Accessor<Vec2 | undefined>;
     private screenPtToWorldPt: (screenPt: Vec2) => Vec2 | undefined;
     private worldPtToScreenPt: (worldPt: Vec2) => Vec2 | undefined;
 
     constructor(params: {
         image: Accessor<HTMLImageElement | undefined>,
+        size: Accessor<Vec2 | undefined>,
     }) {
         let [ state, setState, ] = createStore<State>({
             mousePos: undefined,
@@ -55,6 +57,7 @@ export class TextureAtlas {
         this.state = state;
         this.setState = setState;
         this.image = params.image;
+        this.size = params.size;
         this.screenPtToWorldPt = screenPtToWorldPt;
         this.worldPtToScreenPt = worldPtToScreenPt;
     }
@@ -324,14 +327,18 @@ export class TextureAtlas {
                 onTouchMove={onTouchMove}
             >
                 <g transform={transform()}>
-                    <Show when={this.image()}>
-                        {(image) => (
-                            <foreignObject
-                                width={image().width}
-                                height={image().height}
-                            >
-                                {image()}
-                            </foreignObject>
+                    <Show when={this.size()}>
+                        {(size) => (
+                            <Show when={this.image()}>
+                                {(image) => (
+                                    <foreignObject
+                                        width={size().x}
+                                        height={size().y}
+                                    >
+                                        {image()}
+                                    </foreignObject>
+                                )}
+                            </Show>
                         )}
                     </Show>
                 </g>

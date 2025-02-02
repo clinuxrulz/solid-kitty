@@ -8,11 +8,13 @@ type State = {
         id: string,
         name: string,
         image: HTMLImageElement,
+        size: Vec2,
         blockTable: {
             name: string,
             pos: Vec2,
             size: Vec2,
         }[],
+        dispose: () => void,
     }[],
 };
 
@@ -39,6 +41,12 @@ export class TextureAtlasList {
         this.selectedTileset = selectedTileset;
     }
 
+    dispose() {
+        for (let textureAtlas of this.state.tilesets) {
+            textureAtlas.dispose();
+        }
+    }
+
     readonly Render: Component<{
         style?: JSX.CSSProperties | string,
     }> = (props) => {
@@ -57,21 +65,22 @@ export class TextureAtlasList {
             };
             image.onload = () => {
                 image.onload = null;
-                try {
-                    this.setState(
-                        "tilesets",
-                        produce((tilesets) => {
-                            tilesets.push({
-                                id: createUniqueId(),
-                                name: file.name,
-                                image,
-                                blockTable: [],
-                            });
-                        })
-                    );
-                } finally {
-                    URL.revokeObjectURL(url);
-                }
+                let size = Vec2.create(image.width, image.height);
+                this.setState(
+                    "tilesets",
+                    produce((tilesets) => {
+                        tilesets.push({
+                            id: createUniqueId(),
+                            name: file.name,
+                            image,
+                            size,
+                            blockTable: [],
+                            dispose: () => {
+                                URL.revokeObjectURL(url);
+                            },
+                        });
+                    })
+                );
             };
         };
         let selectTileset = (tilesetId: string) => {
