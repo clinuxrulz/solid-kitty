@@ -331,9 +331,9 @@ export class TextureAtlas {
                 onMouseMove={onMouseMove}
                 onMouseOut={onMouseOut}
                 onWheel={onWheel}
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
-                onTouchMove={onTouchMove}
+                on:touchstart={onTouchStart}
+                on:touchend={onTouchEnd}
+                on:touchmove={onTouchMove}
             >
                 <g transform={transform()}>
                     <Show when={this.size()}>
