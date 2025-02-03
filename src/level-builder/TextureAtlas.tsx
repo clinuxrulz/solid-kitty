@@ -11,10 +11,7 @@ type State = {
         id: number,
         pos: Vec2,
     }[],
-    // panning states
-    isPanning: boolean,
-    panningFrom: Vec2 | undefined,
-    // panning/zoom states for touch screen
+    // panning/zoom states
     isTouchPanZoom: boolean,
     touchPanZoomFrom: Vec2 | undefined,
     touchPanZoomInitScale: number | undefined,
@@ -39,8 +36,6 @@ export class TextureAtlas {
             pan: Vec2.create(-1, -1),
             scale: 30.0,
             touches: [],
-            isPanning: false,
-            panningFrom: undefined,
             isTouchPanZoom: false,
             touchPanZoomFrom: undefined,
             touchPanZoomInitScale: undefined,
@@ -71,30 +66,6 @@ export class TextureAtlas {
         let worldPtToScreenPt = this.worldPtToScreenPt;
         let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
         //
-        createComputed(on(
-            [
-                () => state.isPanning,
-                () => state.panningFrom,
-                () => state.mousePos,
-            ],
-            () => {
-                if (!state.isPanning) {
-                    return;
-                }
-                if (state.panningFrom == undefined) {
-                    return;
-                }
-                if (state.mousePos == undefined) {
-                    return;
-                }
-                let pt = screenPtToWorldPt(state.mousePos);
-                if (pt == undefined) {
-                    return;
-                }
-                let delta = state.panningFrom.clone().sub(pt);
-                setState("pan", (pan) => pan.clone().add(delta));
-            },
-        ));
         let zoomByFactor = (factor: number) => {
             if (state.mousePos == undefined) {
                 return;
