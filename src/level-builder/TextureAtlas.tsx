@@ -226,12 +226,13 @@ export class TextureAtlas {
             svg2.releasePointerCapture(e.pointerId);
             let id = e.pointerId;
             let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
+            stopTouchPanZoom();
             batch(() => {
                 setState("touches", newTouches);
                 setState("mousePos", newTouches.length > 0 ? newTouches[0].pos : undefined);
             });
-            if (newTouches.length == 0) {
-                stopTouchPanZoom();
+            if (newTouches.length != 0) {
+                startTouchPanZoom();
             }
         };
         let onPointerCanceled = (e: PointerEvent) => {
@@ -287,12 +288,6 @@ export class TextureAtlas {
                 onPointerOut={onPointerOut}
                 onContextMenu={(e) => { e.preventDefault(); return false; }}
             >
-                <text
-                    y="100"
-                >{JSON.stringify(state.touches.length)}</text>
-                <text
-                    y="150"
-                >{JSON.stringify(state.mousePos ?? null)}</text>
                 <g transform={transform()}>
                     <Show when={this.size()}>
                         {(size) => (
