@@ -95,25 +95,6 @@ export class TextureAtlas {
                 setState("pan", (pan) => pan.clone().add(delta));
             },
         ));
-        let startPan = () => {
-            if (state.mousePos == undefined) {
-                return;
-            }
-            let pt = screenPtToWorldPt(state.mousePos);
-            if (pt == undefined) {
-                return;
-            }
-            batch(() => {
-                setState("isPanning", true);
-                setState("panningFrom", pt);
-            });
-        };
-        let stopPan = () => {
-            batch(() => {
-                setState("isPanning", false);
-                setState("panningFrom", undefined);
-            });
-        };
         let zoomByFactor = (factor: number) => {
             if (state.mousePos == undefined) {
                 return;
@@ -181,18 +162,16 @@ export class TextureAtlas {
             if (state.touches.length == 0) {
                 return;
             }
-            let mid = Vec2.zero();
-            for (let touch of state.touches) {
-                mid.add(touch.pos);
+            if (state.mousePos == undefined) {
+                return;
             }
-            mid.multScalar(1.0 / state.touches.length);
             let initGap: number | undefined;
             if (state.touches.length != 2) {
                 initGap = undefined;
             } else {
                 initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
             }
-            let pt = screenPtToWorldPt(mid);
+            let pt = screenPtToWorldPt(state.mousePos);
             if (pt == undefined) {
                 return;
             }
@@ -211,29 +190,6 @@ export class TextureAtlas {
                 setState("touchPanZoomInitScale", undefined);
             });
         };
-        let onMouseDown = (e: MouseEvent) => {
-            if (!state.isPanning) {
-                startPan();
-            }
-        };
-        let onMouseUp = (e: MouseEvent) => {
-            if (state.isPanning) {
-                stopPan();
-            }
-        };
-        let onMouseMove = (e: MouseEvent) => {
-            let svg2 = svg();
-            if (svg2 == undefined) {
-                return;
-            }
-            let rect = svg2.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            let y = e.clientY - rect.top;
-            setState("mousePos", Vec2.create(x, y));
-        };
-        let onMouseOut = (e: MouseEvent) => {
-            setState("mousePos", undefined);
-        };
         let onWheel = (e: WheelEvent) => {
             if (e.deltaY > 0) {
                 zoomByFactor(1.0 / 1.1);
@@ -241,75 +197,71 @@ export class TextureAtlas {
                 zoomByFactor(1.1 / 1.0);
             }
         };
-        let onTouchStart = (e: TouchEvent) => {
+        let onPointerDown = (e: PointerEvent) => {
+            e.preventDefault();
             let svg2 = svg();
             if (svg2 == undefined) {
                 return;
             }
+            svg2.setPointerCapture(e.pointerId);
             let rect = svg2.getBoundingClientRect();
-            let touches: { id: number, pos: Vec2, }[] = [];
-            if (e.targetTouches.length == 0) {
+            let id = e.pointerId;
+            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+            let newTouches = [
+                ...state.touches,
+                { id, pos, },
+            ];
+            batch(() => {
+                setState("touches", newTouches);
+                setState("mousePos", newTouches[0].pos);
+            });
+            startTouchPanZoom();
+        };
+        let onPointerUp =  (e: PointerEvent) => {
+            e.preventDefault();
+            let svg2 = svg();
+            if (svg2 == undefined) {
                 return;
             }
-            let avg = Vec2.zero();
-            for (let touch of e.targetTouches) {
-                let pos = Vec2.create(
-                    touch.clientX - rect.left,
-                    touch.clientY - rect.top,
-                );
-                touches.push({
-                    id: touch.identifier,
-                    pos,
-                });
-                avg = avg.add(pos);
-            }
-            avg = avg.multScalar(1.0 / e.targetTouches.length);
-            if (state.isTouchPanZoom) {
+            svg2.releasePointerCapture(e.pointerId);
+            let id = e.pointerId;
+            let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
+            batch(() => {
+                setState("touches", newTouches);
+                setState("mousePos", newTouches.length > 0 ? newTouches[0].pos : undefined);
+            });
+            if (newTouches.length == 0) {
                 stopTouchPanZoom();
             }
-            setState("touches", touches);
-            setState("mousePos", avg);
-            startTouchPanZoom();
-            e.preventDefault();
         };
-        let onTouchEnd = (e: TouchEvent) => {
-            if (state.isTouchPanZoom) {
-                stopTouchPanZoom()
-            }
-            setState("touches", []);
-            e.preventDefault();
+        let onPointerCanceled = (e: PointerEvent) => {
+            onPointerUp(e);
         };
-        let onTouchMove = (e: TouchEvent) => {
+        let onPointerMove = (e: PointerEvent) => {
+            e.preventDefault();
             let svg2 = svg();
             if (svg2 == undefined) {
                 return;
             }
             let rect = svg2.getBoundingClientRect();
-            let touches: { id: number, pos: Vec2, }[] = [];
-            let avg = Vec2.zero();
-            for (let touch of e.targetTouches) {
-                let pos = Vec2.create(
-                    touch.clientX - rect.left,
-                    touch.clientY - rect.top,
-                );
-                touches.push({
-                    id: touch.identifier,
-                    pos,
+            let id = e.pointerId;
+            let touchIdx = state.touches.findIndex(({ id: id2, }) => id2 == id);
+            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+            if (touchIdx != -1) {
+                setState("touches", touchIdx, "pos", (oldPos) => {
+                    oldPos.dispose();
+                    return pos;
                 });
-                avg = avg.add(pos);
             }
-            avg = avg.multScalar(1.0 / e.targetTouches.length);
-            batch(() => {
-                if (state.isTouchPanZoom && state.touches.length != 2 && touches.length == 2) {
-                    let initGap = touches[1].pos.distance(touches[0].pos);
-                    setState("touchPanZoomFrom", avg);
-                    setState("touchPanZoomInitGap", initGap);
-                    setState("touchPanZoomInitScale", state.scale);
-                }
-                setState("touches", touches);
-                setState("mousePos", avg);
-            });
+            if (touchIdx == 0 || touchIdx == -1) {
+                setState("mousePos", pos);
+            }
+        };
+        let onPointerOut = (e: PointerEvent) => {
             e.preventDefault();
+            if (state.touches.length == 0) {
+                setState("mousePos", undefined);
+            }
         };
         //
         let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
@@ -319,22 +271,28 @@ export class TextureAtlas {
                 "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
                 "background-size": "20px 20px",
                 "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+                "touch-action": "none",
             },
             props.style,
         );
-        return (
+        return (<>
             <svg
                 ref={setSvg}
                 style={style2}
-                onMouseDown={onMouseDown}
-                onMouseUp={onMouseUp}
-                onMouseMove={onMouseMove}
-                onMouseOut={onMouseOut}
                 onWheel={onWheel}
-                on:touchstart={onTouchStart}
-                on:touchend={onTouchEnd}
-                on:touchmove={onTouchMove}
+                onPointerDown={onPointerDown}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerCanceled}
+                onPointerMove={onPointerMove}
+                onPointerOut={onPointerOut}
+                onContextMenu={(e) => { e.preventDefault(); return false; }}
             >
+                <text
+                    y="100"
+                >{JSON.stringify(state.touches.length)}</text>
+                <text
+                    y="150"
+                >{JSON.stringify(state.mousePos ?? null)}</text>
                 <g transform={transform()}>
                     <Show when={this.size()}>
                         {(size) => (
@@ -352,6 +310,6 @@ export class TextureAtlas {
                     </Show>
                 </g>
             </svg>
-        );
+        </>);
     };
 }
