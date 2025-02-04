@@ -66,7 +66,7 @@ export class ClientBoundary {
         return signal[0];
     }
 
-    unobserveSignal(id: string) {
+    unobserveAccessor(id: string) {
         let signal = this.signalTable.get(id);
         if (signal == undefined) {
             return;
