@@ -329,6 +329,7 @@ export class TextureAtlas {
                     <button
                         class="btn"
                         style="position: relative;"
+                        onClick={() => setState("mode", "Make Frame")}
                     >
                         {(() => {
                             let s = 0.5;
