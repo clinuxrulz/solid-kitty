@@ -1,6 +1,7 @@
 import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, Show } from "solid-js";
 import { Vec2 } from "../../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
+import { UndoManager } from "../../pixel-editor/UndoManager";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -20,6 +21,7 @@ type State = {
 };
 
 export class TextureAtlas {
+    private undoManager: UndoManager;
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
     private image: Accessor<HTMLImageElement | undefined>;
@@ -31,6 +33,7 @@ export class TextureAtlas {
         image: Accessor<HTMLImageElement | undefined>,
         size: Accessor<Vec2 | undefined>,
     }) {
+        let undoManager = new UndoManager();
         let [ state, setState, ] = createStore<State>({
             mousePos: undefined,
             pan: Vec2.create(-1, -1),
@@ -49,6 +52,7 @@ export class TextureAtlas {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
+        this.undoManager = undoManager;
         this.state = state;
         this.setState = setState;
         this.image = params.image;
@@ -250,10 +254,24 @@ export class TextureAtlas {
                 <div>
                     <button
                         class="btn"
+                        style="font-size: 20pt;"
+                        disabled={!this.undoManager.canUndo()}
+                    >
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button
+                        class="btn"
+                        style="font-size: 20pt;"
+                        disabled={!this.undoManager.canRedo()}
+                    >
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button
+                        class="btn"
                         style="position: relative;"
                     >
                         {(() => {
-                            let s = 0.6;
+                            let s = 0.5;
                             return (<>
                                 <i
                                     class="fa-regular fa-square"
