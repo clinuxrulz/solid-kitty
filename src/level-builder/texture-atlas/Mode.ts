@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Accessor, Component } from "solid-js";
 
 export interface Mode {
     instructions?: Component,
@@ -6,4 +6,5 @@ export interface Mode {
     dragStart?: () => void,
     dragEnd?: () => void,
     click?: () => void,
+    disableOneFingerPan?: Accessor<boolean>,
 }

@@ -129,6 +129,7 @@ export class TextureAtlas {
         let mode = this.mode;
         //
         let overlaySvgUI = () => mode().overlaySvgUI;
+        let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
         //
         let zoomByFactor = (factor: number) => {
             if (state.mousePos == undefined) {
@@ -158,6 +159,7 @@ export class TextureAtlas {
                 () => state.touchPanZoomInitScale,
                 () => state.touches,
                 () => state.mousePos,
+                disableOneFingerPan,
             ],
             () => {
                 if (!state.isTouchPanZoom) {
@@ -170,6 +172,9 @@ export class TextureAtlas {
                     return;
                 }
                 if (state.touchPanZoomInitScale == undefined) {
+                    return;
+                }
+                if (disableOneFingerPan() && state.touches.length == 1) {
                     return;
                 }
                 let pt = screenPtToWorldPt(state.mousePos);
@@ -268,6 +273,8 @@ export class TextureAtlas {
             });
             if (newTouches.length != 0) {
                 startTouchPanZoom();
+            } else {
+                onClick();
             }
         };
         let onPointerCanceled = (e: PointerEvent) => {
@@ -298,6 +305,9 @@ export class TextureAtlas {
             if (state.touches.length == 0) {
                 setState("mousePos", undefined);
             }
+        };
+        let onClick = () => {
+            mode().click?.();
         };
         //
         let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);

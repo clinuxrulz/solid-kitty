@@ -1,12 +1,20 @@
 import { Component, createMemo, Show } from "solid-js";
+import { createStore } from "solid-js/store";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../../Vec2";
 
 export class MakeFrameMode implements Mode {
     overlaySvgUI: Component;
+    click: () => void;
+    disableOneFingerPan = () => true;
 
     constructor(modeParams: ModeParams) {
+        let [ state, setState, ] = createStore<{
+            corner1: Vec2 | undefined,
+        }>({
+            corner1: undefined,
+        });
         let workingPoint = createMemo(() => {
             let mousePos = modeParams.mousePos();
             if (mousePos == undefined) {
@@ -56,6 +64,15 @@ export class MakeFrameMode implements Mode {
                     )}
                 </Show>
             );
+        };
+        this.click = () => {
+            if (state.corner1 == undefined) {
+                let pt = workingPoint();
+                if (pt != undefined) {
+                    setState("corner1", pt);
+                }
+                return;
+            }
         };
     }
 }
