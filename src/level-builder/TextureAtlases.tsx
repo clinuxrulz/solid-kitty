@@ -2,7 +2,7 @@ import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 import { Component, createMemo, JSX, Show } from "solid-js";
 import { TextureAtlasList } from "./TextureAtlasList";
-import { TextureAtlas } from "./TextureAtlas";
+import { TextureAtlas } from "./texture-atlas/TextureAtlas";
 
 type State = {
 };

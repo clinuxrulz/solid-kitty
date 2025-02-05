@@ -1,5 +1,5 @@
 import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, Show } from "solid-js";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
 type State = {
