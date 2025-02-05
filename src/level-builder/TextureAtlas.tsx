@@ -58,7 +58,7 @@ export class TextureAtlas {
     }
 
     Render: Component<{
-        style?: JSX.CSSProperties | string,
+        style?: JSX.CSSProperties,
     }> = (props) => {
         let state = this.state;
         let setState = this.setState;
@@ -237,45 +237,81 @@ export class TextureAtlas {
         };
         //
         let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
-        let style2 = mergeProps(
-            {
-                "background-color": "#DDD",
-                "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
-                "background-size": "20px 20px",
-                "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
-                "touch-action": "none",
-            },
-            props.style,
-        );
-        return (<>
-            <svg
-                ref={setSvg}
-                style={style2}
-                onWheel={onWheel}
-                onPointerDown={onPointerDown}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerCanceled}
-                onPointerMove={onPointerMove}
-                onPointerOut={onPointerOut}
-                onContextMenu={(e) => { e.preventDefault(); return false; }}
+        return (
+            <div
+                style={mergeProps<[ JSX.CSSProperties, JSX.CSSProperties, ]>(
+                    props.style ?? {},
+                    {
+                        "display": "flex",
+                        "flex-direction": "column",
+                    },
+                )}
             >
-                <g transform={transform()}>
-                    <Show when={this.size()}>
-                        {(size) => (
-                            <Show when={this.image()}>
-                                {(image) => (
-                                    <foreignObject
-                                        width={size().x}
-                                        height={size().y}
-                                    >
-                                        {image()}
-                                    </foreignObject>
-                                )}
-                            </Show>
-                        )}
-                    </Show>
-                </g>
-            </svg>
-        </>);
+                <div>
+                    <button
+                        class="btn"
+                        style="position: relative;"
+                    >
+{(() => {
+    let s = 0.6;
+    return (<>
+        <i
+            class="fa-regular fa-square"
+            style={{
+                "font-size": `${40*s}pt`,
+            }}
+        />
+        <i
+            class="fa-solid fa-tree"
+            style={{
+                "position": "absolute",
+                "left": `50%`,
+                "top": `50%`,
+                "-webkit-transform": "translate(-50%, -50%)",
+                "transform": "translate(-50%, -50%)",
+                "font-size": `${24*s}pt`,
+            }}
+        />
+    </>);
+})()}
+                    </button>                    
+                </div>
+                <svg
+                    ref={setSvg}
+                    style={{
+                        "flex-grow": "1",
+                        "background-color": "#DDD",
+                        "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
+                        "background-size": "20px 20px",
+                        "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+                        "touch-action": "none",
+                    }}
+                    onWheel={onWheel}
+                    onPointerDown={onPointerDown}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCanceled}
+                    onPointerMove={onPointerMove}
+                    onPointerOut={onPointerOut}
+                    onContextMenu={(e) => { e.preventDefault(); return false; }}
+                >
+                    <g transform={transform()}>
+                        <Show when={this.size()}>
+                            {(size) => (
+                                <Show when={this.image()}>
+                                    {(image) => (
+                                        <foreignObject
+                                            width={size().x}
+                                            height={size().y}
+                                        >
+                                            {image()}
+                                        </foreignObject>
+                                    )}
+                                </Show>
+                            )}
+                        </Show>
+                    </g>
+                </svg>
+            </div>
+        );
     };
 }
