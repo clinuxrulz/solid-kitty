@@ -252,28 +252,28 @@ export class TextureAtlas {
                         class="btn"
                         style="position: relative;"
                     >
-{(() => {
-    let s = 0.6;
-    return (<>
-        <i
-            class="fa-regular fa-square"
-            style={{
-                "font-size": `${40*s}pt`,
-            }}
-        />
-        <i
-            class="fa-solid fa-tree"
-            style={{
-                "position": "absolute",
-                "left": `50%`,
-                "top": `50%`,
-                "-webkit-transform": "translate(-50%, -50%)",
-                "transform": "translate(-50%, -50%)",
-                "font-size": `${24*s}pt`,
-            }}
-        />
-    </>);
-})()}
+                        {(() => {
+                            let s = 0.6;
+                            return (<>
+                                <i
+                                    class="fa-regular fa-square"
+                                    style={{
+                                        "font-size": `${40*s}pt`,
+                                    }}
+                                />
+                                <i
+                                    class="fa-solid fa-tree"
+                                    style={{
+                                        "position": "absolute",
+                                        "left": `50%`,
+                                        "top": `50%`,
+                                        "-webkit-transform": "translate(-50%, -50%)",
+                                        "transform": "translate(-50%, -50%)",
+                                        "font-size": `${24*s}pt`,
+                                    }}
+                                />
+                            </>);
+                        })()}
                     </button>                    
                 </div>
                 <svg
