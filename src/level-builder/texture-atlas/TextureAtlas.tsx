@@ -1,7 +1,11 @@
-import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Setter, Show } from "solid-js";
 import { Vec2 } from "../../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { UndoManager } from "../../pixel-editor/UndoManager";
+import { Mode } from "./Mode";
+import { ModeParams } from "./ModeParams";
+import { MakeFrameMode } from "./modes/MakeFrameMode";
+import { IdleMode } from "./modes/IdleMode";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -18,6 +22,7 @@ type State = {
     touchPanZoomInitScale: number | undefined,
     touchPanZoomInitGap: number | undefined,
     //
+    mode: "Idle" | "Make Frame",
 };
 
 export class TextureAtlas {
@@ -28,6 +33,9 @@ export class TextureAtlas {
     private size: Accessor<Vec2 | undefined>;
     private screenPtToWorldPt: (screenPt: Vec2) => Vec2 | undefined;
     private worldPtToScreenPt: (worldPt: Vec2) => Vec2 | undefined;
+    private svg: Accessor<SVGSVGElement | undefined>;
+    private setSvg: Setter<SVGSVGElement | undefined>;
+    private mode: Accessor<Mode>;
 
     constructor(params: {
         image: Accessor<HTMLImageElement | undefined>,
@@ -43,7 +51,36 @@ export class TextureAtlas {
             touchPanZoomFrom: undefined,
             touchPanZoomInitScale: undefined,
             touchPanZoomInitGap: undefined,
+            mode: "Idle",
         });
+        let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
+        let [ screenSize, setScreenSize, ] = createSignal<Vec2>();
+        createComputed(on(
+            svg,
+            () => {
+                let svg2 = svg();
+                if (svg2 == undefined) {
+                    return;
+                }
+                let resizeObserver = new ResizeObserver(
+                    () => {
+                        let rect = svg2.getBoundingClientRect();
+                        setScreenSize(
+                            Vec2.create(
+                                rect.width,
+                                rect.height,
+                            ),
+                        );
+                    },
+                );
+                resizeObserver.observe(svg2);
+                onCleanup(() => {
+                    resizeObserver.unobserve(svg2);
+                    resizeObserver.disconnect();
+                    setScreenSize(undefined);
+                });
+            })
+        );
         //
         let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
             return screenPt.clone().multScalar(1.0 / state.scale).add(state.pan);
@@ -52,6 +89,22 @@ export class TextureAtlas {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
+        let modeParams: ModeParams = {
+            undoManager,
+            mousePos: () => state.mousePos,
+            screenSize,
+            screenPtToWorldPt,
+            worldPtToScreenPt,
+        };
+        let mode = createMemo<Mode>(() => {
+            switch (state.mode) {
+                case "Idle":
+                    return new IdleMode(modeParams);
+                case "Make Frame":
+                    return new MakeFrameMode(modeParams);
+            }
+        });
+        //
         this.undoManager = undoManager;
         this.state = state;
         this.setState = setState;
@@ -59,6 +112,9 @@ export class TextureAtlas {
         this.size = params.size;
         this.screenPtToWorldPt = screenPtToWorldPt;
         this.worldPtToScreenPt = worldPtToScreenPt;
+        this.svg = svg;
+        this.setSvg = setSvg;
+        this.mode = mode;
     }
 
     Render: Component<{
@@ -68,7 +124,11 @@ export class TextureAtlas {
         let setState = this.setState;
         let screenPtToWorldPt = this.screenPtToWorldPt;
         let worldPtToScreenPt = this.worldPtToScreenPt;
-        let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
+        let svg = this.svg;
+        let setSvg = this.setSvg;
+        let mode = this.mode;
+        //
+        let overlaySvgUI = () => mode().overlaySvgUI;
         //
         let zoomByFactor = (factor: number) => {
             if (state.mousePos == undefined) {
@@ -328,6 +388,7 @@ export class TextureAtlas {
                             )}
                         </Show>
                     </g>
+                    {<>{overlaySvgUI()?.({})}</>}
                 </svg>
             </div>
         );
