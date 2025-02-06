@@ -6,14 +6,18 @@ import { Vec2 } from "../../../Vec2";
 
 export class MakeFrameMode implements Mode {
     overlaySvgUI: Component;
+    dragStart: () => void;
+    dragEnd: () => void;
     click: () => void;
     disableOneFingerPan = () => true;
 
     constructor(modeParams: ModeParams) {
         let [ state, setState, ] = createStore<{
             corner1: Vec2 | undefined,
+            corner2: Vec2 | undefined,
         }>({
             corner1: undefined,
+            corner2: undefined,
         });
         let workingPoint = createMemo(() => {
             let mousePos = modeParams.mousePos();
@@ -50,6 +54,7 @@ export class MakeFrameMode implements Mode {
                                     y2={pt2().y}
                                     stroke="gray"
                                     stroke-width="2"
+                                    pointer-events="none"
                                 />
                                 <line
                                     x1={pt2().x}
@@ -58,6 +63,7 @@ export class MakeFrameMode implements Mode {
                                     y2={screenSize().y}
                                     stroke="gray"
                                     stroke-width="2"
+                                    pointer-events="none"
                                 />
                             </>)}
                         </Show>
@@ -65,11 +71,36 @@ export class MakeFrameMode implements Mode {
                 </Show>
             );
         };
+        this.dragStart = () => {
+            if (state.corner1 == undefined) {
+                let pt = workingPoint();
+                if (pt != undefined) {
+                    setState("corner1", pt);
+                }
+                return;
+            }
+        };
+        this.dragEnd = () => {
+            if (state.corner2 == undefined) {
+                let pt = workingPoint();
+                if (pt != undefined) {
+                    setState("corner2", pt);
+                }
+                return;
+            }
+        };
         this.click = () => {
             if (state.corner1 == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
                     setState("corner1", pt);
+                }
+                return;
+            }
+            if (state.corner2 == undefined) {
+                let pt = workingPoint();
+                if (pt != undefined) {
+                    setState("corner2", pt);
                 }
                 return;
             }
