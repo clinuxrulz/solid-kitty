@@ -7,6 +7,7 @@ import { ModeParams } from "./ModeParams";
 import { MakeFrameMode } from "./modes/MakeFrameMode";
 import { IdleMode } from "./modes/IdleMode";
 import { EcsWorld } from "../../ecs/EcsWorld";
+import { RenderSystem } from "./systems/RenderSystem";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -39,6 +40,7 @@ export class TextureAtlas {
     private svg: Accessor<SVGSVGElement | undefined>;
     private setSvg: Setter<SVGSVGElement | undefined>;
     private mode: Accessor<Mode>;
+    private renderSystem: RenderSystem;
 
     constructor(params: {
         image: Accessor<HTMLImageElement | undefined>,
@@ -93,6 +95,10 @@ export class TextureAtlas {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
+        let renderSystem = new RenderSystem({
+            world: () => state.world,
+        });
+        //
         let modeParams: ModeParams = {
             undoManager,
             mousePos: () => state.mousePos,
@@ -120,6 +126,7 @@ export class TextureAtlas {
         this.svg = svg;
         this.setSvg = setSvg;
         this.mode = mode;
+        this.renderSystem = renderSystem;
     }
 
     Render: Component<{
@@ -132,6 +139,7 @@ export class TextureAtlas {
         let svg = this.svg;
         let setSvg = this.setSvg;
         let mode = this.mode;
+        let renderSystem = this.renderSystem;
         //
         let overlaySvgUI = () => mode().overlaySvgUI;
         let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
@@ -403,6 +411,7 @@ export class TextureAtlas {
                                 </Show>
                             )}
                         </Show>
+                        <renderSystem.Render/>
                     </g>
                     {<>{overlaySvgUI()?.({})}</>}
                 </svg>
