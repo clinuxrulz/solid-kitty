@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { ReactiveMap } from "@solid-primitives/map";
 import { EcsComponent, EcsComponentType, IsEcsComponent, IsEcsComponentType } from "./EcsComponent";
-import { createSignal, Signal } from "solid-js";
+import { batch, createSignal, Signal, untrack } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
 import { makeRefCountedMakeReactiveObject } from "../util";
 
@@ -43,7 +43,17 @@ export class EcsWorld {
     }
 
     createEntityWithId(entityId: string, components: IsEcsComponent[]) {
-        this.entityMap.set(entityId, createSignal(components));
+        untrack(() => batch(() => {
+            this.entityMap.set(entityId, createSignal(components));
+            for (let component of components) {
+                let entitySet = this.componentTypeEntitiesMap.get(component.type.typeName);
+                if (entitySet == undefined) {
+                    entitySet = new ReactiveSet();
+                    this.componentTypeEntitiesMap.set(component.type.typeName, entitySet);
+                }
+                entitySet.add(entityId);
+            }
+        }));
     }
 
     createEntity(components: IsEcsComponent[]): string {
@@ -53,7 +63,18 @@ export class EcsWorld {
     }
 
     destroyEntity(entityId: string) {
-        this.entityMap.delete(entityId);
+        untrack(() => batch(() => {
+            let components = this.entityMap.get(entityId);
+            if (components != undefined) {
+                for (let component of components[0]()) {
+                    let entitySet = this.componentTypeEntitiesMap.get(component.type.typeName);
+                    if (entitySet != undefined) {
+                        entitySet.delete(entityId);
+                    }
+                }
+            }
+            this.entityMap.delete(entityId);
+        }));
     }
 
     getComponent<A extends object>(entityId: string, componentType: EcsComponentType<A>): EcsComponent<A> | undefined {
