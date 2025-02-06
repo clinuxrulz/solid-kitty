@@ -4,15 +4,8 @@ export class EcsRegistry {
     componentTypes: IsEcsComponentType[];
     componentTypeMap: Map<string,IsEcsComponentType>;
 
-    constructor() {
-        this.componentTypes = [];
-        this.componentTypeMap = new Map();
-    }
-
-    registerComponentTypes(componentTypes: IsEcsComponentType[]) {
-        for (let componentType of componentTypes) {
-            this.componentTypes.push(componentType);
-            this.componentTypeMap.set(componentType.typeName, componentType);
-        }
+    constructor(componentTypes: IsEcsComponentType[]) {
+        this.componentTypes = componentTypes;
+        this.componentTypeMap = new Map(componentTypes.map((x) => [ x.typeName, x, ]));
     }
 }

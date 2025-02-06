@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { ReactiveMap } from "@solid-primitives/map";
-import { IsEcsComponent, IsEcsComponentType } from "./EcsComponent";
+import { EcsComponent, EcsComponentType, IsEcsComponent, IsEcsComponentType } from "./EcsComponent";
 import { createSignal, Signal } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
 import { makeRefCountedMakeReactiveObject } from "../util";
@@ -54,5 +54,13 @@ export class EcsWorld {
 
     destroyEntity(entityId: string) {
         this.entityMap.delete(entityId);
+    }
+
+    getComponent<A extends object>(entityId: string, componentType: EcsComponentType<A>): EcsComponent<A> | undefined {
+        let components = this.entityMap.get(entityId)?.[0]?.();
+        if (components == undefined) {
+            return undefined;
+        }
+        return components.find((component) => component.type.typeName === componentType.typeName) as (EcsComponent<A> | undefined);
     }
 }
