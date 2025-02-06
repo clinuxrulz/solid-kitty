@@ -1,6 +1,6 @@
 import { EcsRegistry } from "../../../ecs/EcsRegistry";
-import { blockComponentType } from "./BlockComponent";
+import { frameComponentType } from "./FrameComponent";
 
 export const registry = new EcsRegistry([
-    blockComponentType,
+    frameComponentType,
 ]);

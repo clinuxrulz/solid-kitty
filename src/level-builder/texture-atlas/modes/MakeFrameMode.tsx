@@ -1,8 +1,9 @@
-import { Component, createMemo, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, on, onCleanup, Show, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../../Vec2";
+import { frameComponentType } from "../components/FrameComponent";
 
 export class MakeFrameMode implements Mode {
     overlaySvgUI: Component;
@@ -33,6 +34,63 @@ export class MakeFrameMode implements Mode {
                 Math.round(pt.y),
             );
         });
+        //
+        let wipFrame = createMemo(() => {
+            let pt1 = state.corner1;
+            if (pt1 == undefined) {
+                return undefined;
+            }
+            let pt2 = state.corner2 ?? workingPoint();
+            if (pt2 == undefined) {
+                return undefined;
+            }
+            let minX = Math.min(pt1.x, pt2.x);
+            let minY = Math.min(pt1.y, pt2.y);
+            let maxX = Math.max(pt1.x, pt2.x);
+            let maxY = Math.max(pt1.y, pt2.y);
+            return {
+                pos: Vec2.create(
+                    minX,
+                    minY,
+                ),
+                size: Vec2.create(
+                    maxX - minX,
+                    maxY - minY,
+                ),
+            };
+        });
+        //
+        {
+            let hasWipFrame = createMemo(() => wipFrame() != undefined);
+            createComputed(() => {
+                if (!hasWipFrame()) {
+                    return;
+                }
+                let wipFrame2 = wipFrame as Accessor<NonNullable<ReturnType<typeof wipFrame>>>;
+                let frameComponent = frameComponentType.create({
+                    name: "TODO",
+                    pos: untrack(() => wipFrame2().pos),
+                    size: untrack(() => wipFrame2().size),
+                });
+                let world = modeParams.world();
+                let entityId = untrack(() => world.createEntity([
+                    frameComponent,
+                ]));
+                createComputed(on(
+                    wipFrame2,
+                    () => {
+                        batch(() => {
+                            frameComponent.setState("pos", wipFrame2().pos);
+                            frameComponent.setState("size", wipFrame2().size);
+                        });
+                    },
+                    { defer: true, },
+                ));
+                onCleanup(() => {
+                    world.destroyEntity(entityId);
+                });
+            });
+        }
         //
         this.overlaySvgUI = () => {
             let pt = createMemo(() => {

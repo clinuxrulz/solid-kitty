@@ -6,6 +6,7 @@ import { Mode } from "./Mode";
 import { ModeParams } from "./ModeParams";
 import { MakeFrameMode } from "./modes/MakeFrameMode";
 import { IdleMode } from "./modes/IdleMode";
+import { EcsWorld } from "../../ecs/EcsWorld";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -23,6 +24,8 @@ type State = {
     touchPanZoomInitGap: number | undefined,
     //
     mode: "Idle" | "Make Frame",
+    //
+    world: EcsWorld,
 };
 
 export class TextureAtlas {
@@ -52,6 +55,7 @@ export class TextureAtlas {
             touchPanZoomInitScale: undefined,
             touchPanZoomInitGap: undefined,
             mode: "Idle",
+            world: new EcsWorld(),
         });
         let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
         let [ screenSize, setScreenSize, ] = createSignal<Vec2>();
@@ -95,6 +99,7 @@ export class TextureAtlas {
             screenSize,
             screenPtToWorldPt,
             worldPtToScreenPt,
+            world: () => state.world,
         };
         let mode = createMemo<Mode>(() => {
             switch (state.mode) {
