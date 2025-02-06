@@ -317,7 +317,7 @@ export class TextureAtlas {
                 setState("mousePos", pos);
             }
         };
-        let onPointerOut = (e: PointerEvent) => {
+        let onPointerLeave = (e: PointerEvent) => {
             e.preventDefault();
             if (state.touches.length == 0) {
                 setState("mousePos", undefined);
@@ -406,7 +406,7 @@ export class TextureAtlas {
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCanceled}
                     onPointerMove={onPointerMove}
-                    onPointerOut={onPointerOut}
+                    onPointerLeave={onPointerLeave}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
                     <g transform={transform()}>
