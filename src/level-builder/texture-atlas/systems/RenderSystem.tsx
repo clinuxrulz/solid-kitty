@@ -30,6 +30,8 @@ export class RenderSystem {
                                         height={frameState2().size.y}
                                         stroke="black"
                                         stroke-width="2"
+                                        fill="none"
+                                        pointer-events="none"
                                     />
                                 )}
                             </Show>
