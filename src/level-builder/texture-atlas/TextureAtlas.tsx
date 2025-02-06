@@ -96,6 +96,7 @@ export class TextureAtlas {
         };
         //
         let renderSystem = new RenderSystem({
+            worldPtToScreenPt,
             world: () => state.world,
         });
         //
@@ -415,6 +416,7 @@ export class TextureAtlas {
                         </Show>
                         <renderSystem.Render/>
                     </g>
+                    <renderSystem.RenderOverlay/>
                     {<>{overlaySvgUI()?.({})}</>}
                 </svg>
             </div>
