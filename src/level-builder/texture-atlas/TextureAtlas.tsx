@@ -107,6 +107,7 @@ export class TextureAtlas {
             screenPtToWorldPt,
             worldPtToScreenPt,
             world: () => state.world,
+            onDone: () => setState("mode", "Idle"),
         };
         let mode = createMemo<Mode>(() => {
             switch (state.mode) {
@@ -325,6 +326,15 @@ export class TextureAtlas {
         let onClick = () => {
             mode().click?.();
         };
+        let onKeyDown = (e: KeyboardEvent) => {
+            if (e.key == "Escape") {
+                setState("mode", "Idle");
+            }
+        };
+        document.addEventListener("keydown", onKeyDown);
+        onCleanup(() => {
+            document.removeEventListener("keydown", onKeyDown);
+        });
         //
         let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
         return (

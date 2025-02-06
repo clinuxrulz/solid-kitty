@@ -10,4 +10,5 @@ export type ModeParams = {
     screenPtToWorldPt(screenPt: Vec2): Vec2 | undefined,
     worldPtToScreenPt(worldPt: Vec2): Vec2 | undefined,
     world: Accessor<EcsWorld>,
+    onDone: () => void,
 };
