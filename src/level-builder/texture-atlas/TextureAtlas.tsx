@@ -282,7 +282,9 @@ export class TextureAtlas {
             stopTouchPanZoom();
             batch(() => {
                 setState("touches", newTouches);
-                setState("mousePos", newTouches.length > 0 ? newTouches[0].pos : undefined);
+                if (e.pointerType != "mouse") {
+                    setState("mousePos", newTouches.length == 0 ? newTouches[0].pos : undefined);
+                }
             });
             if (newTouches.length != 0) {
                 startTouchPanZoom();
