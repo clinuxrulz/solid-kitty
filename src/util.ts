@@ -1,11 +1,11 @@
-import { createRoot, onCleanup } from "solid-js";
+import { Accessor, createMemo, createRoot, onCleanup } from "solid-js";
 import { getOwner } from "solid-js/web";
 
 export function makeRefCountedMakeReactiveObject<A>(
     fn: () => A,
     cleanup?: () => void,
 ): () => A {
-    let cache: A | undefined = undefined;
+    let cache: Accessor<A> | undefined = undefined;
     let dispose: () => void = () => {};
     let refCount = 0;
     return () => {
@@ -15,7 +15,7 @@ export function makeRefCountedMakeReactiveObject<A>(
         if (cache == undefined) {
             let { cache: cache2, dispose: dispose2, } = createRoot((dispose) => {
                 return {
-                    cache: fn(),
+                    cache: createMemo(fn),
                     dispose,
                 };
             });
@@ -32,6 +32,6 @@ export function makeRefCountedMakeReactiveObject<A>(
                 cleanup?.();
             }
         });
-        return cache;
+        return cache();
     };
 }
