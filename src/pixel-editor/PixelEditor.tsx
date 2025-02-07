@@ -861,11 +861,11 @@ const PixelEditor: Component = () => {
                         "touch-action": "none",
                     }}
                     onWheel={onWheel}
-                    onPointerDown={onPointerDown}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={onPointerCanceled}
-                    onPointerMove={onPointerMove}
-                    onPointerLeave={onPointerLeave}
+                    on:pointerdown={onPointerDown}
+                    on:pointerup={onPointerUp}
+                    on:pointercancel={onPointerCanceled}
+                    on:pointermove={onPointerMove}
+                    on:pointerleave={onPointerLeave}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
                     <canvas
