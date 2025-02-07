@@ -1,4 +1,4 @@
-import { Component, createComputed, createMemo, on, Show } from "solid-js";
+import { Component, createComputed, createMemo, on, onCleanup, Show } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
@@ -34,10 +34,10 @@ export class DrawPixelsMode implements Mode {
             );
         });
         //
-        let writePixel = (pt: Vec2) => {
+        let writePixel = (pt: Vec2): UndoUnit | undefined => {
             let oldColour = params.readPixel(pt);
             if (oldColour == undefined) {
-                return;
+                return undefined;
             }
             let newColour = params.currentColour();
             if (
@@ -46,7 +46,7 @@ export class DrawPixelsMode implements Mode {
                 newColour.b == oldColour.b &&
                 newColour.a == oldColour.a
             ) {
-                return;
+                return undefined;
             }
             params.writePixel(pt, newColour);
             let undoUnit: UndoUnit = {
@@ -59,23 +59,46 @@ export class DrawPixelsMode implements Mode {
                     }
                 },
             };
-            params.undoManager.pushUndoUnit(undoUnit);
+            return undoUnit;
         };
         //
         createComputed(on(
             [
                 () => state.dragging,
-                workingPoint,
             ],
             () => {
                 if (!state.dragging) {
                     return;
                 }
-                let pt = workingPoint();
-                if (!pt) {
-                    return;
-                }
-                writePixel(pt);
+                let undoStack: UndoUnit[] = [];
+                onCleanup(() => {
+                    if (undoStack.length != 0) {
+                        let undoStack2: UndoUnit[] = undoStack;
+                        undoStack = [];
+                        let undoUnit: UndoUnit = {
+                            displayName: undoStack2[0].displayName,
+                            run(isUndo) {
+                                for (let x of undoStack2) {
+                                    x.run(isUndo);
+                                }
+                            }
+                        };
+                        params.undoManager.pushUndoUnit(undoUnit);
+                    }
+                });
+                createComputed(on(
+                    workingPoint,
+                    () => {
+                        let pt = workingPoint();
+                        if (!pt) {
+                            return;
+                        }
+                        let undoUnit = writePixel(pt);
+                        if (undoUnit != undefined) {
+                            undoStack.push(undoUnit);
+                        }
+                    },
+                ));
             },
         ));
         //
