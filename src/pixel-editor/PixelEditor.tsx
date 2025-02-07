@@ -673,6 +673,7 @@ const PixelEditor: Component = () => {
                     }}
                 >
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -682,6 +683,7 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -694,6 +696,7 @@ const PixelEditor: Component = () => {
                         let fileInput!: HTMLInputElement;
                         return (<>
                             <button
+                                class="btn"
                                 style={{
                                     "font-size": "20pt",
                                     "padding": "5pt",
@@ -750,6 +753,7 @@ const PixelEditor: Component = () => {
                         </>);
                     })()}
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -759,6 +763,7 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-floppy-disk"></i>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -769,6 +774,7 @@ const PixelEditor: Component = () => {
                         <i class="fas fa-undo"></i>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -779,6 +785,7 @@ const PixelEditor: Component = () => {
                         <i class="fas fa-redo"></i>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -795,6 +802,7 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-eraser"></i>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -811,6 +819,7 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-pencil"/>
                     </button>
                     <button
+                        class="btn"
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -827,6 +836,7 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-eye-dropper"></i>
                     </button>
                     <button
+                        class="btn"
                         ref={setColourPickerButton}
                         style={{
                             "font-size": "20pt",
