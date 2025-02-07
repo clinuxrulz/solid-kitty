@@ -1,16 +1,24 @@
-import { Component, createMemo, Show } from "solid-js";
+import { Component, createComputed, createMemo, on, Show } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
 import { Colour } from "../../Colour";
 import { UndoUnit } from "../UndoManager";
+import { createStore } from "solid-js/store";
 
 export class DrawPixelsMode implements Mode {
     instructions: Component;
     overlaySvgUI: Component;
-    click: () => void;
+    dragStart: () => void;
+    dragEnd: () => void;
+    disableOneFingerPan: () => boolean = () => true;
 
     constructor(params: ModeParams) {
+        let [ state, setState, ] = createStore<{
+            dragging: boolean,
+        }>({
+            dragging: false,
+        });
         let workingPoint = createMemo(() => {
             let mousePos = params.mousePos();
             if (mousePos == undefined) {
@@ -32,6 +40,14 @@ export class DrawPixelsMode implements Mode {
                 return;
             }
             let newColour = params.currentColour();
+            if (
+                newColour.r == oldColour.r &&
+                newColour.g == oldColour.g &&
+                newColour.b == oldColour.b &&
+                newColour.a == oldColour.a
+            ) {
+                return;
+            }
             params.writePixel(pt, newColour);
             let undoUnit: UndoUnit = {
                 displayName: "Draw Pixel",
@@ -45,6 +61,23 @@ export class DrawPixelsMode implements Mode {
             };
             params.undoManager.pushUndoUnit(undoUnit);
         };
+        //
+        createComputed(on(
+            [
+                () => state.dragging,
+                workingPoint,
+            ],
+            () => {
+                if (!state.dragging) {
+                    return;
+                }
+                let pt = workingPoint();
+                if (!pt) {
+                    return;
+                }
+                writePixel(pt);
+            },
+        ));
         //
         this.instructions = () => {
             return "Click to draw pixels, press escape when done.";
@@ -88,11 +121,11 @@ export class DrawPixelsMode implements Mode {
                 </Show>
             );
         };
-        this.click = () => {
-            let pt = workingPoint();
-            if (pt != undefined) {
-                writePixel(pt);
-            }
+        this.dragStart = () => {
+            setState("dragging", true);
+        };
+        this.dragEnd = () => {
+            setState("dragging", false);
         };
     }
 }
