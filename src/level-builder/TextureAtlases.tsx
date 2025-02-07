@@ -1,10 +1,11 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
-import { Component, createMemo, JSX, Show } from "solid-js";
+import { Component, createMemo, JSX, mergeProps, Show } from "solid-js";
 import { TextureAtlasList } from "./TextureAtlasList";
 import { TextureAtlas } from "./texture-atlas/TextureAtlas";
 
 type State = {
+    showTextureAtlasList: boolean,
 };
 
 export class TextureAtlases {
@@ -15,6 +16,7 @@ export class TextureAtlases {
 
     constructor() {
         let [ state, setState, ] = createStore<State>({
+            showTextureAtlasList: false,
         });
         let textureAtlasList = new TextureAtlasList();
         let selectedTilesetImage = createMemo(() =>
@@ -35,36 +37,60 @@ export class TextureAtlases {
     }
 
     readonly Render: Component<{
-        style?: JSX.CSSProperties | string,
+        style?: JSX.CSSProperties,
     }> = (props) => {
+        let state = this.state;
+        let setState = this.setState;
+        let styleProps = mergeProps<[ JSX.CSSProperties, JSX.CSSProperties, ]>(
+            props.style ?? {},
+            {
+                "display": "flex",
+                "flex-direction": "column",
+                "position": "relative",
+            },
+        );
         return (
-            <div style={props.style}>
-                <div
+            <div style={styleProps}>
+                <this.textureAtlas.Render
                     style={{
-                        "width": "100%",
-                        "height": "100%",
-                        "overflow": "hidden",
-                        "display": "flex",
-                        "flex-direction": "row",
+                        "flex-grow": "1",
                     }}
-                >
-                    <this.textureAtlasList.Render/>
-                    {/* a visual divider */}
+                    onBurger={() => {
+                        setState("showTextureAtlasList", true);
+                    }}
+                />
+                <Show when={state.showTextureAtlasList}>
                     <div
                         style={{
-                            "border-radius": "3px",
-                            "width": "6px",
-                            "height": "100%",
-                            "background-color": "#bbb",
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                            "background-color": "rgba(0,0,0,0.8)",
                         }}
-                    />
-                    {/* the current tileset content */}
-                    <this.textureAtlas.Render
-                        style={{
-                            "flex-grow": "1",
-                        }}
-                    />
-                </div>
+                    >
+                        <div
+                            style={{
+                                "position": "absolute",
+                                "left": "50%",
+                                "top": "50%",
+                                "-webkit-transform": "translate(-50%,-50%)",
+                                "transform": "translate(-50%,-50%)",
+                            }}
+                        >
+                            <div>
+                                <this.textureAtlasList.Render/>
+                                <button
+                                    class="btn"
+                                    onClick={() => setState("showTextureAtlasList", false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Show>
             </div>
         );
     };
