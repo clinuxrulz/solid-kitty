@@ -133,6 +133,7 @@ export class TextureAtlas {
 
     Render: Component<{
         style?: JSX.CSSProperties,
+        onBurger?: () => void,
     }> = (props) => {
         let state = this.state;
         let setState = this.setState;
@@ -354,6 +355,17 @@ export class TextureAtlas {
                 )}
             >
                 <div>
+                    <Show when={props.onBurger}>
+                        {(onBurger) => (
+                            <button
+                                class="btn"
+                                style="font-size: 20pt;"
+                                onClick={() => onBurger()()}
+                            >
+                                <i class="fa-solid fa-burger"></i>
+                            </button>
+                        )}
+                    </Show>
                     <button
                         class="btn"
                         style="font-size: 20pt;"
