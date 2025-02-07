@@ -272,7 +272,7 @@ export class TextureAtlas {
             });
             startTouchPanZoom();
             if (newTouches.length == 1) {
-                mode().dragStart?.({ isMouse: e.pointerType == "mouse", });
+                mode().dragStart?.();
             }
         };
         let onPointerUp =  (e: PointerEvent) => {
@@ -286,8 +286,8 @@ export class TextureAtlas {
             let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
             stopTouchPanZoom();
             if (newTouches.length == 0) {
-                mode().dragEnd?.({ isMouse: e.pointerType == "mouse", });
-                onClick({ isMouse: e.pointerType == "mouse", });
+                mode().dragEnd?.();
+                onClick();
             }
             batch(() => {
                 setState("touches", newTouches);
@@ -328,8 +328,8 @@ export class TextureAtlas {
                 setState("mousePos", undefined);
             }
         };
-        let onClick = (params: { isMouse: boolean, }) => {
-            mode().click?.(params);
+        let onClick = () => {
+            mode().click?.();
         };
         let onKeyDown = (e: KeyboardEvent) => {
             if (e.key == "Escape") {

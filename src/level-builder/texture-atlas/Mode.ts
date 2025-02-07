@@ -3,8 +3,8 @@ import { Accessor, Component } from "solid-js";
 export interface Mode {
     instructions?: Component,
     overlaySvgUI?: Component,
-    dragStart?: (params: { isMouse: boolean, }) => void,
-    dragEnd?: (params: { isMouse: boolean, }) => void,
-    click?: (params: { isMouse: boolean, }) => void,
+    dragStart?: () => void,
+    dragEnd?: () => void,
+    click?: () => void,
     disableOneFingerPan?: Accessor<boolean>,
 }
