@@ -7,9 +7,9 @@ import { frameComponentType } from "../components/FrameComponent";
 
 export class MakeFrameMode implements Mode {
     overlaySvgUI: Component;
-    dragStart: () => void;
-    dragEnd: () => void;
-    click: () => void;
+    dragStart: (params: { isMouse: boolean, }) => void;
+    dragEnd: (params: { isMouse: boolean, }) => void;
+    click: (params: { isMouse: boolean, }) => void;
     disableOneFingerPan = () => true;
 
     constructor(modeParams: ModeParams) {
@@ -129,7 +129,10 @@ export class MakeFrameMode implements Mode {
                 </Show>
             );
         };
-        this.dragStart = () => {
+        this.dragStart = ({ isMouse }) => {
+            if (isMouse) {
+                return;
+            }
             if (state.corner1 == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
@@ -138,7 +141,10 @@ export class MakeFrameMode implements Mode {
                 return;
             }
         };
-        this.dragEnd = () => {
+        this.dragEnd = ({ isMouse }) => {
+            if (isMouse) {
+                return;
+            }
             if (state.corner1 != undefined && state.corner2 == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
@@ -147,7 +153,10 @@ export class MakeFrameMode implements Mode {
                 return;
             }
         };
-        this.click = () => {
+        this.click = ({ isMouse }) => {
+            if (!isMouse) {
+                return;
+            }
             if (state.corner1 == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
