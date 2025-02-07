@@ -418,6 +418,9 @@ const PixelEditor: Component = () => {
     let modeOverlaySvgUI = createMemo(() => {
         return mode().overlaySvgUI;
     });
+    let disableOneFingerPan = createMemo(() => {
+        return mode().disableOneFingerPan?.() ?? false;
+    });
     createComputed(on(
         [
             () => state.pan,
@@ -427,49 +430,7 @@ const PixelEditor: Component = () => {
             render();
         },
     ));
-    createComputed(on(
-        [
-            () => state.isPanning,
-            () => state.panningFrom,
-            () => state.mousePos,
-        ],
-        () => {
-            if (!state.isPanning) {
-                return;
-            }
-            if (state.panningFrom == undefined) {
-                return;
-            }
-            if (state.mousePos == undefined) {
-                return;
-            }
-            let pt = screenPtToWorldPt(state.mousePos);
-            if (pt == undefined) {
-                return;
-            }
-            let delta = state.panningFrom.clone().sub(pt);
-            setState("pan", (pan) => pan.clone().add(delta));
-        },
-    ));
-    let startPan = () => {
-        if (state.mousePos == undefined) {
-            return;
-        }
-        let pt = screenPtToWorldPt(state.mousePos);
-        if (pt == undefined) {
-            return;
-        }
-        batch(() => {
-            setState("isPanning", true);
-            setState("panningFrom", pt);
-        });
-    };
-    let stopPan = () => {
-        batch(() => {
-            setState("isPanning", false);
-            setState("panningFrom", undefined);
-        });
-    };
+    //
     let zoomByFactor = (factor: number) => {
         if (state.mousePos == undefined) {
             return;
@@ -498,6 +459,7 @@ const PixelEditor: Component = () => {
             () => state.touchPanZoomInitScale,
             () => state.touches,
             () => state.mousePos,
+            disableOneFingerPan,
         ],
         () => {
             if (!state.isTouchPanZoom) {
@@ -510,6 +472,9 @@ const PixelEditor: Component = () => {
                 return;
             }
             if (state.touchPanZoomInitScale == undefined) {
+                return;
+            }
+            if (disableOneFingerPan() && state.touches.length == 1) {
                 return;
             }
             let pt = screenPtToWorldPt(state.mousePos);
@@ -537,18 +502,16 @@ const PixelEditor: Component = () => {
         if (state.touches.length == 0) {
             return;
         }
-        let mid = Vec2.zero();
-        for (let touch of state.touches) {
-            mid.add(touch.pos);
+        if (state.mousePos == undefined) {
+            return;
         }
-        mid.multScalar(1.0 / state.touches.length);
         let initGap: number | undefined;
         if (state.touches.length != 2) {
             initGap = undefined;
         } else {
             initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
         }
-        let pt = screenPtToWorldPt(mid);
+        let pt = screenPtToWorldPt(state.mousePos);
         if (pt == undefined) {
             return;
         }
@@ -567,29 +530,6 @@ const PixelEditor: Component = () => {
             setState("touchPanZoomInitScale", undefined);
         });
     };
-    let onMouseDown = (e: MouseEvent) => {
-        if (!state.isPanning) {
-            startPan();
-        }
-    };
-    let onMouseUp = (e: MouseEvent) => {
-        if (state.isPanning) {
-            stopPan();
-        }
-    };
-    let onMouseMove = (e: MouseEvent) => {
-        let canvas2 = canvas();
-        if (canvas2 == undefined) {
-            return;
-        }
-        let rect = canvas2.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        setState("mousePos", Vec2.create(x, y));
-    };
-    let onMouseOut = (e: MouseEvent) => {
-        setState("mousePos", undefined);
-    };
     let onWheel = (e: WheelEvent) => {
         if (e.deltaY > 0) {
             zoomByFactor(1.0 / 1.1);
@@ -597,78 +537,84 @@ const PixelEditor: Component = () => {
             zoomByFactor(1.1 / 1.0);
         }
     };
-    let onClick = (e: MouseEvent) => {
-        mode().click?.();
-    };
-    let onTouchStart = (e: TouchEvent) => {
+    let onPointerDown = (e: PointerEvent) => {
+        e.preventDefault();
         let canvas2 = canvas();
         if (canvas2 == undefined) {
             return;
         }
+        canvas2.setPointerCapture(e.pointerId);
         let rect = canvas2.getBoundingClientRect();
-        let touches: { id: number, pos: Vec2, }[] = [];
-        if (e.targetTouches.length == 0) {
-            return;
-        }
-        let avg = Vec2.zero();
-        for (let touch of e.targetTouches) {
-            let pos = Vec2.create(
-                touch.clientX - rect.left,
-                touch.clientY - rect.top,
-            );
-            touches.push({
-                id: touch.identifier,
-                pos,
-            });
-            avg = avg.add(pos);
-        }
-        avg = avg.multScalar(1.0 / e.targetTouches.length);
-        if (state.isTouchPanZoom) {
-            stopTouchPanZoom();
-        }
-        setState("touches", touches);
-        setState("mousePos", avg);
-        startTouchPanZoom();
-        e.preventDefault();
-    };
-    let onTouchEnd = (e: TouchEvent) => {
-        if (state.isTouchPanZoom) {
-            stopTouchPanZoom()
-        }
-        setState("touches", []);
-        e.preventDefault();
-    };
-    let onTouchMove = (e: TouchEvent) => {
-        let canvas2 = canvas();
-        if (canvas2 == undefined) {
-            return;
-        }
-        let rect = canvas2.getBoundingClientRect();
-        let touches: { id: number, pos: Vec2, }[] = [];
-        let avg = Vec2.zero();
-        for (let touch of e.targetTouches) {
-            let pos = Vec2.create(
-                touch.clientX - rect.left,
-                touch.clientY - rect.top,
-            );
-            touches.push({
-                id: touch.identifier,
-                pos,
-            });
-            avg = avg.add(pos);
-        }
-        avg = avg.multScalar(1.0 / e.targetTouches.length);
+        let id = e.pointerId;
+        let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+        let newTouches = [
+            ...state.touches,
+            { id, pos, },
+        ];
         batch(() => {
-            if (state.isTouchPanZoom && state.touches.length != 2 && touches.length == 2) {
-                let initGap = touches[1].pos.distance(touches[0].pos);
-                setState("touchPanZoomFrom", avg);
-                setState("touchPanZoomInitGap", initGap);
-                setState("touchPanZoomInitScale", state.scale);
-            }
-            setState("touches", touches);
-            setState("mousePos", avg);
+            setState("touches", newTouches);
+            setState("mousePos", newTouches[0].pos);
         });
+        startTouchPanZoom();
+        if (newTouches.length == 1) {
+            mode().dragStart?.();
+        }
+    };
+    let onPointerUp =  (e: PointerEvent) => {
         e.preventDefault();
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
+        canvas2.releasePointerCapture(e.pointerId);
+        let id = e.pointerId;
+        let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
+        stopTouchPanZoom();
+        if (newTouches.length == 0) {
+            mode().dragEnd?.();
+            onClick();
+        }
+        batch(() => {
+            setState("touches", newTouches);
+            if (e.pointerType != "mouse") {
+                setState("mousePos", newTouches.length != 0 ? newTouches[0].pos : undefined);
+            }
+        });
+        if (newTouches.length != 0) {
+            startTouchPanZoom();
+        }
+    };
+    let onPointerCanceled = (e: PointerEvent) => {
+        onPointerUp(e);
+    };
+    let onPointerMove = (e: PointerEvent) => {
+        e.preventDefault();
+        let canvas2 = canvas();
+        if (canvas2 == undefined) {
+            return;
+        }
+        let rect = canvas2.getBoundingClientRect();
+        let id = e.pointerId;
+        let touchIdx = state.touches.findIndex(({ id: id2, }) => id2 == id);
+        let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+        if (touchIdx != -1) {
+            setState("touches", touchIdx, "pos", (oldPos) => {
+                oldPos.dispose();
+                return pos;
+            });
+        }
+        if (touchIdx == 0 || touchIdx == -1) {
+            setState("mousePos", pos);
+        }
+    };
+    let onPointerLeave = (e: PointerEvent) => {
+        e.preventDefault();
+        if (state.touches.length == 0) {
+            setState("mousePos", undefined);
+        }
+    };
+    let onClick = () => {
+        mode().click?.();
     };
     let onKeyDown = (e: KeyboardEvent) => {
         if (e.key == "Escape") {
@@ -912,16 +858,15 @@ const PixelEditor: Component = () => {
                         "flex-grow": "1",
                         "display": "flex",
                         "flex-direction": "column",
+                        "touch-action": "none",
                     }}
-                    onMouseDown={onMouseDown}
-                    onMouseUp={onMouseUp}
-                    onMouseMove={onMouseMove}
-                    onMouseOut={onMouseOut}
                     onWheel={onWheel}
-                    onClick={onClick}
-                    on:touchstart={{ passive: true, handleEvent: onTouchStart, }}
-                    on:touchend={{ passive: true, handleEvent: onTouchEnd, }}
-                    on:touchmove={{ passive: false, handleEvent: onTouchMove, }}
+                    onPointerDown={onPointerDown}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCanceled}
+                    onPointerMove={onPointerMove}
+                    onPointerLeave={onPointerLeave}
+                    onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
                     <canvas
                         style={{
