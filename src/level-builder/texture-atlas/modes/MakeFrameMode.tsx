@@ -6,6 +6,7 @@ import { Vec2 } from "../../../Vec2";
 import { frameComponentType } from "../components/FrameComponent";
 
 export class MakeFrameMode implements Mode {
+    instructions: Component;
     overlaySvgUI: Component;
     dragStart: () => void;
     dragEnd: () => void;
@@ -59,6 +60,7 @@ export class MakeFrameMode implements Mode {
             };
         });
         //
+        let doInsertFrame: () => void = () => {};
         {
             let hasWipFrame = createMemo(() => wipFrame() != undefined);
             createComputed(() => {
@@ -85,12 +87,27 @@ export class MakeFrameMode implements Mode {
                     },
                     { defer: true, },
                 ));
+                let keepIt = false;
+                doInsertFrame = () => {
+                    keepIt = true;
+                    batch(() => {
+                        setState("corner1", undefined);
+                        setState("corner2", undefined);
+                    });
+                };
                 onCleanup(() => {
+                    if (keepIt) {
+                        doInsertFrame = () => {};
+                        return;
+                    }
                     world.destroyEntity(entityId);
                 });
             });
         }
         //
+        this.instructions = () => {
+            return "Drag rectangles around stuff to make frames for."
+        };
         this.overlaySvgUI = () => {
             let pt = createMemo(() => {
                 let pt2 = workingPoint();
@@ -142,6 +159,7 @@ export class MakeFrameMode implements Mode {
                 let pt = workingPoint();
                 if (pt != undefined) {
                     setState("corner2", pt);
+                    doInsertFrame();
                 }
                 return;
             }
