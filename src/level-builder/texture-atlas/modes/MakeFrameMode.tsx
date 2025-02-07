@@ -139,7 +139,7 @@ export class MakeFrameMode implements Mode {
             }
         };
         this.dragEnd = () => {
-            if (state.corner2 == undefined) {
+            if (state.corner1 != undefined && state.corner2 == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
                     setState("corner2", pt);
