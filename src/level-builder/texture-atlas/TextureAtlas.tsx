@@ -143,7 +143,8 @@ export class TextureAtlas {
         let mode = this.mode;
         let renderSystem = this.renderSystem;
         //
-        let overlaySvgUI = () => mode().overlaySvgUI;
+        let Instructions = () => (<>{mode().instructions?.({})}</>);
+        let OverlaySvgUI = () => (<>(mode().overlaySvgUI?.({}))</>);
         let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
         //
         let zoomByFactor = (factor: number) => {
@@ -396,44 +397,64 @@ export class TextureAtlas {
                         })()}
                     </button>                    
                 </div>
-                <svg
-                    ref={setSvg}
+                <div
                     style={{
                         "flex-grow": "1",
-                        "background-color": "#DDD",
-                        "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
-                        "background-size": "20px 20px",
-                        "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
-                        "touch-action": "none",
+                        "display": "flex",
+                        "flex-direction": "column",
+                        "position": "relative",
                     }}
-                    onWheel={onWheel}
-                    onPointerDown={onPointerDown}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={onPointerCanceled}
-                    onPointerMove={onPointerMove}
-                    onPointerLeave={onPointerLeave}
-                    onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
-                    <g transform={transform()}>
-                        <Show when={this.size()}>
-                            {(size) => (
-                                <Show when={this.image()}>
-                                    {(image) => (
-                                        <foreignObject
-                                            width={size().x}
-                                            height={size().y}
-                                        >
-                                            {image()}
-                                        </foreignObject>
-                                    )}
-                                </Show>
-                            )}
-                        </Show>
-                        <renderSystem.Render/>
-                    </g>
-                    <renderSystem.RenderOverlay/>
-                    {<>{overlaySvgUI()?.({})}</>}
-                </svg>
+                    <svg
+                        ref={setSvg}
+                        style={{
+                            "flex-grow": "1",
+                            "background-color": "#DDD",
+                            "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
+                            "background-size": "20px 20px",
+                            "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+                            "touch-action": "none",
+                        }}
+                        onWheel={onWheel}
+                        onPointerDown={onPointerDown}
+                        onPointerUp={onPointerUp}
+                        onPointerCancel={onPointerCanceled}
+                        onPointerMove={onPointerMove}
+                        onPointerLeave={onPointerLeave}
+                        onContextMenu={(e) => { e.preventDefault(); return false; }}
+                    >
+                        <g transform={transform()}>
+                            <Show when={this.size()}>
+                                {(size) => (
+                                    <Show when={this.image()}>
+                                        {(image) => (
+                                            <foreignObject
+                                                width={size().x}
+                                                height={size().y}
+                                            >
+                                                {image()}
+                                            </foreignObject>
+                                        )}
+                                    </Show>
+                                )}
+                            </Show>
+                            <renderSystem.Render/>
+                        </g>
+                        <renderSystem.RenderOverlay/>
+                        <OverlaySvgUI/>
+                    </svg>
+                    <div
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "background-color": "black",
+                            "opacity": "0.5",
+                        }}
+                    >
+                        <Instructions/>
+                    </div>
+                </div>
             </div>
         );
     };
