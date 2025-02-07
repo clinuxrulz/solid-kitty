@@ -57,6 +57,10 @@ export class Vec2 {
         return this;
     }
 
+    cross(other: Vec2): number {
+        return this.x * other.y - this.y * other.x;
+    }
+
     distanceSquared(other: Vec2): number {
         let dx = other.x - this.x;
         let dy = other.y - this.y;
