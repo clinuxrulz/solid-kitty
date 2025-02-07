@@ -460,8 +460,7 @@ export class TextureAtlas {
                             "position": "absolute",
                             "left": "0",
                             "top": "0",
-                            "background-color": "black",
-                            "opacity": "0.5",
+                            "background-color": "rgba(0,0,0,0.8)",
                         }}
                     >
                         <Instructions/>

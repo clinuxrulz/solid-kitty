@@ -106,7 +106,15 @@ export class MakeFrameMode implements Mode {
         }
         //
         this.instructions = () => {
-            return "Drag rectangles around stuff to make frames for."
+            return (<>
+                <button
+                    class="btn"
+                    onClick={() => modeParams.onDone()}
+                >
+                    End Mode
+                </button><br/>
+                Drag rectangles around stuff to make frames for.
+            </>);
         };
         this.overlaySvgUI = () => {
             let pt = createMemo(() => {
