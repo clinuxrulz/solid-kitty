@@ -145,7 +145,7 @@ export class TextureAtlas {
         let renderSystem = this.renderSystem;
         //
         let Instructions = () => (<>{mode().instructions?.({})}</>);
-        let OverlaySvgUI = () => (<>(mode().overlaySvgUI?.({}))</>);
+        let OverlaySvgUI = () => (<>{mode().overlaySvgUI?.({})}</>);
         let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
         //
         let zoomByFactor = (factor: number) => {
