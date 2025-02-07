@@ -2,7 +2,6 @@ import { Component, createComputed, createMemo, on, onCleanup, Show } from "soli
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
-import { Colour } from "../../Colour";
 import { UndoUnit } from "../UndoManager";
 import { createStore } from "solid-js/store";
 

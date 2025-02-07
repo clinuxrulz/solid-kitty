@@ -1,16 +1,24 @@
-import { Component, createMemo, Show } from "solid-js";
+import { Component, createComputed, createMemo, on, onCleanup, Show } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
-import { Colour } from "../../Colour";
 import { UndoUnit } from "../UndoManager";
+import { createStore } from "solid-js/store";
+import { Colour } from "../../Colour";
 
 export class ErasePixelsMode implements Mode {
     instructions: Component;
     overlaySvgUI: Component;
-    click: () => void;
+    dragStart: () => void;
+    dragEnd: () => void;
+    disableOneFingerPan: () => boolean = () => true;
 
     constructor(params: ModeParams) {
+        let [ state, setState, ] = createStore<{
+            dragging: boolean,
+        }>({
+            dragging: false,
+        });
         let workingPoint = createMemo(() => {
             let mousePos = params.mousePos();
             if (mousePos == undefined) {
@@ -26,12 +34,20 @@ export class ErasePixelsMode implements Mode {
             );
         });
         //
-        let writePixel = (pt: Vec2) => {
+        let writePixel = (pt: Vec2): UndoUnit | undefined => {
             let oldColour = params.readPixel(pt);
             if (oldColour == undefined) {
-                return;
+                return undefined;
             }
             let newColour = new Colour(0, 0, 0, 0);
+            if (
+                newColour.r == oldColour.r &&
+                newColour.g == oldColour.g &&
+                newColour.b == oldColour.b &&
+                newColour.a == oldColour.a
+            ) {
+                return undefined;
+            }
             params.writePixel(pt, newColour);
             let undoUnit: UndoUnit = {
                 displayName: "Draw Pixel",
@@ -43,11 +59,51 @@ export class ErasePixelsMode implements Mode {
                     }
                 },
             };
-            params.undoManager.pushUndoUnit(undoUnit);
+            return undoUnit;
         };
         //
+        createComputed(on(
+            [
+                () => state.dragging,
+            ],
+            () => {
+                if (!state.dragging) {
+                    return;
+                }
+                let undoStack: UndoUnit[] = [];
+                onCleanup(() => {
+                    if (undoStack.length != 0) {
+                        let undoStack2: UndoUnit[] = undoStack;
+                        undoStack = [];
+                        let undoUnit: UndoUnit = {
+                            displayName: undoStack2[0].displayName,
+                            run(isUndo) {
+                                for (let x of undoStack2) {
+                                    x.run(isUndo);
+                                }
+                            }
+                        };
+                        params.undoManager.pushUndoUnit(undoUnit);
+                    }
+                });
+                createComputed(on(
+                    workingPoint,
+                    () => {
+                        let pt = workingPoint();
+                        if (!pt) {
+                            return;
+                        }
+                        let undoUnit = writePixel(pt);
+                        if (undoUnit != undefined) {
+                            undoStack.push(undoUnit);
+                        }
+                    },
+                ));
+            },
+        ));
+        //
         this.instructions = () => {
-            return "Click to erase pixels, press escape when done.";
+            return "Click to draw pixels, press escape when done.";
         };
         this.overlaySvgUI = () => {
             let pixelRect = createMemo(() => {
@@ -88,11 +144,11 @@ export class ErasePixelsMode implements Mode {
                 </Show>
             );
         };
-        this.click = () => {
-            let pt = workingPoint();
-            if (pt != undefined) {
-                writePixel(pt);
-            }
+        this.dragStart = () => {
+            setState("dragging", true);
+        };
+        this.dragEnd = () => {
+            setState("dragging", false);
         };
     }
 }
