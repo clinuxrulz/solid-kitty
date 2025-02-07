@@ -4,6 +4,7 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../../Vec2";
 import { frameComponentType } from "../components/FrameComponent";
+import { UndoUnit } from "../../../pixel-editor/UndoManager";
 
 export class MakeFrameMode implements Mode {
     instructions: Component;
@@ -90,6 +91,22 @@ export class MakeFrameMode implements Mode {
                 let keepIt = false;
                 doInsertFrame = () => {
                     keepIt = true;
+                    let undoUnit: UndoUnit = {
+                        displayName: "Make Frame",
+                        run(isUndo) {
+                            if (isUndo) {
+                                world.destroyEntity(entityId);
+                            } else {
+                                world.createEntityWithId(
+                                    entityId,
+                                    [
+                                        frameComponent,
+                                    ],
+                                );
+                            }
+                        },
+                    };
+                    modeParams.undoManager.pushUndoUnit(undoUnit);
                     batch(() => {
                         setState("corner1", undefined);
                         setState("corner2", undefined);

@@ -370,6 +370,7 @@ export class TextureAtlas {
                         class="btn"
                         style="font-size: 20pt;"
                         disabled={!this.undoManager.canUndo()}
+                        onClick={() => this.undoManager.undo()}
                     >
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
@@ -377,6 +378,7 @@ export class TextureAtlas {
                         class="btn"
                         style="font-size: 20pt;"
                         disabled={!this.undoManager.canRedo()}
+                        onClick={() => this.undoManager.redo()}
                     >
                         <i class="fa-solid fa-rotate-right"></i>
                     </button>
