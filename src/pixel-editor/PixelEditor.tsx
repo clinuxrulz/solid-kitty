@@ -731,9 +731,18 @@ const PixelEditor: Component = () => {
                             "font-size": "20pt",
                             "padding": "5pt",
                         }}
-                        onClick={() => saveDrawing()}
+                        onClick={() => deleteDrawing()}
                     >
-                        <i class="fa-solid fa-floppy-disk"></i>
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                        onClick={() => setState("mode", "Idle")}
+                    >
+                        <i class="fa-solid fa-hand"></i>
                     </button>
                     {(() => {
                         let fileInput!: HTMLInputElement;
@@ -794,10 +803,15 @@ const PixelEditor: Component = () => {
                             />
                         </>);
                     })()}
-                        {/*
-                    <ion-button onclick="document.querySelector('#uploader').click()">pop file chooser</ion-button>
-<input type="file" id="uploader" hidden>
-                         */}
+                    <button
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                        }}
+                        onClick={() => saveDrawing()}
+                    >
+                        <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
                     <button
                         style={{
                             "font-size": "20pt",
@@ -822,10 +836,17 @@ const PixelEditor: Component = () => {
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
+                            "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
                         }}
-                        onClick={() => deleteDrawing()}
+                        onClick={() => {
+                            if (state.mode == "Erase Pixels") {
+                                setState("mode", "Idle");
+                            } else {
+                                setState("mode", "Erase Pixels");
+                            }
+                        }}
                     >
-                        <i class="fa-solid fa-trash-can"></i>
+                        <i class="fa-solid fa-eraser"></i>
                     </button>
                     <button
                         style={{
@@ -844,35 +865,6 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-pencil"/>
                     </button>
                     <button
-                        ref={setColourPickerButton}
-                        style={{
-                            "font-size": "20pt",
-                            "padding": "5pt",
-                            "background-color": state.showColourPicker ? "blue" : undefined,
-                        }}
-                        onClick={() => {
-                            setState("showColourPicker", (x) => !x);
-                        }}
-                    >
-                        <i class="fa-solid fa-palette"></i>
-                    </button>
-                    <button
-                        style={{
-                            "font-size": "20pt",
-                            "padding": "5pt",
-                            "background-color": state.mode == "Erase Pixels" ? "blue" : undefined,
-                        }}
-                        onClick={() => {
-                            if (state.mode == "Erase Pixels") {
-                                setState("mode", "Idle");
-                            } else {
-                                setState("mode", "Erase Pixels");
-                            }
-                        }}
-                    >
-                        <i class="fa-solid fa-eraser"></i>
-                    </button>
-                    <button
                         style={{
                             "font-size": "20pt",
                             "padding": "5pt",
@@ -887,6 +879,19 @@ const PixelEditor: Component = () => {
                         }}
                     >
                         <i class="fa-solid fa-eye-dropper"></i>
+                    </button>
+                    <button
+                        ref={setColourPickerButton}
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.showColourPicker ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("showColourPicker", (x) => !x);
+                        }}
+                    >
+                        <i class="fa-solid fa-palette"></i>
                     </button>
                 </div>
             </div>
