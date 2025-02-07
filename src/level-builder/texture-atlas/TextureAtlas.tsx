@@ -285,7 +285,7 @@ export class TextureAtlas {
             batch(() => {
                 setState("touches", newTouches);
                 if (e.pointerType != "mouse") {
-                    setState("mousePos", newTouches.length == 0 ? newTouches[0].pos : undefined);
+                    setState("mousePos", newTouches.length != 0 ? newTouches[0].pos : undefined);
                 }
             });
             if (newTouches.length != 0) {
