@@ -15,6 +15,7 @@ import { Storage } from "./Storage";
 import * as FileSaver from "file-saver";
 import { DrawLinesMode } from "./modes/DrawLinesMode";
 import { drawEllipse } from "./shapes";
+import { DrawEllipseMode } from "./modes/DrawEllipseMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -45,7 +46,8 @@ const PixelEditor: Component = () => {
             "Draw Pixels" |
             "Erase Pixels" |
             "Eye Dropper" |
-            "Draw Lines",
+            "Draw Lines" |
+            "Draw Ellipse",
         //
         currentColour: Colour,
         showColourPicker: boolean,
@@ -421,6 +423,8 @@ const PixelEditor: Component = () => {
                 return new EyeDropperMode(modeParams);
             case "Draw Lines":
                 return new DrawLinesMode(modeParams);
+            case "Draw Ellipse":
+                return new DrawEllipseMode(modeParams);
         }
     });
     let modeInstructions = createMemo(() => {
@@ -872,6 +876,19 @@ const PixelEditor: Component = () => {
                         }}
                     >
                         /
+                    </button>
+                    <button
+                        class="btn"
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Draw Ellipse" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("mode", "Draw Ellipse");
+                        }}
+                    >
+                        O
                     </button>
                 </div>
             </div>
