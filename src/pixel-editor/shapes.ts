@@ -17,7 +17,7 @@ export function drawLine(
     x2 += xDir;
     y2 += yDir;
     //
-    if (adx >= ady) {
+    if (adx > ady) {
         let dn = ady % adx;
         let n = 0;
         let d = adx;
@@ -31,7 +31,7 @@ export function drawLine(
                 n -= d;
             }
         }
-    } else {
+    } else if (adx < ady) {
         let dn = adx % ady;
         let n = 0;
         let d = ady;
@@ -44,6 +44,10 @@ export function drawLine(
                 x += xDir;
                 n -= d;
             }
+        }
+    } else {
+        for (let x = x1, y = y1; x != x2; x += xDir, y += yDir) {
+            drawPixel(x, y);
         }
     }
 }
