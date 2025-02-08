@@ -34,6 +34,15 @@ export class DrawLinesMode implements Mode {
                 Math.floor(pt.x),
                 Math.floor(pt.y),
             );
+        },
+        undefined,
+        {
+            equals: (a, b) => {
+                if (a == undefined || b == undefined) {
+                    return a == b;
+                }
+                return a.x == b.x && a.y == b.y;
+            },
         });
         let wipLine = createMemo(() => {
             if (state.pt1 == undefined) {

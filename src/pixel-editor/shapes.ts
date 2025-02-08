@@ -16,6 +16,8 @@ export function drawLine(
     // This will make all the tail sizes throughout the line the same size.
     x2 += xDir;
     y2 += yDir;
+    ++adx;
+    ++ady;
     //
     if (adx > ady) {
         let dn = ady % adx;

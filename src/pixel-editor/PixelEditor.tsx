@@ -863,7 +863,7 @@ const PixelEditor: Component = () => {
                             setState("mode", "Draw Lines");
                         }}
                     >
-                        <i class="fa-thin fa-draw-polygon"></i>
+                        /
                     </button>
                 </div>
             </div>
