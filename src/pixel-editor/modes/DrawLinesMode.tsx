@@ -60,14 +60,11 @@ export class DrawLinesMode implements Mode {
         });
         let doLine: () => void = () => {};
         {
-            let [ bounce, setBounce, ] = createSignal(0);
-            let doBounce = () => setBounce((x) => 1 - x);
             let hasLine = createMemo(() => wipLine() != undefined);
             createComputed(() => {
                 if (!hasLine()) {
                     return;
                 }
-                let _ = bounce();
                 let wipLine2 = wipLine as Accessor<NonNullable<ReturnType<typeof wipLine>>>;
                 let undoStack: Colour[] = [];
                 createComputed(() => {
@@ -89,14 +86,12 @@ export class DrawLinesMode implements Mode {
                     let keepIt = false;
                     doLine = () => {
                         keepIt = true;
-                        let undoStack2 = undoStack;
-                        undoStack = [];
+                        let undoStack2 = undoStack.splice(0, undoStack.length);
                         let lineX1 = line.pt1.x;
                         let lineY1 = line.pt1.y;
                         let lineX2 = line.pt2.x;
                         let lineY2 = line.pt2.y;
                         let colour = modeParams.currentColour();
-                        setState("pt1", line.pt2.clone());
                         let undoUnit: UndoUnit = {
                             displayName: "Draw Line",
                             run(isUndo) {
@@ -129,7 +124,7 @@ export class DrawLinesMode implements Mode {
                             }
                         };
                         modeParams.undoManager.pushUndoUnit(undoUnit);
-                        doBounce();
+                        setState("pt1", undefined);
                     };
                     onCleanup(() => {
                         if (keepIt) {
@@ -147,6 +142,7 @@ export class DrawLinesMode implements Mode {
                                 pos.dispose();
                             },
                         );
+                        undoStack.splice(0, undoStack.length);
                     });
                 });
             });
