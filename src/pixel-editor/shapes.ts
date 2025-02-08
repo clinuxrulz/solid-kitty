@@ -61,6 +61,18 @@ export function drawEllipse(
   radiusY: number,
   drawPixel: (x: number, y: number) => void
 ): void {
+    if (radiusX == 0) {
+        for (let y = centerY - radiusY; y <= centerY + radiusY; ++y) {
+            drawPixel(centerX, y);
+        }
+        return;
+    }
+    if (radiusY == 0) {
+        for (let x = centerX - radiusX; x <= centerX + radiusX; ++x) {
+            drawPixel(x, centerY);
+        }
+        return;
+    }
     let x = 1;
     let y = -radiusY;
     let a = radiusY;
