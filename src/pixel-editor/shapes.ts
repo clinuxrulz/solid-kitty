@@ -53,3 +53,38 @@ export function drawLine(
         }
     }
 }
+
+// untested
+export function drawEllipse(
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+  drawPixel: (x: number, y: number) => void
+): void {
+    let x = 0;
+    let y = -radiusY;
+    let a = Math.sqrt(radiusY);
+    let b = Math.sqrt(radiusX);
+    let errL1 = 0;
+    let draw4 = () => {
+        drawPixel(centerX + x, centerY + y);
+        drawPixel(centerX - x, centerY + y);
+        drawPixel(centerX + x, centerY - y);
+        drawPixel(centerX - x, centerY - y);
+    };
+    while (y < 0) {
+        draw4();
+        errL1 += 2*a*x + a;
+        ++x;
+        while (errL1 > 0) {
+            errL1 += 2*b*y + b;
+            y++;
+            draw4();
+            if (y >= 0) {
+                return;
+            }
+        }
+    }
+}
+
