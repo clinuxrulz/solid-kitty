@@ -2,9 +2,10 @@ import { createStore } from "solid-js/store";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
-import { Accessor, Component, createComputed, createMemo, onCleanup, Show } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createSignal, onCleanup, Show } from "solid-js";
 import { drawLine } from "../shapes";
 import { Colour } from "../../Colour";
+import { UndoUnit } from "../UndoManager";
 
 export class DrawLinesMode implements Mode {
     overlaySvgUI: Component;
@@ -57,12 +58,16 @@ export class DrawLinesMode implements Mode {
             }
             return { pt1: state.pt1, pt2, };
         });
+        let doLine: () => void = () => {};
         {
+            let [ bounce, setBounce, ] = createSignal(0);
+            let doBounce = () => setBounce((x) => 1 - x);
             let hasLine = createMemo(() => wipLine() != undefined);
             createComputed(() => {
                 if (!hasLine()) {
                     return;
                 }
+                let _ = bounce();
                 let wipLine2 = wipLine as Accessor<NonNullable<ReturnType<typeof wipLine>>>;
                 let undoStack: Colour[] = [];
                 createComputed(() => {
@@ -76,20 +81,60 @@ export class DrawLinesMode implements Mode {
                         (x, y) => {
                             let pos = Vec2.create(x, y);
                             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
-                            if (
-                                newColour.r == oldColour.r &&
-                                newColour.g == oldColour.g &&
-                                newColour.b == oldColour.b &&
-                                newColour.a == oldColour.a
-                            ) {
-                                return;
-                            }
                             modeParams.writePixel(pos, newColour);
                             undoStack.push(oldColour);
                             pos.dispose();
                         },
                     );
+                    let keepIt = false;
+                    doLine = () => {
+                        keepIt = true;
+                        let undoStack2 = undoStack;
+                        undoStack = [];
+                        let lineX1 = line.pt1.x;
+                        let lineY1 = line.pt1.y;
+                        let lineX2 = line.pt2.x;
+                        let lineY2 = line.pt2.y;
+                        let colour = modeParams.currentColour();
+                        setState("pt1", line.pt2.clone());
+                        let undoUnit: UndoUnit = {
+                            displayName: "Draw Line",
+                            run(isUndo) {
+                                if (isUndo) {
+                                    let atI = 0;
+                                    drawLine(
+                                        lineX1,
+                                        lineY1,
+                                        lineX2,
+                                        lineY2,
+                                        (x, y) => {
+                                            let pos = Vec2.create(x, y);
+                                            modeParams.writePixel(pos, undoStack2[atI++]);
+                                            pos.dispose();
+                                        },
+                                    );
+                                } else {
+                                    drawLine(
+                                        lineX1,
+                                        lineY1,
+                                        lineX2,
+                                        lineY2,
+                                        (x, y) => {
+                                            let pos = Vec2.create(x, y);
+                                            modeParams.writePixel(pos, colour);
+                                            pos.dispose();
+                                        },
+                                    );
+                                }
+                            }
+                        };
+                        modeParams.undoManager.pushUndoUnit(undoUnit);
+                        doBounce();
+                    };
                     onCleanup(() => {
+                        if (keepIt) {
+                            return;
+                        }
                         let atI = 0;
                         drawLine(
                             line.pt1.x,
@@ -98,7 +143,7 @@ export class DrawLinesMode implements Mode {
                             line.pt2.y,
                             (x, y) => {
                                 let pos = Vec2.create(x, y);
-                                modeParams.writePixel(pos, undoStack[atI]);
+                                modeParams.writePixel(pos, undoStack[atI++]);
                                 pos.dispose();
                             },
                         );
@@ -155,6 +200,9 @@ export class DrawLinesMode implements Mode {
             }
         };
         this.dragEnd = () => {
+            if (workingPoint() != undefined) {
+                doLine();
+            }
         };
     }
 }
