@@ -404,13 +404,6 @@ const PixelEditor: Component = () => {
             triggerAutoSave();
         },
     };
-    setTimeout(() => {
-        let c = new Colour(255,0,0,255);
-        drawEllipse(50,50,10,20,(x,y) => {
-            let pos = Vec2.create(x,y);
-            modeParams.writePixel(pos,c);
-        });
-    }, 1000);
     let mode = createMemo<Mode>(() => {
         switch (state.mode) {
             case "Idle":
