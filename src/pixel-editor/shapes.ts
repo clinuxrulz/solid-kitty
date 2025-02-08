@@ -61,22 +61,33 @@ export function drawEllipse(
   radiusY: number,
   drawPixel: (x: number, y: number) => void
 ): void {
-    let x = 0;
+    let x = 1;
     let y = -radiusY;
     let a = radiusY;
     let b = radiusX;
     let errL1 = 0;
-    let errL2x = a*a;
+    let errL2x = 3*a*a;
     let errL2y = 2*b*b*y + b*b;
     let twoA2 = 2*a*a;
     let twoB2 = 2*b*b;
+    let lastX: number | undefined = undefined;
+    let lastY: number | undefined = undefined;
     let draw4 = () => {
+        if (x == lastX && y == lastY) {
+            return;
+        }
+        lastX = x;
+        lastY = y;
         drawPixel(centerX + x, centerY + y);
         drawPixel(centerX - x, centerY + y);
         drawPixel(centerX + x, centerY - y);
         drawPixel(centerX - x, centerY - y);
     };
-    while (y < 0) {
+    drawPixel(centerX, centerY + y);
+    drawPixel(centerX, centerY - y);
+    drawPixel(centerX + x, centerY);
+    drawPixel(centerX - x, centerY);
+    while (y < 1) {
         draw4();
         errL1 += errL2x;
         errL2x += twoA2;
