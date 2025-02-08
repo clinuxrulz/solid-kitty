@@ -4,6 +4,7 @@ import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
 import { Accessor, Component, createComputed, createMemo, onCleanup, Show } from "solid-js";
 import { drawLine } from "../shapes";
+import { Colour } from "../../Colour";
 
 export class DrawLinesMode implements Mode {
     overlaySvgUI: Component;
@@ -21,29 +22,31 @@ export class DrawLinesMode implements Mode {
              */
             pt1: undefined,
         });
-        let workingPoint = createMemo(() => {
-            let mousePos = modeParams.mousePos();
-            if (mousePos == undefined) {
-                return undefined;
-            }
-            let pt = modeParams.screenPtToWorldPt(mousePos);
-            if (pt == undefined) {
-                return undefined;
-            }
-            return Vec2.create(
-                Math.floor(pt.x),
-                Math.floor(pt.y),
-            );
-        },
-        undefined,
-        {
-            equals: (a, b) => {
-                if (a == undefined || b == undefined) {
-                    return a == b;
+        let workingPoint = createMemo(
+            () => {
+                let mousePos = modeParams.mousePos();
+                if (mousePos == undefined) {
+                    return undefined;
                 }
-                return a.x == b.x && a.y == b.y;
+                let pt = modeParams.screenPtToWorldPt(mousePos);
+                if (pt == undefined) {
+                    return undefined;
+                }
+                return Vec2.create(
+                    Math.floor(pt.x),
+                    Math.floor(pt.y),
+                );
             },
-        });
+            undefined,
+            {
+                equals: (a, b) => {
+                    if (a == undefined || b == undefined) {
+                        return a == b;
+                    }
+                    return a.x == b.x && a.y == b.y;
+                },
+            }
+        );
         let wipLine = createMemo(() => {
             if (state.pt1 == undefined) {
                 return undefined;
@@ -61,9 +64,10 @@ export class DrawLinesMode implements Mode {
                     return;
                 }
                 let wipLine2 = wipLine as Accessor<NonNullable<ReturnType<typeof wipLine>>>;
-                let undoStack: (()=>void)[] = [];
+                let undoStack: Colour[] = [];
                 createComputed(() => {
                     let line = wipLine2();
+                    let newColour = modeParams.currentColour();
                     drawLine(
                         line.pt1.x,
                         line.pt1.y,
@@ -71,11 +75,7 @@ export class DrawLinesMode implements Mode {
                         line.pt2.y,
                         (x, y) => {
                             let pos = Vec2.create(x, y);
-                            let oldColour = modeParams.readPixel(pos);
-                            if (oldColour == undefined) {
-                                return;
-                            }
-                            let newColour = modeParams.currentColour();
+                            let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
                             if (
                                 newColour.r == oldColour.r &&
                                 newColour.g == oldColour.g &&
@@ -85,19 +85,23 @@ export class DrawLinesMode implements Mode {
                                 return;
                             }
                             modeParams.writePixel(pos, newColour);
-                            undoStack.push(() => {
-                                modeParams.writePixel(pos, oldColour);
-                            });
+                            undoStack.push(oldColour);
+                            pos.dispose();
                         },
                     );
                     onCleanup(() => {
-                        while (true) {
-                            let undo = undoStack.pop();
-                            if (undo == undefined) {
-                                break;
-                            }
-                            undo();
-                        }
+                        let atI = 0;
+                        drawLine(
+                            line.pt1.x,
+                            line.pt1.y,
+                            line.pt2.x,
+                            line.pt2.y,
+                            (x, y) => {
+                                let pos = Vec2.create(x, y);
+                                modeParams.writePixel(pos, undoStack[atI]);
+                                pos.dispose();
+                            },
+                        );
                     });
                 });
             });
