@@ -49,7 +49,7 @@ export function query<A extends object, B>(
                         reject(ex);
                     }
                 }
-            });
+            })();
         } else if (cache.type == "Pending") {
             cache.callbacks.push({ resolve, reject, });
         } else {
