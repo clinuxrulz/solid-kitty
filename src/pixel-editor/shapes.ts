@@ -67,6 +67,8 @@ export function drawEllipse(
     let a = Math.sqrt(radiusY);
     let b = Math.sqrt(radiusX);
     let errL1 = 0;
+    let errL2x = a;
+    let errL2y = 2*b*y + b;
     let draw4 = () => {
         drawPixel(centerX + x, centerY + y);
         drawPixel(centerX - x, centerY + y);
@@ -75,10 +77,12 @@ export function drawEllipse(
     };
     while (y < 0) {
         draw4();
-        errL1 += 2*a*x + a;
+        errL1 += errL2x;
+        errL2x += a + a;
         ++x;
         while (errL1 > 0) {
-            errL1 += 2*b*y + b;
+            errL1 += errL2y;
+            errL2y += b + b;
             y++;
             draw4();
             if (y >= 0) {
