@@ -71,10 +71,10 @@ export class DrawEllipseMode implements Mode {
                     let line = wipLine2();
                     let newColour = modeParams.currentColour();
                     drawEllipse(
-                        line.pt1.x,
-                        line.pt1.y,
-                        line.pt2.x,
-                        line.pt2.y,
+                        Math.round(0.5 * (line.pt1.x + line.pt2.x)),
+                        Math.round(0.5 * (line.pt1.y + line.pt2.y)),
+                        Math.round(0.5 * Math.abs(line.pt2.x - line.pt1.x)),
+                        Math.round(0.5 * Math.abs(line.pt2.y - line.pt1.y)),
                         (x, y) => {
                             let pos = Vec2.create(x, y);
                             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
@@ -98,10 +98,10 @@ export class DrawEllipseMode implements Mode {
                                 if (isUndo) {
                                     let atI = 0;
                                     drawEllipse(
-                                        lineX1,
-                                        lineY1,
-                                        lineX2,
-                                        lineY2,
+                                        Math.round(0.5 * (lineX1 + lineX2)),
+                                        Math.round(0.5 * (lineY1 + lineY2)),
+                                        Math.round(0.5 * Math.abs(lineX2 - lineX1)),
+                                        Math.round(0.5 * Math.abs(lineY2 - lineY1)),
                                         (x, y) => {
                                             let pos = Vec2.create(x, y);
                                             modeParams.writePixel(pos, undoStack2[atI++]);
@@ -110,10 +110,10 @@ export class DrawEllipseMode implements Mode {
                                     );
                                 } else {
                                     drawEllipse(
-                                        lineX1,
-                                        lineY1,
-                                        lineX2,
-                                        lineY2,
+                                        Math.round(0.5 * (lineX1 + lineX2)),
+                                        Math.round(0.5 * (lineY1 + lineY2)),
+                                        Math.round(0.5 * Math.abs(lineX2 - lineX1)),
+                                        Math.round(0.5 * Math.abs(lineY2 - lineY1)),
                                         (x, y) => {
                                             let pos = Vec2.create(x, y);
                                             modeParams.writePixel(pos, colour);
@@ -132,10 +132,10 @@ export class DrawEllipseMode implements Mode {
                         }
                         let atI = 0;
                         drawEllipse(
-                            line.pt1.x,
-                            line.pt1.y,
-                            line.pt2.x,
-                            line.pt2.y,
+                            Math.round(0.5 * (line.pt1.x + line.pt2.x)),
+                            Math.round(0.5 * (line.pt1.y + line.pt2.y)),
+                            Math.round(0.5 * Math.abs(line.pt2.x - line.pt1.x)),
+                            Math.round(0.5 * Math.abs(line.pt2.y - line.pt1.y)),
                             (x, y) => {
                                 let pos = Vec2.create(x, y);
                                 modeParams.writePixel(pos, undoStack[atI++]);
