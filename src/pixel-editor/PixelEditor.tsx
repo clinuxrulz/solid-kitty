@@ -13,6 +13,7 @@ import { ErasePixelsMode } from "./modes/ErasePixelsMode";
 import { StaticRouter } from "@solidjs/router";
 import { Storage } from "./Storage";
 import * as FileSaver from "file-saver";
+import { DrawLinesMode } from "./modes/DrawLinesMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -42,7 +43,8 @@ const PixelEditor: Component = () => {
             "Idle" |
             "Draw Pixels" |
             "Erase Pixels" |
-            "Eye Dropper",
+            "Eye Dropper" |
+            "Draw Lines",
         //
         currentColour: Colour,
         showColourPicker: boolean,
@@ -409,7 +411,8 @@ const PixelEditor: Component = () => {
                 return new ErasePixelsMode(modeParams);
             case "Eye Dropper":
                 return new EyeDropperMode(modeParams);
-
+            case "Draw Lines":
+                return new DrawLinesMode(modeParams);
         }
     });
     let modeInstructions = createMemo(() => {
@@ -848,6 +851,19 @@ const PixelEditor: Component = () => {
                         }}
                     >
                         <i class="fa-solid fa-palette"></i>
+                    </button>
+                    <button
+                        class="btn"
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Draw Lines" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("mode", "Draw Lines");
+                        }}
+                    >
+                        <i class="fa-thin fa-draw-polygon"></i>
                     </button>
                 </div>
             </div>
