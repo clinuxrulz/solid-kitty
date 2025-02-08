@@ -12,9 +12,14 @@ export function drawLine(
     let ady = Math.abs(dy);
     let xDir = Math.sign(dx);
     let yDir = Math.sign(dy);
+    // Overshoot by 1, but don't include last points.
+    // This will make all the tail sizes throughout the line the same size.
+    x2 += xDir;
+    y2 += yDir;
+    //
     if (adx >= ady) {
         let dn = ady % adx;
-        let n = (dn + adx>>1) % adx;
+        let n = 0;
         let d = adx;
         let y = y1;
         let x = x1;
@@ -26,10 +31,9 @@ export function drawLine(
                 n -= d;
             }
         }
-        drawPixel(x, y);
     } else {
         let dn = adx % ady;
-        let n = (dn + ady>>1) % ady;
+        let n = 0;
         let d = ady;
         let x = x1;
         let y = y1;
@@ -41,7 +45,5 @@ export function drawLine(
                 n -= d;
             }
         }
-        drawPixel(x, y);
     }
 }
-
