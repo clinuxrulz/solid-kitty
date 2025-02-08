@@ -83,11 +83,11 @@ export function drawEllipse(
         drawPixel(centerX + x, centerY - y);
         drawPixel(centerX - x, centerY - y);
     };
-    drawPixel(centerX, centerY + y);
-    drawPixel(centerX, centerY - y);
-    drawPixel(centerX + x, centerY);
-    drawPixel(centerX - x, centerY);
-    while (y < 1) {
+    drawPixel(centerX, centerY + radiusY);
+    drawPixel(centerX, centerY - radiusY);
+    drawPixel(centerX + radiusX, centerY);
+    drawPixel(centerX - radiusX, centerY);
+    while (y < -1) {
         draw4();
         errL1 += errL2x;
         errL2x += twoA2;
@@ -97,7 +97,7 @@ export function drawEllipse(
             errL2y += twoB2;
             ++y;
             draw4();
-            if (y >= 0) {
+            if (y >= -1) {
                 return;
             }
         }
