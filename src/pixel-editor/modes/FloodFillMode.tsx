@@ -37,6 +37,7 @@ export class FloodFillMode implements Mode {
             let dummy1 = Vec2.zero();
             let dummy2 = new Colour(0,0,0,0);
             let fillColour = modeParams.currentColour();
+            let undoStack: Vec2[] = [];
             floodFill(
                 pt.x,
                 pt.y,
@@ -57,9 +58,25 @@ export class FloodFillMode implements Mode {
                 (x, y) => {
                     dummy1.x = x;
                     dummy1.y = y;
+                    undoStack.push(dummy1.clone());
                     modeParams.writePixel(dummy1, fillColour);
                 },
             );
+            let undoUnit: UndoUnit = {
+                displayName: "Flood Fill",
+                run(isUndo) {
+                    if (isUndo) {
+                        for (let pt of undoStack) {
+                            modeParams.writePixel(pt, sourceColour);
+                        }
+                    } else {
+                        for (let pt of undoStack) {
+                            modeParams.writePixel(pt, fillColour);
+                        }
+                    }
+                }
+            };
+            modeParams.undoManager.pushUndoUnit(undoUnit);
         };
         //
         this.overlaySvgUI = () => {
