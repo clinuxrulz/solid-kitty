@@ -335,7 +335,7 @@ const PixelEditor: Component = () => {
                 return false;
             }
             return (
-                pt.x >= state.minPt.x && pt.x < state.minPt.x + image2.imageData.width ||
+                pt.x >= state.minPt.x && pt.x < state.minPt.x + image2.imageData.width &&
                 pt.y >= state.minPt.y && pt.y < state.minPt.y + image2.imageData.height
             );
         },
