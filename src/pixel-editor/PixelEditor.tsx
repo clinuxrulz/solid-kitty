@@ -16,6 +16,7 @@ import * as FileSaver from "file-saver";
 import { DrawLinesMode } from "./modes/DrawLinesMode";
 import { drawEllipse } from "./shapes";
 import { DrawEllipseMode } from "./modes/DrawEllipseMode";
+import { FloodFillMode } from "./modes/FloodFillMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -47,7 +48,8 @@ const PixelEditor: Component = () => {
             "Erase Pixels" |
             "Eye Dropper" |
             "Draw Lines" |
-            "Draw Ellipse",
+            "Draw Ellipse" |
+            "Flood Fill",
         //
         currentColour: Colour,
         showColourPicker: boolean,
@@ -327,12 +329,22 @@ const PixelEditor: Component = () => {
         setCurrentColour(colour) {
             setState("currentColour", colour);
         },
+        isInBounds(pt) {
+            let image2 = image();
+            if (image2 == undefined) {
+                return false;
+            }
+            return (
+                pt.x >= state.minPt.x && pt.x < state.minPt.x + image2.imageData.width ||
+                pt.y >= state.minPt.y && pt.y < state.minPt.y + image2.imageData.height
+            );
+        },
         readPixel(pt: Vec2, out?: Colour): Colour | undefined {
-            out = out ?? new Colour(0, 0, 0, 0);
             let image2 = image();
             if (image2 == undefined) {
                 return undefined;
             }
+            out = out ?? new Colour(0, 0, 0, 0);
             if (
                 pt.x < state.minPt.x || pt.x >= state.minPt.x + image2.imageData.width ||
                 pt.y < state.minPt.y || pt.y >= state.minPt.y + image2.imageData.height
@@ -422,6 +434,8 @@ const PixelEditor: Component = () => {
                 return new DrawLinesMode(modeParams);
             case "Draw Ellipse":
                 return new DrawEllipseMode(modeParams);
+            case "Flood Fill":
+                return new FloodFillMode(modeParams);
         }
     });
     let modeInstructions = createMemo(() => {
@@ -886,6 +900,19 @@ const PixelEditor: Component = () => {
                         }}
                     >
                         O
+                    </button>
+                    <button
+                        class="btn"
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Flood Fill" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("mode", "Flood Fill");
+                        }}
+                    >
+                        <i class="fa-solid fa-fill-drip"></i>
                     </button>
                 </div>
             </div>
