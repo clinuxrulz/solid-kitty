@@ -73,12 +73,12 @@ export function drawEllipse(
         }
         return;
     }
-    let x = 1;
+    let x = 0;
     let y = -radiusY;
     let a = radiusY;
     let b = radiusX;
     let errL1 = 0;
-    let errL2x = 3*a*a;
+    let errL2x = a*a;
     let errL2y = 2*b*b*y + b*b;
     let twoA2 = 2*a*a;
     let twoB2 = 2*b*b;
@@ -100,19 +100,30 @@ export function drawEllipse(
     drawPixel(centreX + radiusX, centreY);
     drawPixel(centreX - radiusX, centreY);
     while (y < -1) {
-        draw4();
         errL1 += errL2x;
         errL2x += twoA2;
         ++x;
+        let oldY = y;
         while (errL1 > 0) {
             errL1 += errL2y;
             errL2y += twoB2;
             ++y;
-            draw4();
+            //draw4();
             if (y >= -1) {
+                --x;
+                for (y = oldY; y < 0; ++y) {
+                    draw4();
+                }
                 return;
             }
         }
+        let newY = y;
+        --x;
+        for (y = oldY; y < newY; ++y) {
+            draw4();
+        }
+        ++x;
+        draw4();
     }
 }
 

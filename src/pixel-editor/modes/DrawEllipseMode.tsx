@@ -78,8 +78,18 @@ export class DrawEllipseMode implements Mode {
                         (x, y) => {
                             let pos = Vec2.create(x, y);
                             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
-                            modeParams.writePixel(pos, newColour);
                             undoStack.push(oldColour);
+                            pos.dispose();
+                        },
+                    );
+                    drawEllipse(
+                        Math.round(0.5 * (line.pt1.x + line.pt2.x)),
+                        Math.round(0.5 * (line.pt1.y + line.pt2.y)),
+                        Math.round(0.5 * Math.abs(line.pt2.x - line.pt1.x)),
+                        Math.round(0.5 * Math.abs(line.pt2.y - line.pt1.y)),
+                        (x, y) => {
+                            let pos = Vec2.create(x, y);
+                            modeParams.writePixel(pos, newColour);
                             pos.dispose();
                         },
                     );
