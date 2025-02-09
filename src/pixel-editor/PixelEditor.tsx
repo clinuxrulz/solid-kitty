@@ -327,7 +327,8 @@ const PixelEditor: Component = () => {
         setCurrentColour(colour) {
             setState("currentColour", colour);
         },
-        readPixel(pt: Vec2): Colour | undefined {
+        readPixel(pt: Vec2, out?: Colour): Colour | undefined {
+            out = out ?? new Colour(0, 0, 0, 0);
             let image2 = image();
             if (image2 == undefined) {
                 return undefined;
@@ -336,16 +337,19 @@ const PixelEditor: Component = () => {
                 pt.x < state.minPt.x || pt.x >= state.minPt.x + image2.imageData.width ||
                 pt.y < state.minPt.y || pt.y >= state.minPt.y + image2.imageData.height
             ) {
-                return new Colour(0, 0, 0, 0);
+                out.r = 0;
+                out.g = 0;
+                out.b = 0;
+                out.a = 0;
+                return out;
             }
             let data = image2.imageData.data;
             let offset = (image2.imageData.width * (pt.y - state.minPt.y) + (pt.x - state.minPt.x)) << 2;
-            return new Colour(
-                data[offset],
-                data[offset+1],
-                data[offset+2],
-                data[offset+3],
-            );
+            out.r = data[offset];
+            out.g = data[offset+1];
+            out.b = data[offset+2];
+            out.a = data[offset+3];
+            return out;
         },
         writePixel(pt: Vec2, colour: Colour): void {
             let image2 = image();

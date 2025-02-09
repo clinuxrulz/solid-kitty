@@ -55,21 +55,21 @@ export function drawLine(
 }
 
 export function drawEllipse(
-  centerX: number,
-  centerY: number,
+  centreX: number,
+  centreY: number,
   radiusX: number,
   radiusY: number,
   drawPixel: (x: number, y: number) => void
 ): void {
     if (radiusX == 0) {
-        for (let y = centerY - radiusY; y <= centerY + radiusY; ++y) {
-            drawPixel(centerX, y);
+        for (let y = centreY - radiusY; y <= centreY + radiusY; ++y) {
+            drawPixel(centreX, y);
         }
         return;
     }
     if (radiusY == 0) {
-        for (let x = centerX - radiusX; x <= centerX + radiusX; ++x) {
-            drawPixel(x, centerY);
+        for (let x = centreX - radiusX; x <= centreX + radiusX; ++x) {
+            drawPixel(x, centreY);
         }
         return;
     }
@@ -90,15 +90,15 @@ export function drawEllipse(
         }
         lastX = x;
         lastY = y;
-        drawPixel(centerX + x, centerY + y);
-        drawPixel(centerX - x, centerY + y);
-        drawPixel(centerX + x, centerY - y);
-        drawPixel(centerX - x, centerY - y);
+        drawPixel(centreX + x, centreY + y);
+        drawPixel(centreX - x, centreY + y);
+        drawPixel(centreX + x, centreY - y);
+        drawPixel(centreX - x, centreY - y);
     };
-    drawPixel(centerX, centerY + radiusY);
-    drawPixel(centerX, centerY - radiusY);
-    drawPixel(centerX + radiusX, centerY);
-    drawPixel(centerX - radiusX, centerY);
+    drawPixel(centreX, centreY + radiusY);
+    drawPixel(centreX, centreY - radiusY);
+    drawPixel(centreX + radiusX, centreY);
+    drawPixel(centreX - radiusX, centreY);
     while (y < -1) {
         draw4();
         errL1 += errL2x;
@@ -116,3 +116,61 @@ export function drawEllipse(
     }
 }
 
+export function floodFill(
+    x: number,
+    y: number,
+    isSourceColour: (x: number, y: number) => boolean,
+    drawPixel: (x: number, y: number) => void,
+) {
+    let toVisitStack: number[] = [];
+    toVisitStack.push(y);
+    toVisitStack.push(x);
+    while (toVisitStack.length >= 2) {
+        let atX = toVisitStack.pop()!;
+        let atY = toVisitStack.pop()!;
+        let nextItFlagUp = true;
+        let nextItDownFlag = true;
+        for (let atX2 = atX; isSourceColour(atX2, atY); ++atX2) {
+            drawPixel(atX2, atY);
+            if (isSourceColour(atX2, atY-1)) {
+                if (nextItFlagUp) {
+                    toVisitStack.push(atY-1);
+                    toVisitStack.push(atX2);
+                }
+                nextItFlagUp = false;
+            } else {
+                nextItFlagUp = true;
+            }
+            if (isSourceColour(atX2, atY+1)) {
+                if (nextItDownFlag) {
+                    toVisitStack.push(atY+1);
+                    toVisitStack.push(atX2);
+                }
+                nextItDownFlag = false;
+            } else {
+                nextItDownFlag = true;
+            }
+        }
+        for (let atX2 = atX-1; isSourceColour(atX2, atY); --atX2) {
+            drawPixel(atX2, atY);
+            if (isSourceColour(atX2, atY-1)) {
+                if (nextItFlagUp) {
+                    toVisitStack.push(atY-1);
+                    toVisitStack.push(atX2);
+                }
+                nextItFlagUp = false;
+            } else {
+                nextItFlagUp = true;
+            }
+            if (isSourceColour(atX2, atY+1)) {
+                if (nextItDownFlag) {
+                    toVisitStack.push(atY+1);
+                    toVisitStack.push(atX2);
+                }
+                nextItDownFlag = false;
+            } else {
+                nextItDownFlag = true;
+            }
+        }
+    }
+}

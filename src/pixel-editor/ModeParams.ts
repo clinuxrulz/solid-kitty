@@ -12,6 +12,6 @@ export type ModeParams = {
     worldPtToScreenPt(worldPt: Vec2): Vec2 | undefined,
     currentColour: Accessor<Colour>,
     setCurrentColour: (colour: Colour) => void,
-    readPixel(pt: Vec2): Colour | undefined,
+    readPixel(pt: Vec2, out?: Colour): Colour | undefined,
     writePixel(pt: Vec2, colour: Colour): void,
 };
