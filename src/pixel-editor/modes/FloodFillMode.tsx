@@ -37,6 +37,14 @@ export class FloodFillMode implements Mode {
             let dummy1 = Vec2.zero();
             let dummy2 = new Colour(0,0,0,0);
             let fillColour = modeParams.currentColour();
+            if (
+                fillColour.r == sourceColour.r &&
+                fillColour.g == sourceColour.g &&
+                fillColour.b == sourceColour.b &&
+                fillColour.a == sourceColour.a
+            ) {
+                return;
+            }
             let undoStack: Vec2[] = [];
             floodFill(
                 pt.x,
