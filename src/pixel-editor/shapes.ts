@@ -54,7 +54,38 @@ export function drawLine(
     }
 }
 
+/**
+ * Draws an ellipse, this one is slower but more visually appealing.
+ */
 export function drawEllipse(
+    centreX: number,
+    centreY: number,
+    radiusX: number,
+    radiusY: number,
+    drawPixel: (x: number, y: number) => void
+) {
+    if (radiusX == 0) {
+        return;
+    }
+    let draw4 = (x: number, y: number) => {
+        drawPixel(centreX + x, centreY + y);
+        drawPixel(centreX - x, centreY + y);
+        drawPixel(centreX + x, centreY - y);
+        drawPixel(centreX - x, centreY - y);
+    };
+    let lastH = radiusY;
+    for (let i = 0; i <= radiusX; ++i) {
+        let q = radiusY * i / radiusX;
+        let h = Math.round(Math.sqrt(radiusY*radiusY - q*q));
+        for (let h2 = lastH-1; h2 >= h+1; --h2) {
+            draw4(i, -h2);
+        }
+        lastH = h;
+        draw4(i, -h);
+    }
+}
+
+export function drawEllipseOldFast(
   centreX: number,
   centreY: number,
   radiusX: number,
