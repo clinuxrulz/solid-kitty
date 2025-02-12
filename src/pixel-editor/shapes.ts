@@ -54,43 +54,12 @@ export function drawLine(
     }
 }
 
-/**
- * Draws an ellipse, this one is slower but more visually appealing.
- */
 export function drawEllipse(
     centreX: number,
     centreY: number,
     radiusX: number,
     radiusY: number,
     drawPixel: (x: number, y: number) => void
-) {
-    if (radiusX == 0) {
-        return;
-    }
-    let draw4 = (x: number, y: number) => {
-        drawPixel(centreX + x, centreY + y);
-        drawPixel(centreX - x, centreY + y);
-        drawPixel(centreX + x, centreY - y);
-        drawPixel(centreX - x, centreY - y);
-    };
-    let lastH = radiusY;
-    for (let i = 0; i <= radiusX; ++i) {
-        let q = radiusY * i / radiusX;
-        let h = Math.round(Math.sqrt(radiusY*radiusY - q*q));
-        for (let h2 = lastH-1; h2 >= h+1; --h2) {
-            draw4(i, -h2);
-        }
-        lastH = h;
-        draw4(i, -h);
-    }
-}
-
-export function drawEllipseOldFast(
-  centreX: number,
-  centreY: number,
-  radiusX: number,
-  radiusY: number,
-  drawPixel: (x: number, y: number) => void
 ): void {
     if (radiusX == 0) {
         for (let y = centreY - radiusY; y <= centreY + radiusY; ++y) {
@@ -104,13 +73,25 @@ export function drawEllipseOldFast(
         }
         return;
     }
-    let x = 0;
-    let y = -radiusY;
-    let a = radiusY;
+    radiusX -= 2;
+    //
+    let x = 1;
+    let y = radiusY-2;
+    let a = radiusY-1;
     let b = radiusX;
-    let errL1 = 0;
-    let errL2x = a*a;
-    let errL2y = 2*b*b*y + b*b;
+    let errL1 = a*a*x*x + b*b*y*y - a*a*b*b;
+    /*
+     * errL2x(x,y) = 2a²x + a²
+     * errL1(x+1,y) = errL1(x,y) + errL2x(x,y)
+     * errL2x(x+1,y) = errL2x(x,y) + 2a²
+     */
+    let errL2x = 2*a*a*x + a*a;
+    /*
+     * errL2y(x,y) = -2b²y + b²
+     * errL1(x,y-1) = errL1(x,y) + errL2y(x,y)
+     * errL2y(x,y-1) = errL2y(x,y) + 2b²
+    */
+    let errL2y = -2*b*b*y + b*b;
     let twoA2 = 2*a*a;
     let twoB2 = 2*b*b;
     let lastX: number | undefined = undefined;
@@ -126,35 +107,32 @@ export function drawEllipseOldFast(
         drawPixel(centreX + x, centreY - y);
         drawPixel(centreX - x, centreY - y);
     };
-    drawPixel(centreX, centreY + radiusY);
-    drawPixel(centreX, centreY - radiusY);
+    drawPixel(centreX, centreY + radiusY-2);
+    drawPixel(centreX, centreY - radiusY+2);
     drawPixel(centreX + radiusX, centreY);
     drawPixel(centreX - radiusX, centreY);
-    while (y < -1) {
+    while (y > 0) {
+        draw4();
+        ++x;
         errL1 += errL2x;
         errL2x += twoA2;
-        ++x;
         let oldY = y;
         while (errL1 > 0) {
+            --y;
             errL1 += errL2y;
             errL2y += twoB2;
-            ++y;
-            //draw4();
-            if (y >= -1) {
-                --x;
-                for (y = oldY; y < 0; ++y) {
+            if (y <= 0) {
+                for (y = oldY-1; y >= 1; --y) {
                     draw4();
                 }
                 return;
             }
         }
         let newY = y;
-        --x;
-        for (y = oldY; y < newY; ++y) {
+        for (y = oldY-1; y > newY; --y) {
             draw4();
         }
-        ++x;
-        draw4();
+        y = newY;
     }
 }
 
