@@ -49,6 +49,12 @@ const App: Component = (props) => {
                     >
                         Reactive Simulator
                     </button>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/vector-editor")}
+                    >
+                        Vector Editor
+                    </button>
                 </div>
             </div>
         </div>
