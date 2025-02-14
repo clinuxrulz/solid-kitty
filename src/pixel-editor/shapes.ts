@@ -136,6 +136,66 @@ export function drawEllipse(
     }
 }
 
+export function drawWave(
+    sx: number,
+    sy: number,
+    a: number,
+    b: number,
+    drawPixel: (x: number, y: number) => void,
+) {
+    a *= 2;
+    b *= 2;
+    let dummy1 = 120*a*b*b*b*b;
+    let dummy2 = 0;
+    let dummy3 = -20*a*b*b;
+    let dummy4 = 0;
+    let dummy5 = 0;
+    let dummy6 = 0;
+    let dummy7 = a;
+    let dummy8 = 0;
+    let dummy9 = 0;
+    let dummy10 = 0;
+    let dummy11 = 0;
+    let dummy12 = 0;
+    let dummy13 = -120*b*b*b*b*b;
+    let dummy14 = 0;
+    let err = 0;
+    let x = 0;
+    let y = 0;
+    let mx = Math.floor(a*0.5*Math.PI)*2.5;
+    while (x <= mx) {
+        drawPixel(sx+x,sy-y);
+        drawPixel(sx+2*mx-x,sy-y);
+        drawPixel(sx+2*mx+x,sy+y);
+        drawPixel(sx+4*mx-x,sy+y);
+        ++x;
+        //
+        dummy12 += dummy11;
+        dummy11 += dummy10;
+        dummy10 += dummy9;
+        dummy9 += dummy8;
+        dummy8 += dummy7;
+        //
+        dummy6 += dummy5;
+        dummy5 += dummy4;
+        dummy4 += dummy3;
+        //
+        dummy2 += dummy1;
+        //
+        err = dummy2 + dummy6 + dummy12 + dummy14;
+        while (err < 0) {
+            --y;
+            err -= dummy13;
+            dummy14 -= dummy13;
+        }
+        while (err > 0) {
+            ++y;
+            dummy14 += dummy13;
+            err += dummy13;
+        }
+    }
+}
+
 export function floodFill(
     x: number,
     y: number,
