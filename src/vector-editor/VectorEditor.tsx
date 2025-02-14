@@ -42,9 +42,19 @@ const VectorEditor: Component = () => {
     let Instructions = () => (<>{mode().instructions?.({})}</>);
     let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
     let onPointerDown = (e: PointerEvent) => {
+        let svg2 = svg();
+        if (svg2 == undefined) {
+            return;
+        }
+        svg2.setPointerCapture(e.pointerId);
         e.preventDefault();
     };
     let onPointerUp = (e: PointerEvent) => {
+        let svg2 = svg();
+        if (svg2 == undefined) {
+            return;
+        }
+        svg2.releasePointerCapture(e.pointerId);
         mode().click?.();
         e.preventDefault();
     };
@@ -97,6 +107,7 @@ const VectorEditor: Component = () => {
                     style={{
                         "flex-grow": "1",
                         "background-color": "white",
+                        "touch-action": "none",
                     }}
                     onPointerDown={onPointerDown}
                     onPointerUp={onPointerUp}
