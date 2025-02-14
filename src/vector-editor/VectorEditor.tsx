@@ -96,6 +96,7 @@ const VectorEditor: Component = () => {
                     ref={setSvg}
                     style={{
                         "flex-grow": "1",
+                        "background-color": "white",
                     }}
                     onPointerDown={onPointerDown}
                     onPointerUp={onPointerUp}
