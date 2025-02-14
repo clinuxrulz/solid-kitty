@@ -1,4 +1,4 @@
-import { Accessor, Component, createComputed, createMemo, onCleanup, untrack } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, on, onCleanup, untrack } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
@@ -55,6 +55,12 @@ export class InsertCatmullRomSpline implements Mode {
                 onCleanup(() => {
                     world.destroyEntity(entity);
                 });
+                createComputed(on(
+                    wipControlPoints2,
+                    () => {
+                        spline.setState("controlPoints", wipControlPoints2());
+                    },
+                ));
             });
         }
         this.instructions = () => {
