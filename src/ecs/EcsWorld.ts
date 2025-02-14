@@ -15,6 +15,10 @@ export class EcsWorld {
         this.componentTypeEntitiesMap = new ReactiveMap();
     }
 
+    entities(): string[] {
+        return Array.from(this.entityMap.keys());
+    }
+
     entitiesWithComponentType(componentType: IsEcsComponentType): string[] {
         {
             let r = this.componentTypeEntitiesMap_.get(componentType.typeName);
@@ -83,5 +87,9 @@ export class EcsWorld {
             return undefined;
         }
         return components.find((component) => component.type.typeName === componentType.typeName) as (EcsComponent<A> | undefined);
+    }
+
+    getComponents(entityId: string): IsEcsComponent[] {
+        return this.entityMap.get(entityId)?.[0]?.() ?? [];
     }
 }

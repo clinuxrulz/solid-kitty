@@ -28,7 +28,6 @@ const VectorEditor: Component = () => {
             <svg
                 style={{
                     "flex-grow": "1",
-                    "background-color": "green",
                 }}
             >
 

@@ -1,7 +1,7 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
 import { Vec2 } from "../../Vec2";
 
-type CatmullRomSplineState = {
+export type CatmullRomSplineState = {
     controlPoints: Vec2[],
     isClosed: boolean,
 };
