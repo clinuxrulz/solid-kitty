@@ -32,9 +32,7 @@ export class InsertCatmullRomSpline implements Mode {
             }
             return [ ...state.controlPoints, ...opToArr(workingPt2), ];
         });
-        let doInsert: () => void = () => {
-            modeParams.onDone();
-        };
+        let doInsert: () => void = () => {};
         {
             let hasWipControlPoints = createMemo(() =>
                 wipControlPoints() != undefined
@@ -52,7 +50,16 @@ export class InsertCatmullRomSpline implements Mode {
                 let entity = untrack(() => world.createEntity([
                     spline,
                 ]));
+                let keepIt = false;
+                doInsert = () => {
+                    keepIt = true;
+                    modeParams.onDone();
+                };
                 onCleanup(() => {
+                    doInsert = () => {};
+                    if (keepIt) {
+                        return;
+                    }
                     world.destroyEntity(entity);
                 });
                 createComputed(on(
