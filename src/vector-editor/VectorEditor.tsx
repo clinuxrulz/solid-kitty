@@ -1,4 +1,4 @@
-import { Component, createMemo } from "solid-js";
+import { Component, createMemo, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
@@ -10,10 +10,12 @@ import { IdleMode } from "./modes/IdleMode";
 
 const VectorEditor: Component = () => {
     let [ state, setState ] = createStore<{
+        mousePos: Vec2 | undefined,
         mode:
             "Idle" |
             "Insert Catmull Rom Spline",
     }>({
+        mousePos: undefined,
         mode: "Idle",
     });
     let screenPtToWorldPt = (pt: Vec2) => pt.clone();
@@ -23,6 +25,7 @@ const VectorEditor: Component = () => {
         world,
     });
     let modeParams: ModeParams = {
+        mousePos: () => state.mousePos,
         screenPtToWorldPt,
         worldPtToScreenPt,
         world: () => world,
@@ -37,6 +40,31 @@ const VectorEditor: Component = () => {
         }
     });
     let Instructions = () => (<>{mode().instructions?.({})}</>);
+    let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
+    let onPointerDown = (e: PointerEvent) => {
+        e.preventDefault();
+    };
+    let onPointerUp = (e: PointerEvent) => {
+        mode().click?.();
+        e.preventDefault();
+    };
+    let onPointerMove = (e: PointerEvent) => {
+        let svg2 = svg();
+        if (svg2 == undefined) {
+            return;
+        }
+        let rect = svg2.getBoundingClientRect();
+        let pt = Vec2.create(
+            e.clientX - rect.left,
+            e.clientY - rect.top,
+        );
+        setState("mousePos", pt);
+        e.preventDefault();
+    };
+    let onPointerLeave = (e: PointerEvent) => {
+        setState("mousePos", undefined);
+        e.preventDefault();
+    };
     return (
         <div
             style={{
@@ -65,9 +93,14 @@ const VectorEditor: Component = () => {
                 }}
             >
                 <svg
+                    ref={setSvg}
                     style={{
                         "flex-grow": "1",
                     }}
+                    onPointerDown={onPointerDown}
+                    onPointerUp={onPointerUp}
+                    onPointerMove={onPointerMove}
+                    onPointerLeave={onPointerLeave}
                 >
                     <renderSystem.Render/>
                 </svg>
