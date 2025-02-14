@@ -1,5 +1,7 @@
 import { Component } from "solid-js";
 import { createStore } from "solid-js/store";
+import { EcsWorld } from "../ecs/EcsWorld";
+import { RenderSystem } from "./systems/RenderSystem";
 
 const VectorEditor: Component = () => {
     let [ state, setState ] = createStore<{
@@ -8,6 +10,10 @@ const VectorEditor: Component = () => {
             "Insert Catmull Rom Spline",
     }>({
         mode: "Idle",
+    });
+    let world = new EcsWorld();
+    let renderSystem = new RenderSystem({
+        world,
     });
     return (
         <div
@@ -30,7 +36,7 @@ const VectorEditor: Component = () => {
                     "flex-grow": "1",
                 }}
             >
-
+                <renderSystem.Render/>
             </svg>
         </div>
     );
