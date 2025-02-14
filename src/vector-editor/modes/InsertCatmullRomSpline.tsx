@@ -32,7 +32,9 @@ export class InsertCatmullRomSpline implements Mode {
             }
             return [ ...state.controlPoints, ...opToArr(workingPt2), ];
         });
-        let doInsert: () => void = () => {};
+        let doInsert: () => void = () => {
+            modeParams.onDone();
+        };
         {
             let hasWipControlPoints = createMemo(() =>
                 wipControlPoints() != undefined
@@ -64,6 +66,7 @@ export class InsertCatmullRomSpline implements Mode {
                 >
                     End Mode
                 </button>
+                {JSON.stringify(workingPt() ?? null)}
             </>);
         };
         this.click = () => {
