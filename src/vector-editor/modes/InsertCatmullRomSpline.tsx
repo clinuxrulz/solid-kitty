@@ -66,7 +66,6 @@ export class InsertCatmullRomSpline implements Mode {
                 >
                     End Mode
                 </button>
-                {JSON.stringify(workingPt() ?? null)}
             </>);
         };
         this.click = () => {
