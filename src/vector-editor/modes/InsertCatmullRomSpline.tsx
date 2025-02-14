@@ -1,4 +1,4 @@
-import { Accessor, Component, createComputed, createMemo, on, onCleanup, untrack } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createUniqueId, on, onCleanup, untrack } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
@@ -12,8 +12,10 @@ export class InsertCatmullRomSpline implements Mode {
     constructor(modeParams: ModeParams) {
         let [ state, setState, ] = createStore<{
             controlPoints: Vec2[],
+            isClosed: boolean,
         }>({
             controlPoints: [],
+            isClosed: false,
         });
         let workingPt = createMemo(() => {
             let mousePos = modeParams.mousePos();
@@ -45,7 +47,7 @@ export class InsertCatmullRomSpline implements Mode {
                 let world = modeParams.world();
                 let spline = catmullRomSplineComponentType.create({
                     controlPoints: untrack(wipControlPoints2),
-                    isClosed: false,
+                    isClosed: untrack(() => state.isClosed),
                 })
                 let entity = untrack(() => world.createEntity([
                     spline,
@@ -68,9 +70,16 @@ export class InsertCatmullRomSpline implements Mode {
                         spline.setState("controlPoints", wipControlPoints2());
                     },
                 ));
+                createComputed(on(
+                    () => state.isClosed,
+                    () => {
+                        spline.setState("isClosed", state.isClosed);
+                    },
+                ));
             });
         }
         this.instructions = () => {
+            let closedId = createUniqueId();
             return (<>
                 Click in the control points for your curve.<br/>
                 <button
@@ -79,6 +88,24 @@ export class InsertCatmullRomSpline implements Mode {
                 >
                     End Mode
                 </button>
+                <br/>
+                <br/>
+                <input
+                    id={closedId}
+                    type="checkbox"
+                    checked={state.isClosed}
+                    onChange={(e) => {
+                        setState("isClosed", e.currentTarget.checked);
+                    }}
+                />
+                <label
+                    for={closedId}
+                    style={{
+                        "padding-left": "5px",
+                    }}
+                >
+                    Closed
+                </label>
             </>);
         };
         this.click = () => {
