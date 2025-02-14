@@ -1,4 +1,4 @@
-import { Component, createMemo, For, JSX } from "solid-js";
+import { Component, createMemo, For, Index, JSX } from "solid-js";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { catmullRomSplineComponentType, CatmullRomSplineState } from "../components/CatmullRomSpline";
 import { EcsComponent } from "../../ecs/EcsComponent";
@@ -47,14 +47,26 @@ const RenderCatmullRomSpline: Component<{
         );
         return d.map((part) => part.type + " " + part.values.join(" ")).join(" ");
     });
-    return (
+    return (<>
         <path
             d={pathString()}
             stroke="black"
             stroke-width="2"
             fill="none"
         />
-    );
+        <Index each={props.state.controlPoints}>
+          {(pt) => (
+            <circle
+              cx={pt().x}
+              cy={pt().y}
+              r={8}
+              stroke="red"
+              stroke-width={1}
+              fill="none"
+            />
+          )}
+        </Index>
+    </>);
 };
 
 const EPSILON = 1e-12;
