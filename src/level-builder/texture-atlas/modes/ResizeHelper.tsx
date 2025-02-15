@@ -1,4 +1,4 @@
-import { Accessor, Component, createMemo, For, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, For, on, Show, untrack } from "solid-js";
 import { Vec2 } from "../../../Vec2";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
@@ -150,6 +150,69 @@ export class ResizeHelper {
             }
             return closest;
         });
+        //
+        createComputed(on(
+            () => state.draggingAnchor,
+            () => {
+                if (state.draggingAnchor == undefined) {
+                    return;
+                }
+                let resizeCorner = state.draggingAnchor.value;
+                let initPos = untrack(params.rect.pos);
+                let initSize = untrack(params.rect.size);
+                createComputed(on(
+                    workingPt,
+                    () => {
+                        let workingPt2 = workingPt();
+                        if (workingPt2 == undefined) {
+                            return;
+                        }
+                        let offsetX = workingPt2.x - resizeCorner.pickupPt.x;
+                        let newX: number | undefined;
+                        let newWidth: number | undefined;
+                        if (resizeCorner.xType == "Left") {
+                            newX = initPos.x + offsetX;
+                            newWidth = initSize.x - offsetX;
+                        } else if (resizeCorner.xType == "Right") {
+                            newX = undefined;
+                            newWidth = initSize.x + offsetX;
+                        } else {
+                            newX = undefined;
+                            newWidth = undefined;
+                        }
+                        let offsetY = workingPt2.y - resizeCorner.pickupPt.y;
+                        let newY: number | undefined;
+                        let newHeight: number | undefined;
+                        if (resizeCorner.yType == "Top") {
+                            newY = initPos.y + offsetY;
+                            newHeight = initSize.y - offsetY;
+                        } else if (resizeCorner.yType == "Bottom") {
+                            newY = undefined;
+                            newHeight = initSize.y + offsetY;
+                        } else {
+                            newY = undefined;
+                            newHeight == undefined;
+                        }
+                        batch(() => {
+                            if (newX != undefined || newY != undefined) {
+                                params.rect.setPos(
+                                    Vec2.create(
+                                        newX ?? initPos.x,
+                                        newY ?? initPos.y,
+                                    ),
+                                );
+                            }
+                            params.rect.setSize(
+                                Vec2.create(
+                                    newWidth ?? initSize.x,
+                                    newHeight ?? initSize.y,
+                                ),
+                            );
+                        });
+                    },
+                ));
+            },
+        ));
         //
         this.overlaySvgUI = () => (
             <For each={anchors}>
