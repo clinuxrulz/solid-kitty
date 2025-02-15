@@ -3,9 +3,13 @@ import { Vec2 } from "../../../Vec2";
 import { ModeParams } from "../ModeParams";
 
 const ANCHOR_SIZE = 10.0;
+const SNAP_DIST = 10.0;
+const SNAP_DIST_SQUARED = SNAP_DIST * SNAP_DIST;
 
 export class ResizeHelper {
     overlaySvgUI: Component;
+    dragStart: () => void;
+    dragEnd: () => void;
 
     constructor(params: {
         modeParams: ModeParams,
@@ -101,6 +105,41 @@ export class ResizeHelper {
             },
         ];
         //
+        let workingPt = createMemo(() => {
+            let mousePos = params.modeParams.mousePos();
+            if (mousePos == undefined) {
+                return undefined;
+            }
+            return modeParams.screenPtToWorldPt(mousePos);
+        });
+        let anchorUnderMouse = createMemo(() => {
+            let mousePos = params.modeParams.mousePos();
+            if (mousePos == undefined) {
+                return undefined;
+            }
+            let pt = workingPt();
+            if (pt == undefined) {
+                return undefined;
+            }
+            let closest: (typeof anchors)[0] | undefined;
+            let closestDist: number | undefined = undefined;
+            for (let anchor of anchors) {
+                let pt2 = params.modeParams.worldPtToScreenPt(anchor.pt());
+                if (pt2 == undefined) {
+                    continue;
+                }
+                let dist = pt2.distanceSquared(mousePos);
+                if (dist > SNAP_DIST_SQUARED) {
+                    continue;
+                }
+                if (closestDist == undefined || dist < closestDist) {
+                    closestDist = dist;
+                    closest = anchor;
+                }
+            }
+            return closest;
+        });
+        //
         this.overlaySvgUI = () => (
             <For each={anchors}>
                 {(anchor) => {
@@ -125,5 +164,7 @@ export class ResizeHelper {
                 }}
             </For>
         );
+        this.dragStart = () => {};
+        this.dragEnd = () => {};
     }
 }
