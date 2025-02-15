@@ -11,6 +11,7 @@ export class IdleMode implements Mode {
     highlightedEntities: Accessor<string[]>;
     selectedEntities: Accessor<string[]>;
     click: () => void;
+    disableOneFingerPan: Accessor<boolean>;
 
     constructor(modeParams: ModeParams) {
         let [ state, setState, ] = createStore<{
@@ -57,5 +58,8 @@ export class IdleMode implements Mode {
             let entity = entityUnderMouse();
             setState("selectedEntities", opToArr(entity));
         };
+        this.disableOneFingerPan = createMemo(() => {
+            return resizeHelper()?.disableOneFingerPan?.() ?? false;
+        });
     }
 }

@@ -12,6 +12,7 @@ export class ResizeHelper {
     overlaySvgUI: Component;
     dragStart: () => void;
     dragEnd: () => void;
+    disableOneFingerPan: Accessor<boolean>;
 
     constructor(params: {
         modeParams: ModeParams,
@@ -259,5 +260,8 @@ export class ResizeHelper {
                 setState("draggingAnchor", undefined);
             }
         };
+        this.disableOneFingerPan = createMemo(() => {
+            return anchorUnderMouse() != undefined || state.draggingAnchor != undefined;
+        });
     }
 }
