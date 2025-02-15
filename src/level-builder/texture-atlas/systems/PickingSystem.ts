@@ -58,9 +58,9 @@ export class PickingSystem {
                 let closestDist: number | undefined = undefined;
                 for (let { entity, state: frame, } of frames()) {
                     let minX = frame.pos.x;
-                    let maxX = frame.pos.x + frame.size.x - 1;
+                    let maxX = frame.pos.x + frame.size.x;
                     let minY = frame.pos.y;
-                    let maxY = frame.pos.y + frame.size.y - 1;
+                    let maxY = frame.pos.y + frame.size.y;
                     let pt1 = Vec2.create(
                         minX,
                         Math.max(minY, Math.min(maxY, pt.y)),
