@@ -1,18 +1,22 @@
-import { Accessor, createMemo } from "solid-js";
+import { Accessor, Component, createMemo, For, Show } from "solid-js";
 import { Vec2 } from "../../../Vec2";
+import { ModeParams } from "../ModeParams";
+
+const ANCHOR_SIZE = 8.0;
 
 export class ResizeHelper {
+    overlaySvgUI: Component;
+
     constructor(params: {
+        modeParams: ModeParams,
         rect: {
             pos: Accessor<Vec2>,
             size: Accessor<Vec2>,
+            setPos: (x: Vec2) => void,
+            setSize: (x: Vec2) => void,
         },
-        onStartResize: (
-            xType: "Left" | "Centre" | "Right",
-            yType: "Top" | "Centre" | "Bottom",
-            pickupPt: Vec2,
-        ) => void,
     }) {
+        let modeParams = params.modeParams;
         let anchors: {
             xType: "Left" | "Centre" | "Right",
             yType: "Top" | "Centre" | "Bottom",
@@ -96,5 +100,30 @@ export class ResizeHelper {
                 ),
             },
         ];
+        //
+        this.overlaySvgUI = () => (
+            <For each={anchors}>
+                {(anchor) => {
+                    let pt = createMemo(() =>
+                        modeParams.worldPtToScreenPt(anchor.pt())
+                    );
+                    return (
+                        <Show when={pt()}>
+                            {(pt2) => (
+                                <rect
+                                    x={pt2().x - 0.5 * ANCHOR_SIZE}
+                                    y={pt2().y - 0.5 * ANCHOR_SIZE}
+                                    width={ANCHOR_SIZE}
+                                    height={ANCHOR_SIZE}
+                                    stroke="black"
+                                    stroke-width="1"
+                                    fill="none"
+                                />
+                            )}
+                        </Show>
+                    );
+                }}
+            </For>
+        );
     }
 }
