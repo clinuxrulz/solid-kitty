@@ -30,6 +30,7 @@ export function makeRefCountedMakeReactiveObject<A>(
                 dispose();
                 dispose = () => {};
                 cleanup?.();
+                cache = undefined;
             }
         });
         return cache();
