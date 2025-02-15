@@ -10,6 +10,8 @@ export class IdleMode implements Mode {
     overlaySvgUI: Component;
     highlightedEntities: Accessor<string[]>;
     selectedEntities: Accessor<string[]>;
+    dragStart: () => void;
+    dragEnd: () => void;
     click: () => void;
     disableOneFingerPan: Accessor<boolean>;
 
@@ -54,6 +56,12 @@ export class IdleMode implements Mode {
         </>);
         this.highlightedEntities = createMemo(() => opToArr(entityUnderMouse()));
         this.selectedEntities = () => state.selectedEntities;
+        this.dragStart = () => {
+            return resizeHelper()?.dragStart?.();
+        };
+        this.dragEnd = () => {
+            return resizeHelper()?.dragEnd?.();
+        };
         this.click = () => {
             let entity = entityUnderMouse();
             setState("selectedEntities", opToArr(entity));
