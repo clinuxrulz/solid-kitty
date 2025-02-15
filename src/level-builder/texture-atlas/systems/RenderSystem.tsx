@@ -84,6 +84,17 @@ const RenderFrame: Component<{
             ),
         };
     });
+    let stroke = createMemo(() => {
+        if (props.selected && props.highlighted) {
+            return "cyan";
+        } else if (props.selected) {
+            return "green";
+        } else if (props.highlighted) {
+            return "blue";
+        } else {
+            return "black";
+        }
+    });
     return (
         <Show when={screenRect()}>
             {(screenRect2) => (
@@ -92,7 +103,7 @@ const RenderFrame: Component<{
                     y={screenRect2().pos.y}
                     width={screenRect2().size.x}
                     height={screenRect2().size.y}
-                    stroke="black"
+                    stroke={stroke()}
                     stroke-width="2"
                     fill="none"
                     pointer-events="none"
