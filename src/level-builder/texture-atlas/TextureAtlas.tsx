@@ -9,6 +9,7 @@ import { IdleMode } from "./modes/IdleMode";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
 import { RenderParams } from "./RenderParams";
+import { PickingSystem } from "./systems/PickingSystem";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -104,6 +105,11 @@ export class TextureAtlas {
             renderParams,
             world: () => state.world,
         });
+        let pickingSystem = new PickingSystem({
+            mousePos: () => state.mousePos,
+            screenPtToWorldPt,
+            world: () => state.world,
+        });
         //
         let modeParams: ModeParams = {
             undoManager,
@@ -112,6 +118,7 @@ export class TextureAtlas {
             screenPtToWorldPt,
             worldPtToScreenPt,
             world: () => state.world,
+            pickingSystem,
             onDone: () => setState("mode", "Idle"),
         };
         let mode = createMemo<Mode>(() => {

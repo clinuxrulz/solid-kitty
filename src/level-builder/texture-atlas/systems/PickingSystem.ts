@@ -12,7 +12,7 @@ export class PickingSystem {
     mkEntityUnderMouse: () => Accessor<string | undefined>;
 
     constructor(params: {
-        mousePos: Accessor<Vec2>,
+        mousePos: Accessor<Vec2 | undefined>,
         screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined,
         world: Accessor<EcsWorld>,
     }) {
