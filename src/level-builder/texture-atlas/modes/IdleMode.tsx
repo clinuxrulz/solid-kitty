@@ -5,6 +5,7 @@ import { opToArr } from "../../../kitty-demo/util";
 import { createStore } from "solid-js/store";
 import { frameComponentType } from "../components/FrameComponent";
 import { ResizeHelper } from "./ResizeHelper";
+import { Vec2 } from "../../../Vec2";
 
 export class IdleMode implements Mode {
     overlaySvgUI: Component;
@@ -45,8 +46,20 @@ export class IdleMode implements Mode {
                 rect: {
                     pos: () => frame.state.pos,
                     size: () => frame.state.size,
-                    setPos: (x) => frame.setState("pos", x),
-                    setSize: (x) => frame.setState("size", x),
+                    setPos: (x) =>
+                        frame.setState("pos",
+                            Vec2.create(
+                                Math.round(x.x),
+                                Math.round(x.y),
+                            ),
+                        ),
+                    setSize: (x) =>
+                        frame.setState("size",
+                            Vec2.create(
+                                Math.round(x.x),
+                                Math.round(x.y),
+                            ),
+                        ),
                 },
             });
         });
