@@ -1,6 +1,8 @@
 import { Accessor, Component, createMemo, For, Show } from "solid-js";
 import { Vec2 } from "../../../Vec2";
 import { ModeParams } from "../ModeParams";
+import { createStore } from "solid-js/store";
+import { NoTrack } from "../../../util";
 
 const ANCHOR_SIZE = 10.0;
 const SNAP_DIST = 10.0;
@@ -20,6 +22,15 @@ export class ResizeHelper {
             setSize: (x: Vec2) => void,
         },
     }) {
+        let [ state, setState, ] = createStore<{
+            draggingAnchor: NoTrack<{
+                xType: "Left" | "Centre" | "Right",
+                yType: "Top" | "Centre" | "Bottom",
+                pickupPt: Vec2,
+            }> | undefined,
+        }>({
+            draggingAnchor: undefined,
+        });
         let modeParams = params.modeParams;
         let anchors: {
             xType: "Left" | "Centre" | "Right",
@@ -164,7 +175,26 @@ export class ResizeHelper {
                 }}
             </For>
         );
-        this.dragStart = () => {};
-        this.dragEnd = () => {};
+        this.dragStart = () => {
+            if (state.draggingAnchor == undefined) {
+                let anchor = anchorUnderMouse();
+                if (anchor != undefined) {
+                    let pt = workingPt();
+                    if (pt != undefined) {
+                        setState("draggingAnchor", new NoTrack({
+                            xType: anchor.xType,
+                            yType: anchor.yType,
+                            pickupPt: pt,
+                        }));
+                    }
+                }
+                return;
+            }
+        };
+        this.dragEnd = () => {
+            if (state.draggingAnchor != undefined) {
+                setState("draggingAnchor", undefined);
+            }
+        };
     }
 }
