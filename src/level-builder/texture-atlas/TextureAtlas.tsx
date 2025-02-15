@@ -8,6 +8,7 @@ import { MakeFrameMode } from "./modes/MakeFrameMode";
 import { IdleMode } from "./modes/IdleMode";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
+import { RenderParams } from "./RenderParams";
 
 type State = {
     mousePos: Vec2 | undefined,
@@ -95,8 +96,12 @@ export class TextureAtlas {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
-        let renderSystem = new RenderSystem({
+        let renderParams: RenderParams = {
             worldPtToScreenPt,
+        };
+        //
+        let renderSystem = new RenderSystem({
+            renderParams,
             world: () => state.world,
         });
         //
