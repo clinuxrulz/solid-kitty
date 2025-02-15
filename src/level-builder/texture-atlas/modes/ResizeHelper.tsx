@@ -2,7 +2,7 @@ import { Accessor, Component, createMemo, For, Show } from "solid-js";
 import { Vec2 } from "../../../Vec2";
 import { ModeParams } from "../ModeParams";
 
-const ANCHOR_SIZE = 8.0;
+const ANCHOR_SIZE = 10.0;
 
 export class ResizeHelper {
     overlaySvgUI: Component;
@@ -116,7 +116,7 @@ export class ResizeHelper {
                                     width={ANCHOR_SIZE}
                                     height={ANCHOR_SIZE}
                                     stroke="black"
-                                    stroke-width="1"
+                                    stroke-width="2"
                                     fill="none"
                                 />
                             )}
