@@ -104,6 +104,7 @@ export class TextureAtlas {
         let pickingSystem = new PickingSystem({
             mousePos: () => state.mousePos,
             screenPtToWorldPt,
+            worldPtToScreenPt,
             world: () => state.world,
         });
         //

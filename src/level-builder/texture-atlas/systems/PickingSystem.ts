@@ -14,6 +14,7 @@ export class PickingSystem {
     constructor(params: {
         mousePos: Accessor<Vec2 | undefined>,
         screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined,
+        worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined,
         world: Accessor<EcsWorld>,
     }) {
         let frameEntitites = createMemo(() =>
@@ -76,10 +77,10 @@ export class PickingSystem {
                         Math.max(minX, Math.min(maxX, pt.x)),
                         maxY,
                     );
-                    let pt5 = params.screenPtToWorldPt(pt1);
-                    let pt6 = params.screenPtToWorldPt(pt2);
-                    let pt7 = params.screenPtToWorldPt(pt3);
-                    let pt8 = params.screenPtToWorldPt(pt4);
+                    let pt5 = params.worldPtToScreenPt(pt1);
+                    let pt6 = params.worldPtToScreenPt(pt2);
+                    let pt7 = params.worldPtToScreenPt(pt3);
+                    let pt8 = params.worldPtToScreenPt(pt4);
                     if (pt5 == undefined || pt6 == undefined || pt7 == undefined || pt8 == undefined) {
                         return;
                     }
