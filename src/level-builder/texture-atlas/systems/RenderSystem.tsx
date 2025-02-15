@@ -11,6 +11,8 @@ export class RenderSystem {
     constructor(params: {
         renderParams: RenderParams,
         world: Accessor<EcsWorld>,
+        highlightedEntitiesSet: Accessor<Set<string>>,
+        selectedEntitiesSet: Accessor<Set<string>>,
     }) {
         let frameEntityIds = createMemo(() =>
             params.world().entitiesWithComponentType(
@@ -25,12 +27,20 @@ export class RenderSystem {
                         let frameState = createMemo<FrameState | undefined>(() =>
                             params.world().getComponent(entityId, frameComponentType)?.state
                         );
+                        let highlighted = createMemo(() =>
+                            params.highlightedEntitiesSet().has(entityId)
+                        );
+                        let selected = createMemo(() =>
+                            params.selectedEntitiesSet().has(entityId)
+                        );
                         return (
                             <Show when={frameState()}>{
                                 (frameState2) =>
                                     <RenderFrame
                                         renderParams={params.renderParams}
                                         state={frameState2()}
+                                        highlighted={highlighted()}
+                                        selected={selected()}
                                     />
                             }</Show>
                         );
@@ -44,6 +54,8 @@ export class RenderSystem {
 const RenderFrame: Component<{
     renderParams: RenderParams,
     state: FrameState,
+    highlighted: boolean,
+    selected: boolean,
 }> = (props) => {
     let screenRect = createMemo<{
         pos: Vec2,

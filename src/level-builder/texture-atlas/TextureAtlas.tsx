@@ -101,10 +101,6 @@ export class TextureAtlas {
             worldPtToScreenPt,
         };
         //
-        let renderSystem = new RenderSystem({
-            renderParams,
-            world: () => state.world,
-        });
         let pickingSystem = new PickingSystem({
             mousePos: () => state.mousePos,
             screenPtToWorldPt,
@@ -128,6 +124,18 @@ export class TextureAtlas {
                 case "Make Frame":
                     return new MakeFrameMode(modeParams);
             }
+        });
+        let highlightedEntitiesSet = createMemo(() => {
+            return new Set(mode().highlightedEntities?.() ?? []);
+        });
+        let selectedEntitiesSet = createMemo(() => {
+            return new Set(mode().selectedEntities?.() ?? []);
+        });
+        let renderSystem = new RenderSystem({
+            renderParams,
+            world: () => state.world,
+            highlightedEntitiesSet,
+            selectedEntitiesSet,
         });
         //
         this.undoManager = undoManager;
