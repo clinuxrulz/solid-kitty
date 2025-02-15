@@ -56,6 +56,7 @@ export class PickingSystem {
                 let closest: string | undefined;
                 let closestDist: number | undefined = undefined;
                 for (let { entity, state: frame, } of frames()) {
+                    debugger;
                     let minX = frame.pos.x;
                     let maxX = frame.pos.x + frame.size.x - 1;
                     let minY = frame.pos.y;
