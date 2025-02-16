@@ -81,7 +81,7 @@ export function drawEllipse(
     let radiusY = 0.5 * height;
     //
     let x = 0;
-    let y = radiusY-1;
+    let y = radiusY;
     let a = radiusY;
     let b = radiusX;
     let errL1 = a*a*x*x + b*b*y*y - a*a*b*b;
@@ -128,6 +128,11 @@ export function drawEllipse(
                 }
                 return;
             }
+        }
+        while (errL1 < 0) {
+            ++y;
+            errL2y -= twoB2;
+            errL1 -= errL2y;
         }
         let newY = y;
         for (y = oldY-1; y > newY; --y) {
