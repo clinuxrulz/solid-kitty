@@ -29,6 +29,7 @@ const GravityTest: Component = () => {
             dummy6 += dummy5;
             dummy5 += dummy3;
             heights2.push(height);
+            ++t;
         }
     }
     return (
@@ -42,8 +43,8 @@ const GravityTest: Component = () => {
             <tbody>
                 <tr>
                     <td colSpan={2}>
-                        p0 = {p0}
-                        v0 = {v0}
+                        p0 = {p0}<br/>
+                        v0 = {v0}<br/>
                         a = {a}
                     </td>
                 </tr>
@@ -57,15 +58,15 @@ const GravityTest: Component = () => {
                     <td>
                         <b>Modified Newton's Method</b><br/>
                         <code>
-                            dummy1 = p0
-                            dummy2 = v0
-                            dummy3 = a
-                            dummy4(0) = 0
-                            dummy4(t + 1) = dummy4(t) + dummy2
-                            dummy5(0) = 0
-                            dummy5(t + 1) = dummy5(t) + dummy3
-                            dummy6(0) = 0
-                            dummy6(t + 1) = dummy6(t) + dummy5(t)
+                            dummy1 = p0<br/>
+                            dummy2 = v0<br/>
+                            dummy3 = a<br/>
+                            dummy4(0) = 0<br/>
+                            dummy4(t + 1) = dummy4(t) + dummy2<br/>
+                            dummy5(0) = 0<br/>
+                            dummy5(t + 1) = dummy5(t) + dummy3<br/>
+                            dummy6(0) = 0<br/>
+                            dummy6(t + 1) = dummy6(t) + dummy5(t)<br/>
                             p(t) = dummy1 + dummy4(t) + dummy6(t)
                         </code>
                     </td>
@@ -74,14 +75,14 @@ const GravityTest: Component = () => {
                     <td>
                         <code>
                             <For each={heights1}>
-                                {(height, t) => (<>p({t}) = {height}{"\r\n"}</>)}
+                                {(height, t) => (<>p({t}) = {height}<br/></>)}
                             </For>
                         </code>
                     </td>
                     <td>
                     <code>
                             <For each={heights2}>
-                                {(height, t) => (<>p({t}) = {height}{"\r\n"}</>)}
+                                {(height, t) => (<>p({t}) = {height}<br/></>)}
                             </For>
                         </code>
                     </td>
