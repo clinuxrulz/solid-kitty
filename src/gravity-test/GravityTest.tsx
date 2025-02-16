@@ -7,29 +7,29 @@ const GravityTest: Component = () => {
     let heights1: number[] = [];
     // Actual formula
     {
-        // p = p0 + v0.t + a.t.t
+        // p(t) = p0 + v0.t + ½.a.t²
         for (let t = 0; t <= 50; ++t) {
-            let height = p0 + v0*t + a*t*t;
+            let height = p0 + v0*t + 0.5*a*t*t;
             heights1.push(height);
         }
     }
     let heights2: number[] = [];
     // Modified Newton's Method
     {
-        // p(t) = p0 + v0.t + a.t.t
-        // p(t+1) = p0 + v0.(t+1) + a.(t+1).(t+1)
-        // p(t+1) = p0 + v0.t + a.t.t + v0 + 2.a.t + a
-        // p(t+1) = p(t) + v0 + a + 2.a.t
+        // p(t) = p0 + v0.t + ½.a.t²
+        // p(t+1) = p0 + v0.(t+1) + ½.a.(t+1)²
+        // p(t+1) = p0 + v0.t + ½.a.t² + v0 + a.t + ½.a
+        // p(t+1) = p(t) + v0 + ½.a + a.t
         // 
         /*
-        dummy1 = v0 + a
+        dummy1 = v0 + ½a
         dummy2(0) = 0
-        dummy2(t + 1) = dummy2(t) + a + a
+        dummy2(t + 1) = dummy2(t) + a
         p(0) = p0
         p(t + 1) = p(t) + dummy1 + dummy2(t)
         */
-        let twoA = a + a;
-        let dummy1 = v0 + a;
+        let halfA = 0.5*a;
+        let dummy1 = v0 + halfA;
         let dummy2 = 0;
         let height = p0;
         let t = 0;
@@ -37,7 +37,7 @@ const GravityTest: Component = () => {
             heights2.push(height);
             ++t;
             height += dummy1 + dummy2;
-            dummy2 += twoA;
+            dummy2 += a;
         }
     }
     return (
@@ -66,15 +66,15 @@ const GravityTest: Component = () => {
                         <td style="border: 1px solid blue;">
                             <b>Actual Formula:</b><br/>
                             <code>
-                                p = p0 + v0.t + a.t.t
+                                p(t) = p0 + v0.t + ½.a.t²
                             </code>
                         </td>
                         <td style="border: 1px solid blue;">
                             <b>Modified Newton's Method</b><br/>
                             <code>
-                                dummy1 = v0 + a<br/>
+                                dummy1 = v0 + ½a<br/>
                                 dummy2(0) = 0<br/>
-                                dummy2(t + 1) = dummy2(t) + a + a<br/>
+                                dummy2(t + 1) = dummy2(t) + a<br/>
                                 p(0) = p0<br/>
                                 p(t + 1) = p(t) + dummy1 + dummy2(t)
                             </code>
