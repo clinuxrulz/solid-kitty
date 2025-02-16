@@ -14,7 +14,6 @@ import { StaticRouter } from "@solidjs/router";
 import { Storage } from "./Storage";
 import * as FileSaver from "file-saver";
 import { DrawLinesMode } from "./modes/DrawLinesMode";
-import { drawEllipse } from "./shapes";
 import { DrawEllipseMode } from "./modes/DrawEllipseMode";
 import { FloodFillMode } from "./modes/FloodFillMode";
 

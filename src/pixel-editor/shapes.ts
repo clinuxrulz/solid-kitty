@@ -55,29 +55,34 @@ export function drawLine(
 }
 
 export function drawEllipse(
-    centreX: number,
-    centreY: number,
-    radiusX: number,
-    radiusY: number,
+    minX: number,
+    minY: number,
+    width: number,
+    height: number,
     drawPixel: (x: number, y: number) => void
 ): void {
-    if (radiusX == 0) {
-        for (let y = centreY - radiusY; y <= centreY + radiusY; ++y) {
-            drawPixel(centreX, y);
+    width = width + (width & 1);
+    height = height + (height & 1);
+    if (width == 0) {
+        for (let y = minY; y < minY + height; ++y) {
+            drawPixel(minX, y);
         }
         return;
     }
-    if (radiusY == 0) {
-        for (let x = centreX - radiusX; x <= centreX + radiusX; ++x) {
-            drawPixel(x, centreY);
+    if (height == 0) {
+        for (let x = minX; x < minX + width; ++x) {
+            drawPixel(x, minY);
         }
         return;
     }
-    radiusX -= 2;
+    let centreX = minX + 0.5 * width;
+    let centreY = minY + 0.5 * height;
+    let radiusX = 0.5 * width;
+    let radiusY = 0.5 * height;
     //
-    let x = 1;
-    let y = radiusY-2;
-    let a = radiusY-1;
+    let x = 0;
+    let y = radiusY-1;
+    let a = radiusY;
     let b = radiusX;
     let errL1 = a*a*x*x + b*b*y*y - a*a*b*b;
     /*
@@ -107,11 +112,7 @@ export function drawEllipse(
         drawPixel(centreX + x, centreY - y);
         drawPixel(centreX - x, centreY - y);
     };
-    drawPixel(centreX, centreY + radiusY-2);
-    drawPixel(centreX, centreY - radiusY+2);
-    drawPixel(centreX + radiusX, centreY);
-    drawPixel(centreX - radiusX, centreY);
-    while (y > 0) {
+    while (x <= radiusX) {
         draw4();
         ++x;
         errL1 += errL2x;
@@ -121,8 +122,8 @@ export function drawEllipse(
             --y;
             errL1 += errL2y;
             errL2y += twoB2;
-            if (y <= 0) {
-                for (y = oldY-1; y >= 1; --y) {
+            if (y < 0) {
+                for (y = oldY-1; y >= 0; --y) {
                     draw4();
                 }
                 return;
