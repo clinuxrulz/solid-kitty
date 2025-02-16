@@ -16,79 +16,89 @@ const GravityTest: Component = () => {
     let heights2: number[] = [];
     // Modified Newton's Method
     {
-        let dummy1 = p0;
-        let dummy2 = v0;
-        let dummy3 = a;
-        let dummy4 = 0;
-        let dummy5 = 0;
-        let dummy6 = 0;
+        // p(t) = p0 + v0.t + a.t.t
+        // p(t+1) = p0 + v0.(t+1) + a.(t+1).(t+1)
+        // p(t+1) = p0 + v0.t + a.t.t + v0 + 2.a.t + a
+        // p(t+1) = p(t) + v0 + a + 2.a.t
+        // 
+        /*
+        dummy1 = v0 + a
+        dummy2(0) = 0
+        dummy2(t + 1) = dummy2(t) + a + a
+        p(0) = p0
+        p(t + 1) = p(t) + dummy1 + dummy2(t)
+        */
+        let twoA = a + a;
+        let dummy1 = v0 + a;
+        let dummy2 = 0;
+        let height = p0;
         let t = 0;
         while (t <= 50) {
-            let height = dummy1 + dummy4 + dummy6;
-            dummy4 += dummy2;
-            dummy6 += dummy5;
-            dummy5 += dummy3;
             heights2.push(height);
             ++t;
+            height += dummy1 + dummy2;
+            dummy2 += twoA;
         }
     }
     return (
-        <table
+        <div
             style={{
                 "width": "100%",
                 "height": "100%",
+                "overflow-y": "auto",
             }}
         >
-            <thead/>
-            <tbody>
-                <tr>
-                    <td colSpan={2}>
-                        p0 = {p0}<br/>
-                        v0 = {v0}<br/>
-                        a = {a}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <b>Actual Formula:</b><br/>
-                        <code>
-                            p = p0 + v0.t + a.t.t
-                        </code>
-                    </td>
-                    <td>
-                        <b>Modified Newton's Method</b><br/>
-                        <code>
-                            dummy1 = p0<br/>
-                            dummy2 = v0<br/>
-                            dummy3 = a<br/>
-                            dummy4(0) = 0<br/>
-                            dummy4(t + 1) = dummy4(t) + dummy2<br/>
-                            dummy5(0) = 0<br/>
-                            dummy5(t + 1) = dummy5(t) + dummy3<br/>
-                            dummy6(0) = 0<br/>
-                            dummy6(t + 1) = dummy6(t) + dummy5(t)<br/>
-                            p(t) = dummy1 + dummy4(t) + dummy6(t)
-                        </code>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <code>
-                            <For each={heights1}>
-                                {(height, t) => (<>p({t}) = {height}<br/></>)}
-                            </For>
-                        </code>
-                    </td>
-                    <td>
-                    <code>
-                            <For each={heights2}>
-                                {(height, t) => (<>p({t}) = {height}<br/></>)}
-                            </For>
-                        </code>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <table
+                style={{
+                    "width": "100%",
+                }}
+            >
+                <thead/>
+                <tbody>
+                    <tr>
+                        <td colSpan={2} style="border: 1px solid blue;">
+                            p0 = {p0}<br/>
+                            v0 = {v0}<br/>
+                            a = {a}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid blue;">
+                            <b>Actual Formula:</b><br/>
+                            <code>
+                                p = p0 + v0.t + a.t.t
+                            </code>
+                        </td>
+                        <td style="border: 1px solid blue;">
+                            <b>Modified Newton's Method</b><br/>
+                            <code>
+                                dummy1 = v0 + a<br/>
+                                dummy2(0) = 0<br/>
+                                dummy2(t + 1) = dummy2(t) + a + a<br/>
+                                p(0) = p0<br/>
+                                p(t + 1) = p(t) + dummy1 + dummy2(t)
+                            </code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid blue;">
+                            <code>
+                                <For each={heights1}>
+                                    {(height, t) => (<>p({t}) = {height}<br/></>)}
+                                </For>
+                            </code>
+                        </td>
+                        <td style="border: 1px solid blue;">
+                            <code>
+                                <For each={heights2}>
+                                    {(height, t) => (<>p({t}) = {height}<br/></>)}
+                                </For>
+                            </code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     );
 };
 
