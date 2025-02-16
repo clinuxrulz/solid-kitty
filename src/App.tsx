@@ -55,6 +55,12 @@ const App: Component = (props) => {
                     >
                         Vector Editor
                     </button>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/gravity-test")}
+                    >
+                        Gravity Test
+                    </button>
                 </div>
             </div>
         </div>
