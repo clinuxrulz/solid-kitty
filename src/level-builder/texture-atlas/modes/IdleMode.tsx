@@ -42,7 +42,9 @@ export class IdleMode implements Mode {
                 return undefined;
             }
             return new ResizeHelper({
-                modeParams,
+                mousePos: modeParams.mousePos,
+                screenPtToWorldPt: modeParams.screenPtToWorldPt,
+                worldPtToScreenPt: modeParams.worldPtToScreenPt,
                 rect: {
                     pos: () => frame.state.pos,
                     size: () => frame.state.size,

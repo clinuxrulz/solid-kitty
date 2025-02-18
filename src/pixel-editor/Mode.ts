@@ -7,4 +7,5 @@ export interface Mode {
     dragEnd?: () => void,
     click?: () => void,
     disableOneFingerPan?: () => boolean,
+    done?: () => void,
 }

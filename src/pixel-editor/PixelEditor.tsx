@@ -419,8 +419,15 @@ const PixelEditor: Component = () => {
             triggerAutoSave();
         },
     };
+    let lastMode: Mode | undefined = undefined;
+    let preMode = createMemo(() => {
+        if (lastMode != undefined) {
+            lastMode.done?.();
+        }
+        return state.mode;
+    });
     let mode = createMemo<Mode>(() => {
-        switch (state.mode) {
+        switch (preMode()) {
             case "Idle":
                 return new IdleMode(modeParams);
             case "Draw Pixels":
@@ -437,6 +444,7 @@ const PixelEditor: Component = () => {
                 return new FloodFillMode(modeParams);
         }
     });
+    createComputed(() => { lastMode = mode(); });
     let modeInstructions = createMemo(() => {
         return mode().instructions;
     });

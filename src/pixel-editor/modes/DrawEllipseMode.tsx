@@ -2,26 +2,28 @@ import { createStore } from "solid-js/store";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
-import { Accessor, Component, createComputed, createMemo, createSignal, onCleanup, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, createSignal, onCleanup, Show } from "solid-js";
 import { drawEllipse } from "../shapes";
 import { Colour } from "../../Colour";
 import { UndoUnit } from "../UndoManager";
+import { ResizeHelper } from "../../level-builder/texture-atlas/modes/ResizeHelper";
 
 export class DrawEllipseMode implements Mode {
     overlaySvgUI: Component;
     dragStart: () => void;
     dragEnd: () => void;
     disableOneFingerPan: () => boolean = () => true;
+    done: () => void;
 
     constructor(modeParams: ModeParams) {
         let [ state, setState, ] = createStore<{
-            pt1: Vec2 | undefined,
+            pos: Vec2 | undefined,
+            size: Vec2 | undefined,
+            isDragging: boolean,
         }>({
-            /**
-             * The first point of the line.
-             * If pt1 is not undefined, then we are dragging.
-             */
-            pt1: undefined,
+            pos: undefined,
+            size: undefined,
+            isDragging: false,
         });
         let workingPoint = createMemo(
             () => {
@@ -48,33 +50,88 @@ export class DrawEllipseMode implements Mode {
                 },
             }
         );
-        let wipLine = createMemo(() => {
-            if (state.pt1 == undefined) {
-                return undefined;
+        createComputed(() => {
+            if (!state.isDragging) {
+                return;
             }
-            let pt2 = workingPoint();
-            if (pt2 == undefined) {
-                return undefined;
+            if (state.pos == undefined) {
+                return;
             }
-            return { pt1: state.pt1, pt2, };
+            let pt = workingPoint();
+            if (pt != undefined) {
+                let minX = Math.min(state.pos.x, pt.x);
+                let minY = Math.min(state.pos.y, pt.y);
+                let maxX = Math.max(state.pos.x, pt.x);
+                let maxY = Math.max(state.pos.y, pt.y);
+                if (minX == maxX && minY == maxY) {
+                    return;
+                }
+                batch(() => {
+                    if (minX != state.pos?.x || minY != state.pos?.y) {
+                        setState("pos", Vec2.create(minX, minY));
+                    }
+                    setState("size", Vec2.create(maxX - minX, maxY - minY));
+                });
+            }
+        });
+        let hasRect = createMemo(() => state.pos != undefined && state.size != undefined);
+        let resizeHelper = createMemo(() => {
+            if (!hasRect()) {
+                return;
+            }
+            let pos = (() => state.pos) as Accessor<NonNullable<typeof state.pos>>;
+            let size = (() => state.size) as Accessor<NonNullable<typeof state.size>>;
+            return new ResizeHelper({
+                mousePos: modeParams.mousePos,
+                screenPtToWorldPt: modeParams.screenPtToWorldPt,
+                worldPtToScreenPt: modeParams.worldPtToScreenPt,
+                rect: {
+                    pos,
+                    size: createMemo(() =>
+                        Vec2.create(size().x + 1, size().y + 1)
+                    ),
+                    setPos: (pos) => {
+                        setState(
+                            "pos",
+                            Vec2.create(
+                                Math.round(pos.x),
+                                Math.round(pos.y),
+                            ),
+                        );
+                    },
+                    setSize: (size) => {
+                        setState(
+                            "size",
+                            Vec2.create(
+                                Math.round(size.x) - 1,
+                                Math.round(size.y) - 1,
+                            ),
+                        );
+                    },
+                },
+            });
         });
         let doLine: () => void = () => {};
         {
-            let hasLine = createMemo(() => wipLine() != undefined);
             createComputed(() => {
-                if (!hasLine()) {
+                if (!hasRect()) {
                     return;
                 }
-                let wipLine2 = wipLine as Accessor<NonNullable<ReturnType<typeof wipLine>>>;
+                let pos = (() => state.pos) as Accessor<NonNullable<typeof state.pos>>;
+                let size = (() => state.size) as Accessor<NonNullable<typeof state.size>>;
                 let undoStack: Colour[] = [];
+                let posAndSize = createMemo(() => ({
+                    pos: pos().clone(),
+                    size: size().clone(),
+                }));
                 createComputed(() => {
-                    let line = wipLine2();
                     let newColour = modeParams.currentColour();
+                    let { pos: pos2, size: size2 } = posAndSize();
                     drawEllipse(
-                        Math.min(line.pt1.x, line.pt2.x),
-                        Math.min(line.pt1.y, line.pt2.y),
-                        Math.round(Math.abs(line.pt2.x - line.pt1.x)),
-                        Math.round(Math.abs(line.pt2.y - line.pt1.y)),
+                        pos2.x,
+                        pos2.y,
+                        size2.x,
+                        size2.y,
                         (x, y) => {
                             let pos = Vec2.create(x, y);
                             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
@@ -83,10 +140,10 @@ export class DrawEllipseMode implements Mode {
                         },
                     );
                     drawEllipse(
-                        Math.min(line.pt1.x, line.pt2.x),
-                        Math.min(line.pt1.y, line.pt2.y),
-                        Math.round(Math.abs(line.pt2.x - line.pt1.x)),
-                        Math.round(Math.abs(line.pt2.y - line.pt1.y)),
+                        pos2.x,
+                        pos2.y,
+                        size2.x,
+                        size2.y,
                         (x, y) => {
                             let pos = Vec2.create(x, y);
                             modeParams.writePixel(pos, newColour);
@@ -97,10 +154,6 @@ export class DrawEllipseMode implements Mode {
                     doLine = () => {
                         keepIt = true;
                         let undoStack2 = undoStack.splice(0, undoStack.length);
-                        let lineX1 = line.pt1.x;
-                        let lineY1 = line.pt1.y;
-                        let lineX2 = line.pt2.x;
-                        let lineY2 = line.pt2.y;
                         let colour = modeParams.currentColour();
                         let undoUnit: UndoUnit = {
                             displayName: "Draw Line",
@@ -108,10 +161,10 @@ export class DrawEllipseMode implements Mode {
                                 if (isUndo) {
                                     let atI = 0;
                                     drawEllipse(
-                                        Math.min(lineX1, lineX2),
-                                        Math.min(lineY1, lineY2),
-                                        Math.round(Math.abs(lineX2 - lineX1)),
-                                        Math.round(Math.abs(lineY2 - lineY1)),
+                                        pos2.x,
+                                        pos2.y,
+                                        size2.x,
+                                        size2.y,
                                         (x, y) => {
                                             let pos = Vec2.create(x, y);
                                             modeParams.writePixel(pos, undoStack2[atI++]);
@@ -120,10 +173,10 @@ export class DrawEllipseMode implements Mode {
                                     );
                                 } else {
                                     drawEllipse(
-                                        Math.min(lineX1, lineX2),
-                                        Math.min(lineY1, lineY2),
-                                        Math.round(Math.abs(lineX2 - lineX1)),
-                                        Math.round(Math.abs(lineY2 - lineY1)),
+                                        pos2.x,
+                                        pos2.y,
+                                        size2.x,
+                                        size2.y,
                                         (x, y) => {
                                             let pos = Vec2.create(x, y);
                                             modeParams.writePixel(pos, colour);
@@ -134,18 +187,22 @@ export class DrawEllipseMode implements Mode {
                             }
                         };
                         modeParams.undoManager.pushUndoUnit(undoUnit);
-                        setState("pt1", undefined);
+                        batch(() => {
+                            setState("pos", undefined);
+                            setState("size", undefined);
+                        });
                     };
                     onCleanup(() => {
                         if (keepIt) {
+                            debugger;
                             return;
                         }
                         let atI = 0;
                         drawEllipse(
-                            Math.min(line.pt1.x, line.pt2.x),
-                            Math.min(line.pt1.y, line.pt2.y),
-                            Math.round(Math.abs(line.pt2.x - line.pt1.x)),
-                            Math.round(Math.abs(line.pt2.y - line.pt1.y)),
+                            pos2.x,
+                            pos2.y,
+                            size2.x,
+                            size2.y,
                             (x, y) => {
                                 let pos = Vec2.create(x, y);
                                 modeParams.writePixel(pos, undoStack[atI++]);
@@ -159,6 +216,12 @@ export class DrawEllipseMode implements Mode {
         }
         this.overlaySvgUI = () => {
             let pixelRect = createMemo(() => {
+                let resizeHelper2 = resizeHelper();
+                if (resizeHelper2 != undefined) {
+                    if (resizeHelper2.isOverAnchor()) {
+                        return undefined;
+                    }
+                }
                 let pt1 = workingPoint();
                 if (pt1 == undefined) {
                     return undefined;
@@ -179,7 +242,7 @@ export class DrawEllipseMode implements Mode {
                     h: pt22.y - pt12.y + 2,
                 };
             });
-            return (
+            return (<>
                 <Show when={pixelRect()}>
                     {(pixelRect2) => (
                         <rect
@@ -194,19 +257,41 @@ export class DrawEllipseMode implements Mode {
                         />
                     )}
                 </Show>
-            );
+                <Show when={resizeHelper()}>
+                    {(resizeHelper2) => (<>{resizeHelper2().overlaySvgUI({})}</>)}
+                </Show>
+            </>);
         };
         this.dragStart = () => {
-            if (state.pt1 == undefined) {
+            let resizeHelper2 = resizeHelper();
+            if (resizeHelper2 != undefined) {
+                if (resizeHelper2.isOverAnchor()) {
+                    resizeHelper2.dragStart();
+                    return;
+                }
+            }
+            if (state.pos != undefined && state.size != undefined) {
+                doLine();
+            }
+            setState("isDragging", true);
+            if (state.pos == undefined) {
                 let pt = workingPoint();
                 if (pt != undefined) {
-                    setState("pt1", pt);
+                    setState("pos", pt);
                 }
                 return;
             }
         };
         this.dragEnd = () => {
+            resizeHelper()?.dragEnd?.();
+            setState("isDragging", false);
             if (workingPoint() != undefined) {
+                //doLine();
+            }
+        };
+        this.done = () => {
+            debugger;
+            if (state.pos != undefined && state.size != undefined) {
                 doLine();
             }
         };

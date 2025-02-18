@@ -4,8 +4,8 @@ import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
 import { NoTrack } from "../../../util";
 
-const ANCHOR_SIZE = 10.0;
-const SNAP_DIST = 10.0;
+const ANCHOR_SIZE = 30.0;
+const SNAP_DIST = 30.0;
 const SNAP_DIST_SQUARED = SNAP_DIST * SNAP_DIST;
 
 export class ResizeHelper {
@@ -13,9 +13,12 @@ export class ResizeHelper {
     dragStart: () => void;
     dragEnd: () => void;
     disableOneFingerPan: Accessor<boolean>;
+    isOverAnchor: Accessor<boolean>;
 
     constructor(params: {
-        modeParams: ModeParams,
+        mousePos: Accessor<Vec2 | undefined>,
+        screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined,
+        worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined,
         rect: {
             pos: Accessor<Vec2>,
             size: Accessor<Vec2>,
@@ -32,7 +35,6 @@ export class ResizeHelper {
         }>({
             draggingAnchor: undefined,
         });
-        let modeParams = params.modeParams;
         let anchors: {
             xType: "Left" | "Centre" | "Right",
             yType: "Top" | "Centre" | "Bottom",
@@ -118,14 +120,14 @@ export class ResizeHelper {
         ];
         //
         let workingPt = createMemo(() => {
-            let mousePos = params.modeParams.mousePos();
+            let mousePos = params.mousePos();
             if (mousePos == undefined) {
                 return undefined;
             }
-            return modeParams.screenPtToWorldPt(mousePos);
+            return params.screenPtToWorldPt(mousePos);
         });
         let anchorUnderMouse = createMemo(() => {
-            let mousePos = params.modeParams.mousePos();
+            let mousePos = params.mousePos();
             if (mousePos == undefined) {
                 return undefined;
             }
@@ -136,7 +138,7 @@ export class ResizeHelper {
             let closest: (typeof anchors)[0] | undefined;
             let closestDist: number | undefined = undefined;
             for (let anchor of anchors) {
-                let pt2 = params.modeParams.worldPtToScreenPt(anchor.pt());
+                let pt2 = params.worldPtToScreenPt(anchor.pt());
                 if (pt2 == undefined) {
                     continue;
                 }
@@ -219,19 +221,19 @@ export class ResizeHelper {
             <For each={anchors}>
                 {(anchor) => {
                     let pt = createMemo(() =>
-                        modeParams.worldPtToScreenPt(anchor.pt())
+                        params.worldPtToScreenPt(anchor.pt())
                     );
                     return (
                         <Show when={pt()}>
                             {(pt2) => (
-                                <rect
-                                    x={pt2().x - 0.5 * ANCHOR_SIZE}
-                                    y={pt2().y - 0.5 * ANCHOR_SIZE}
-                                    width={ANCHOR_SIZE}
-                                    height={ANCHOR_SIZE}
+                                <circle
+                                    cx={pt2().x}
+                                    cy={pt2().y}
+                                    r={0.5 * ANCHOR_SIZE}
                                     stroke="black"
                                     stroke-width="2"
                                     fill="none"
+                                    pointer-events="none"
                                 />
                             )}
                         </Show>
@@ -263,5 +265,6 @@ export class ResizeHelper {
         this.disableOneFingerPan = createMemo(() => {
             return anchorUnderMouse() != undefined || state.draggingAnchor != undefined;
         });
+        this.isOverAnchor = createMemo(() => anchorUnderMouse() != undefined);
     }
 }
