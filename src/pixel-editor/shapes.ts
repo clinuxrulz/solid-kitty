@@ -62,13 +62,13 @@ export function drawEllipse(
     drawPixel: (x: number, y: number) => void
 ): void {
     if (width == 0) {
-        for (let y = minY; y < minY + height; ++y) {
+        for (let y = minY; y <= minY + height; ++y) {
             drawPixel(minX, y);
         }
         return;
     }
     if (height == 0) {
-        for (let x = minX; x < minX + width; ++x) {
+        for (let x = minX; x <= minX + width; ++x) {
             drawPixel(x, minY);
         }
         return;
