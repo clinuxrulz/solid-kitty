@@ -61,8 +61,6 @@ export function drawEllipse(
     height: number,
     drawPixel: (x: number, y: number) => void
 ): void {
-    width = width + (width & 1);
-    height = height + (height & 1);
     if (width == 0) {
         for (let y = minY; y < minY + height; ++y) {
             drawPixel(minX, y);
@@ -75,13 +73,15 @@ export function drawEllipse(
         }
         return;
     }
-    let centreX = minX + 0.5 * width;
-    let centreY = minY + 0.5 * height;
+    let centreX1 = minX + (width >> 1);
+    let centreX2 = minX + width - (width >> 1);
+    let centreY1 = minY + (height >> 1);
+    let centreY2 = minY + height - (height >> 1);
     let radiusX = 0.5 * width;
     let radiusY = 0.5 * height;
     //
     let x = 0;
-    let y = radiusY;
+    let y = Math.ceil(radiusY);
     let a = radiusY;
     let b = radiusX;
     let errL1 = a*a*x*x + b*b*y*y - a*a*b*b;
@@ -107,10 +107,10 @@ export function drawEllipse(
         }
         lastX = x;
         lastY = y;
-        drawPixel(centreX + x, centreY + y);
-        drawPixel(centreX - x, centreY + y);
-        drawPixel(centreX + x, centreY - y);
-        drawPixel(centreX - x, centreY - y);
+        drawPixel(centreX1 + x, centreY1 + y);
+        drawPixel(centreX2 - x, centreY1 + y);
+        drawPixel(centreX1 + x, centreY2 - y);
+        drawPixel(centreX2 - x, centreY2 - y);
     };
     while (x <= radiusX) {
         draw4();
