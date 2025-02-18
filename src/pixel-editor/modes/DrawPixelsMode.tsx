@@ -1,9 +1,11 @@
-import { Component, createComputed, createMemo, on, onCleanup, Show } from "solid-js";
+import { Component, createComputed, createMemo, on, onCleanup, Show, untrack } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
 import { UndoUnit } from "../UndoManager";
 import { createStore } from "solid-js/store";
+import { drawLine } from "../shapes";
+import { Colour } from "../../Colour";
 
 export class DrawPixelsMode implements Mode {
     instructions: Component;
@@ -69,10 +71,12 @@ export class DrawPixelsMode implements Mode {
                 if (!state.dragging) {
                     return;
                 }
+                let lastPos: Vec2 | undefined = undefined;
                 let undoStack: UndoUnit[] = [];
                 onCleanup(() => {
                     if (undoStack.length != 0) {
                         let undoStack2: UndoUnit[] = undoStack;
+                        undoStack2.reverse();
                         undoStack = [];
                         let undoUnit: UndoUnit = {
                             displayName: undoStack2[0].displayName,
@@ -92,8 +96,61 @@ export class DrawPixelsMode implements Mode {
                         if (!pt) {
                             return;
                         }
-                        let undoUnit = writePixel(pt);
-                        if (undoUnit != undefined) {
+                        if (lastPos == undefined) {
+                            let undoUnit = writePixel(pt);
+                            if (undoUnit != undefined) {
+                                undoStack.push(undoUnit);
+                            }
+                            lastPos = pt;
+                        } else {
+                            let lastPixels: Colour[] = [];
+                            let dummy = Vec2.zero();
+                            let colour = untrack(() => params.currentColour());
+                            drawLine(
+                                lastPos.x,
+                                lastPos.y,
+                                pt.x,
+                                pt.y,
+                                (x, y) => {
+                                    dummy.x = x;
+                                    dummy.y = y;
+                                    lastPixels.push(params.readPixel(dummy) ?? new Colour(0,0,0,0));
+                                    params.writePixel(dummy, colour);
+                                }
+                            );
+                            let from = lastPos;
+                            lastPos = pt;
+                            let undoUnit: UndoUnit = {
+                                displayName: "Draw Pixel",
+                                run(isUndo) {
+                                    if (isUndo) {
+                                        let idx = 0;
+                                        drawLine(
+                                            from.x,
+                                            from.y,
+                                            pt.x,
+                                            pt.y,
+                                            (x, y) => {
+                                                dummy.x = x;
+                                                dummy.y = y;
+                                                params.writePixel(dummy, lastPixels[idx++]);
+                                            }
+                                        );
+                                    } else {
+                                        drawLine(
+                                            from.x,
+                                            from.y,
+                                            pt.x,
+                                            pt.y,
+                                            (x, y) => {
+                                                dummy.x = x;
+                                                dummy.y = y;
+                                                params.writePixel(dummy, colour);
+                                            }
+                                        );
+                                    }
+                                }
+                            };
                             undoStack.push(undoUnit);
                         }
                     },
