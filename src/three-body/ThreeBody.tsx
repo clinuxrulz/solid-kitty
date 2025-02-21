@@ -55,18 +55,18 @@ const ThreeBody: Component = () => {
     }>({
         objects: [
             {
-                pos: Vec2.create(400,40),
-                vel: Vec2.create(2,2),
+                pos: Vec2.create(200,300),
+                vel: Vec2.create(0,0),
                 acc: Vec2.zero(),
             },
             {
                 pos: Vec2.create(400,300),
-                vel: Vec2.create(-4,-2),
+                vel: Vec2.create(0,3),
                 acc: Vec2.zero(),
             },
             {
-                pos: Vec2.create(600,300),
-                vel: Vec2.create(0,-6),
+                pos: Vec2.create(500,300),
+                vel: Vec2.create(0,-3),
                 acc: Vec2.zero(),
             },
         ],
