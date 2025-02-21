@@ -57,25 +57,19 @@ const ThreeBody: Component = () => {
         objects: [
             {
                 pos: Vec2.create(400,200),
-                vel: Vec2.create(2,0),
+                vel: Vec2.create(0,-2+1),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
             {
-                pos: Vec2.create(600,400),
-                vel: Vec2.create(0,2),
+                pos: Vec2.create(200,200),
+                vel: Vec2.create(0,2+1),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
             {
-                pos: Vec2.create(400,600),
-                vel: Vec2.create(-2,0),
-                acc: Vec2.zero(),
-                lastPositions: [],
-            },
-            {
-                pos: Vec2.create(200,400),
-                vel: Vec2.create(0,-2),
+                pos: Vec2.create(500,600),
+                vel: Vec2.create(1,-2+1),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
@@ -93,7 +87,7 @@ const ThreeBody: Component = () => {
                 let objectJ = state.objects[j];
                 dummy1.copy(objectJ.pos).sub(objectI.pos);
                 let mag = dummy1.length();
-                dummy1.multScalar(800.0 / (mag*mag*mag));
+                dummy1.multScalar(1000.0 / (mag*mag*mag));
                 acc.add(dummy1);
             }
             objectI.acc.dispose();
