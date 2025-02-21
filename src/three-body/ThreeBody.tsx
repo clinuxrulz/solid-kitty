@@ -83,7 +83,7 @@ const ThreeBody: Component = () => {
                 let objectJ = state.objects[j];
                 dummy1.copy(objectJ.pos).sub(objectI.pos);
                 let mag = dummy1.length();
-                dummy1.multScalar(1000.0 / (mag*mag*mag));
+                dummy1.multScalar(800.0 / (mag*mag*mag));
                 acc.add(dummy1);
             }
             objectI.acc.dispose();
