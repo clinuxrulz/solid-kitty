@@ -56,20 +56,20 @@ const ThreeBody: Component = () => {
     }>({
         objects: [
             {
-                pos: Vec2.create(400,200),
-                vel: Vec2.create(0,-2+1),
+                pos: Vec2.create(200, 0),
+                vel: Vec2.create(0, -2),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
             {
-                pos: Vec2.create(200,200),
-                vel: Vec2.create(0,2+1),
+                pos: Vec2.create(-200, 0),
+                vel: Vec2.create(0, 2),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
             {
-                pos: Vec2.create(500,600),
-                vel: Vec2.create(1,-2+1),
+                pos: Vec2.create(0, 150),
+                vel: Vec2.create(2, 0),
                 acc: Vec2.zero(),
                 lastPositions: [],
             },
@@ -135,9 +135,27 @@ const ThreeBody: Component = () => {
         };
         requestAnimationFrame(update);
     }
-    let s = 0.3;
+    let svg: SVGSVGElement | undefined;
+    let pan = createMemo((last: Vec2 | undefined) => {
+        let result = Vec2.zero();
+        if (last != undefined) {
+            last.dispose();
+        }
+        for (let object of state.objects) {
+            result.add(object.pos);
+        }
+        result.multScalar(1.0 / state.objects.length);
+        if (svg != undefined) {
+            let rect = svg.getBoundingClientRect();
+            result.x -= 0.5 * rect.width;
+            result.y -= 0.5 * rect.height;
+        }
+        return result;
+    });
+    let s = 1;
     return (
-        <svg style="width: 100%; height: 100%; background-color: white;">
+        <svg ref={svg} style="width: 100%; height: 100%; background-color: white;">
+            <g transform={`translate(${-pan().x}, ${-pan().y})`}>
             <For each={state.objects}>
                 {(object) => (<>
                     <Show when={object.lastPositions.length > 1 ? object.lastPositions : undefined}>
@@ -170,6 +188,7 @@ const ThreeBody: Component = () => {
                     />
                 </>)}
             </For>
+            </g>
         </svg>
     );
 };
