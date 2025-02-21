@@ -61,6 +61,12 @@ const App: Component = (props) => {
                     >
                         Gravity Test
                     </button>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/three-body")}
+                    >
+                        Three Body
+                    </button>
                 </div>
             </div>
         </div>

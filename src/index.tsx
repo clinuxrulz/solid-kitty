@@ -14,7 +14,7 @@ const ColourPicker = lazy(() => import('./pixel-editor/ColourPicker'));
 const ReactiveSimulator = lazy(() => import('./reactive-simulator/ReactiveSimulator'));
 const VectorEditor = lazy(() => import("./vector-editor/VectorEditor"));
 const GravityTest = lazy(() => import("./gravity-test/GravityTest"));
-
+const ThreeBody = lazy(() => import("./three-body/ThreeBody"));
 
 const root = document.getElementById('root');
 
@@ -49,5 +49,6 @@ render(() => (
     <Route path="/reactive-sim" component={ReactiveSimulator}/>
     <Route path="/vector-editor" component={VectorEditor}/>
     <Route path="/gravity-test" component={GravityTest}/>
+    <Route path="/three-body" component={ThreeBody}/>
   </HashRouter>
 ), root!);

@@ -13,7 +13,7 @@
 // (A1(t)^2*(Q.Q)^3*(R.R)^3 - Q^2*(R.R)^3 - R^2*(Q.Q)^3)^2 - (2*Q*R)^2*(Q.Q)^3*(R.R)^3 = 0
 // energy = (A1(t)^2*(Q.Q)^3*(R.R)^3 - Q^2*(R.R)^3 - R^2*(Q.Q)^3)^2 - (2*Q*R)^2*(Q.Q)^3*(R.R)^3
 
-import { batch, Component } from "solid-js";
+import { batch, Component, For } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 
@@ -120,7 +120,22 @@ const ThreeBody: Component = () => {
         };
         requestAnimationFrame(update);
     }
-    return undefined;
+    return (
+        <svg style="width: 100%; height: 100%; background-color: white;">
+            <For each={state.objects}>
+                {(object) => (
+                    <circle
+                        cx={object.pos.x}
+                        cy={object.pos.y}
+                        r={20.0}
+                        stroke="black"
+                        stroke-width={2}
+                        fill="none"
+                    />
+                )}
+            </For>
+        </svg>
+    );
 };
 
 export default ThreeBody;
