@@ -102,9 +102,16 @@ const ThreeBody: Component = () => {
         dummy1.dispose();
     };
     {
+        let first = true;
         let dtOffset = 0.0;
         let lastTime: number = 0.0;
         let update = (t: number) => {
+            if (first) {
+                lastTime = t;
+                first = false;
+                requestAnimationFrame(update);
+                return;
+            }
             let time = t / 1000.0;
             let dt = time - lastTime;
             lastTime = time;
