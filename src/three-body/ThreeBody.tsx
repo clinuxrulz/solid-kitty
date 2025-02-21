@@ -13,7 +13,7 @@
 // (A1(t)^2*(Q.Q)^3*(R.R)^3 - Q^2*(R.R)^3 - R^2*(Q.Q)^3)^2 - (2*Q*R)^2*(Q.Q)^3*(R.R)^3 = 0
 // energy = (A1(t)^2*(Q.Q)^3*(R.R)^3 - Q^2*(R.R)^3 - R^2*(Q.Q)^3)^2 - (2*Q*R)^2*(Q.Q)^3*(R.R)^3
 
-import { batch, Component, For } from "solid-js";
+import { batch, Component, createMemo, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../Vec2";
 
@@ -51,23 +51,33 @@ const ThreeBody: Component = () => {
             pos: Vec2,
             vel: Vec2,
             acc: Vec2,
+            lastPositions: Vec2[],
         }[],
     }>({
         objects: [
             {
-                pos: Vec2.create(200,300),
-                vel: Vec2.create(0,0),
+                pos: Vec2.create(400,200),
+                vel: Vec2.create(2,0),
                 acc: Vec2.zero(),
+                lastPositions: [],
             },
             {
-                pos: Vec2.create(400,300),
-                vel: Vec2.create(0,3),
+                pos: Vec2.create(600,400),
+                vel: Vec2.create(0,2),
                 acc: Vec2.zero(),
+                lastPositions: [],
             },
             {
-                pos: Vec2.create(500,300),
-                vel: Vec2.create(0,-3),
+                pos: Vec2.create(400,600),
+                vel: Vec2.create(-2,0),
                 acc: Vec2.zero(),
+                lastPositions: [],
+            },
+            {
+                pos: Vec2.create(200,400),
+                vel: Vec2.create(0,-2),
+                acc: Vec2.zero(),
+                lastPositions: [],
             },
         ],
     });
@@ -94,7 +104,11 @@ const ThreeBody: Component = () => {
             dummy1.copy(objectI.acc).multScalar(0.5);
             let tmp = objectI.pos;
             setState("objects", i, "pos", objectI.pos.clone().add(objectI.vel).add(dummy1));
-            tmp.dispose();
+            setState("objects", i, "lastPositions", [
+                tmp,
+                ...objectI.lastPositions,
+            ].slice(0, 200));
+            //tmp.dispose();
             tmp = objectI.vel;
             setState("objects", i, "vel", objectI.vel.clone().add(objectI.acc));
             tmp.dispose();
@@ -130,16 +144,36 @@ const ThreeBody: Component = () => {
     return (
         <svg style="width: 100%; height: 100%; background-color: white;">
             <For each={state.objects}>
-                {(object) => (
+                {(object) => (<>
+                    <Show when={object.lastPositions.length > 1 ? object.lastPositions : undefined}>
+                        {(lastPositions) => {
+                            let d = createMemo(() => {
+                                let p = lastPositions();
+                                let r = `M ${p[0].x} ${p[0].y}`;
+                                for (let i = 1; i < p.length; ++i) {
+                                    r += ` L ${p[i].x} ${p[i].y}`
+                                }
+                                return r;
+                            });
+                            return (
+                                <path
+                                    d={d()}
+                                    stroke="red"
+                                    fill="none"
+                                    stroke-dasharray="1,2"
+                                />
+                            );
+                        }}
+                    </Show>
                     <circle
                         cx={object.pos.x}
                         cy={object.pos.y}
-                        r={20.0}
+                        r={20}
                         stroke="black"
                         stroke-width={2}
                         fill="none"
                     />
-                )}
+                </>)}
             </For>
         </svg>
     );
