@@ -135,6 +135,7 @@ const ThreeBody: Component = () => {
         };
         requestAnimationFrame(update);
     }
+    let s = 0.3;
     return (
         <svg style="width: 100%; height: 100%; background-color: white;">
             <For each={state.objects}>
@@ -143,9 +144,9 @@ const ThreeBody: Component = () => {
                         {(lastPositions) => {
                             let d = createMemo(() => {
                                 let p = lastPositions();
-                                let r = `M ${p[0].x} ${p[0].y}`;
+                                let r = `M ${p[0].x*s} ${p[0].y*s}`;
                                 for (let i = 1; i < p.length; ++i) {
-                                    r += ` L ${p[i].x} ${p[i].y}`
+                                    r += ` L ${p[i].x*s} ${p[i].y*s}`
                                 }
                                 return r;
                             });
@@ -160,9 +161,9 @@ const ThreeBody: Component = () => {
                         }}
                     </Show>
                     <circle
-                        cx={object.pos.x}
-                        cy={object.pos.y}
-                        r={20}
+                        cx={object.pos.x*s}
+                        cy={object.pos.y*s}
+                        r={20*s}
                         stroke="black"
                         stroke-width={2}
                         fill="none"
