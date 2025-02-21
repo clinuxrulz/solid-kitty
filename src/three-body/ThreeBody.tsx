@@ -55,18 +55,18 @@ const ThreeBody: Component = () => {
     }>({
         objects: [
             {
-                pos: Vec2.create(100,100),
-                vel: Vec2.create(20,20),
+                pos: Vec2.create(400,40),
+                vel: Vec2.create(2,2),
                 acc: Vec2.zero(),
             },
             {
-                pos: Vec2.create(300,100),
-                vel: Vec2.create(-20,20),
+                pos: Vec2.create(400,300),
+                vel: Vec2.create(-4,-2),
                 acc: Vec2.zero(),
             },
             {
-                pos: Vec2.create(100,300),
-                vel: Vec2.create(20,-20),
+                pos: Vec2.create(600,300),
+                vel: Vec2.create(0,-6),
                 acc: Vec2.zero(),
             },
         ],
@@ -83,7 +83,7 @@ const ThreeBody: Component = () => {
                 let objectJ = state.objects[j];
                 dummy1.copy(objectJ.pos).sub(objectI.pos);
                 let mag = dummy1.length();
-                dummy1.multScalar(1.0 / (mag*mag*mag));
+                dummy1.multScalar(1000.0 / (mag*mag*mag));
                 acc.add(dummy1);
             }
             objectI.acc.dispose();
@@ -107,7 +107,7 @@ const ThreeBody: Component = () => {
         let lastTime: number = 0.0;
         let update = (t: number) => {
             if (first) {
-                lastTime = t;
+                lastTime = t / 1000.0;
                 first = false;
                 requestAnimationFrame(update);
                 return;
