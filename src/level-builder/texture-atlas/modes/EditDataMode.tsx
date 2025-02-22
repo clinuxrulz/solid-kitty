@@ -36,15 +36,9 @@ export class EditDataMode implements Mode {
                         class="btn"
                         onClick={() => modeParams.onDone()}
                     >
-                        Close Does Not Work
+                        Close
                     </button>
                 </div>
-                <button
-                    class="btn"
-                    onClick={() => modeParams.onDone()}
-                >
-                    Close Works
-                </button>
             </div>
         );
     }
