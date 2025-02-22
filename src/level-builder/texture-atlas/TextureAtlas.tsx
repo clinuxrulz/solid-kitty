@@ -390,6 +390,15 @@ export class TextureAtlas {
                         <button
                             class="btn"
                             style="font-size: 20pt;"
+                            onClick={() => {
+                                console.log(state.world.toJson());
+                            }}
+                        >
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                        <button
+                            class="btn"
+                            style="font-size: 20pt;"
                             disabled={!this.undoManager.canUndo()}
                             onClick={() => this.undoManager.undo()}
                         >

@@ -1,7 +1,10 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
+import { Result } from "../kitty-demo/Result";
 
 export interface IsEcsComponentType {
     readonly typeName: string;
+    readonly toJson: (value: any) => object;
+    readonly fromJson: (x: any) => Result<any>;
 }
 
 export interface IsEcsComponent {
@@ -10,11 +13,17 @@ export interface IsEcsComponent {
 
 export class EcsComponentType<S extends object> implements IsEcsComponentType {
     readonly typeName: string;
-    
+    readonly toJson: (value: S) => object;
+    readonly fromJson: (x: any) => Result<S>;
+
     constructor(params: {
-        typeName: string
+        typeName: string,
+        toJson: (value: S) => object,
+        fromJson: (x: any) => Result<S>,
     }) {
         this.typeName = params.typeName;
+        this.toJson = params.toJson;
+        this.fromJson = params.fromJson;
     }
 
     create(s: S): EcsComponent<S> {

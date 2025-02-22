@@ -4,6 +4,8 @@ import { EcsComponent, EcsComponentType, IsEcsComponent, IsEcsComponentType } fr
 import { batch, createSignal, Signal, untrack } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
 import { makeRefCountedMakeReactiveObject } from "../util";
+import { err, ok, Result } from "../kitty-demo/Result";
+import { EcsRegistry } from "./EcsRegistry";
 
 export class EcsWorld {
     private entityMap: ReactiveMap<string,Signal<IsEcsComponent[]>>;
@@ -91,5 +93,43 @@ export class EcsWorld {
 
     getComponents(entityId: string): IsEcsComponent[] {
         return this.entityMap.get(entityId)?.[0]?.() ?? [];
+    }
+
+    toJson(): any {
+        let result: any = {};
+        for (let entity of this.entities()) {
+            let componentsSet: any = {};
+            for (let component of this.getComponents(entity)) {
+                componentsSet[component.type.typeName] = component.type.toJson((component as EcsComponent<any>).state);
+            }
+            result[entity] = componentsSet;
+        }
+        return result;
+    }
+
+    static fromJson(registry: EcsRegistry, x: any): Result<EcsWorld> {
+        let world = new EcsWorld();
+        for (let entity of Object.keys(x)) {
+            let components = x[entity];
+            let componentTypes = Object.keys(components);
+            let components2: IsEcsComponent[] = [];
+            for (let componentType of componentTypes) {
+                let componentType2 = registry.componentTypeMap.get(componentType);
+                if (componentType2 == undefined) {
+                    return err(`${componentType} not found`);
+                }
+                let component = componentType2.fromJson(components[componentType]);
+                if (component.type == "Err") {
+                    return component;
+                }
+                let component2 = component.value;
+                components2.push(component2);
+            }
+            world.createEntityWithId(
+                entity,
+                components2,
+            );
+        }
+        return ok(world);
     }
 }
