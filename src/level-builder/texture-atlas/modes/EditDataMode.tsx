@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, onMount } from "solid-js";
 import { EcsComponent } from "../../../ecs/EcsComponent";
 import { FrameState } from "../components/FrameComponent";
 import { Mode } from "../Mode";
@@ -24,13 +24,6 @@ export class EditDataMode implements Mode {
                     "background-color": "rgba(0,0,0,0.5)",
                 }}
             >
-                <button
-                    class="btn"
-                    onClick={() => modeParams.onDone()}
-                >
-                    Close
-                </button>
-                {/*
                 <div
                     style={{
                         "position": "absolute",
@@ -47,12 +40,11 @@ export class EditDataMode implements Mode {
                     </table>
                     <button
                         class="btn"
-                        onClick={() => alert("a")}
+                        onClick={() => modeParams.onDone()}
                     >
                         Close
                     </button>
                 </div>
-                */}
             </div>
         );
     }
