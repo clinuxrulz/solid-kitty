@@ -52,7 +52,7 @@ export class EditDataMode implements Mode {
                                         style="color: black;"
                                         value={state.name}
                                         onInput={(e) => {
-                                            setState("name", e.currentTarget.name);
+                                            setState("name", e.currentTarget.value);
                                         }}
                                     />
                                 </td>
@@ -64,6 +64,7 @@ export class EditDataMode implements Mode {
                         <button
                             class="btn"
                             onClick={() => {
+                                debugger;
                                 frameComponent.setState("name", state.name);
                                 modeParams.onDone();
                             }}
