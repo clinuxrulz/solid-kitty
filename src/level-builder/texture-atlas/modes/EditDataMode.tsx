@@ -22,7 +22,6 @@ export class EditDataMode implements Mode {
                     "right": "0",
                     "bottom": "0",
                     "background-color": "rgba(0,0,0,0.5)",
-                    "pointer-events": "auto",
                 }}
             >
                 <button
@@ -31,6 +30,29 @@ export class EditDataMode implements Mode {
                 >
                     Close
                 </button>
+                {/*
+                <div
+                    style={{
+                        "position": "absolute",
+                        "left": "50%",
+                        "top": "50%",
+                        "transform": "translate(-50%,-50%)",
+                    }}
+                >
+                    <table>
+                        <thead/>
+                        <tbody>
+                            a
+                        </tbody>
+                    </table>
+                    <button
+                        class="btn"
+                        onClick={() => alert("a")}
+                    >
+                        Close
+                    </button>
+                </div>
+                */}
             </div>
         );
     }
