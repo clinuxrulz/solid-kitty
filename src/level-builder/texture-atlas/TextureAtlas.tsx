@@ -167,6 +167,7 @@ export class TextureAtlas {
         //
         let Instructions = () => (<>{mode().instructions?.({})}</>);
         let OverlaySvgUI = () => (<>{mode().overlaySvgUI?.({})}</>);
+        let OverlayHtmlUI = () => (<>{mode().overlayHtmlUI?.({})}</>)
         let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
         //
         let zoomByFactor = (factor: number) => {
@@ -478,6 +479,18 @@ export class TextureAtlas {
                         <renderSystem.RenderOverlay/>
                         <OverlaySvgUI/>
                     </svg>
+                    <div
+                        style={{
+                            "position": "absolute",
+                            "left": "0",
+                            "top": "0",
+                            "right": "0",
+                            "bottom": "0",
+                            "pointer-events": "none",
+                        }}
+                    >
+                        <OverlayHtmlUI/>
+                    </div>
                     <div
                         style={{
                             "position": "absolute",

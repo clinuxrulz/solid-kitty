@@ -1,4 +1,4 @@
-import { Accessor, Component, createMemo } from "solid-js";
+import { Accessor, Component, createMemo, For, Show } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { opToArr } from "../../../kitty-demo/util";
@@ -9,6 +9,7 @@ import { Vec2 } from "../../../Vec2";
 
 export class IdleMode implements Mode {
     overlaySvgUI: Component;
+    overlayHtmlUI: Component;
     highlightedEntities: Accessor<string[]>;
     selectedEntities: Accessor<string[]>;
     dragStart: () => void;
@@ -69,6 +70,37 @@ export class IdleMode implements Mode {
         this.overlaySvgUI = () => (<>
             {resizeHelper()?.overlaySvgUI?.({})}
         </>);
+        this.overlayHtmlUI = () => (
+            <For each={state.selectedEntities}>
+                {(entity) => {
+                    let frame = createMemo(() => modeParams.world().getComponent(entity, frameComponentType));
+                    return (
+                        <Show when={frame()}>
+                            {(frame2) => {
+                                let pt = createMemo(() => modeParams.worldPtToScreenPt(frame2().state.pos));
+                                return (
+                                    <Show when={pt()}>
+                                        {(pt2) => (
+                                            <button
+                                                class="btn"
+                                                style={{
+                                                    "position": "absolute",
+                                                    "left": `${pt2().x}px`,
+                                                    "top": `${pt2().y}px`,
+                                                    "transform": "translate(20px, -100%)",
+                                                }}
+                                            >
+                                                    Edit Data...
+                                            </button>
+                                        )}
+                                    </Show>
+                                );
+                            }}
+                        </Show>
+                    );
+                }}
+            </For>
+        );
         this.highlightedEntities = createMemo(() => opToArr(entityUnderMouse()));
         this.selectedEntities = () => state.selectedEntities;
         this.dragStart = () => {
