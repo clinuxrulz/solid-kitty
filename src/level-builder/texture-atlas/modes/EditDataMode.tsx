@@ -32,19 +32,19 @@ export class EditDataMode implements Mode {
                         "transform": "translate(-50%,-50%)",
                     }}
                 >
-                    <table>
-                        <thead/>
-                        <tbody>
-                            a
-                        </tbody>
-                    </table>
                     <button
                         class="btn"
                         onClick={() => modeParams.onDone()}
                     >
-                        Close
+                        Close Does Not Work
                     </button>
                 </div>
+                <button
+                    class="btn"
+                    onClick={() => modeParams.onDone()}
+                >
+                    Close Works
+                </button>
             </div>
         );
     }
