@@ -88,6 +88,7 @@ export class IdleMode implements Mode {
                                                     "left": `${pt2().x}px`,
                                                     "top": `${pt2().y}px`,
                                                     "transform": "translate(20px, -100%)",
+                                                    "pointer-events": "auto",
                                                 }}
                                             >
                                                     Edit Data...
