@@ -1,7 +1,7 @@
 import { Accessor, createMemo, mapArray } from "solid-js";
 import { Vec2 } from "../../../Vec2";
 import { EcsWorld } from "../../../ecs/EcsWorld";
-import { frameComponentType, FrameState } from "../components/FrameComponent";
+import { frameComponentType, FrameState } from "../../components/FrameComponent";
 import { makeRefCountedMakeReactiveObject } from "../../../util";
 import { opToArr } from "../../../kitty-demo/util";
 

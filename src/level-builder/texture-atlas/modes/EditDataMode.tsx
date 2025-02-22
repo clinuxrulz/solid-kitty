@@ -1,6 +1,6 @@
 import { Component, onMount, untrack } from "solid-js";
 import { EcsComponent } from "../../../ecs/EcsComponent";
-import { FrameState } from "../components/FrameComponent";
+import { FrameState } from "../../components/FrameComponent";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";

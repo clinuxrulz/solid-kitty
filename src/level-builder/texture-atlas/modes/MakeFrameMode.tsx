@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../../Vec2";
-import { frameComponentType } from "../components/FrameComponent";
+import { frameComponentType } from "../../components/FrameComponent";
 import { UndoUnit } from "../../../pixel-editor/UndoManager";
 
 export class MakeFrameMode implements Mode {

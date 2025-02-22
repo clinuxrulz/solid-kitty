@@ -1,6 +1,6 @@
 import { Accessor, Component, createMemo, For, Show } from "solid-js";
 import { EcsWorld } from "../../../ecs/EcsWorld";
-import { frameComponentType, FrameState } from "../components/FrameComponent";
+import { frameComponentType, FrameState } from "../../components/FrameComponent";
 import { Vec2 } from "../../../Vec2";
 import { RenderParams } from "../RenderParams";
 

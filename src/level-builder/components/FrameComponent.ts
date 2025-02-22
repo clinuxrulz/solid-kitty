@@ -1,6 +1,6 @@
-import { EcsComponentType } from "../../../ecs/EcsComponent";
-import { ok } from "../../../kitty-demo/Result";
-import { Vec2 } from "../../../Vec2";
+import { EcsComponentType } from "../../ecs/EcsComponent";
+import { ok } from "../../kitty-demo/Result";
+import { Vec2 } from "../../Vec2";
 
 export type FrameState = {
     name: string,
