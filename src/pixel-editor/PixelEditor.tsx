@@ -16,6 +16,7 @@ import * as FileSaver from "file-saver";
 import { DrawLinesMode } from "./modes/DrawLinesMode";
 import { DrawEllipseMode } from "./modes/DrawEllipseMode";
 import { FloodFillMode } from "./modes/FloodFillMode";
+import { DrawRectMode } from "./modes/DrawRectMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -47,6 +48,7 @@ const PixelEditor: Component = () => {
             "Erase Pixels" |
             "Eye Dropper" |
             "Draw Lines" |
+            "Draw Rect" |
             "Draw Ellipse" |
             "Flood Fill",
         //
@@ -438,6 +440,8 @@ const PixelEditor: Component = () => {
                 return new EyeDropperMode(modeParams);
             case "Draw Lines":
                 return new DrawLinesMode(modeParams);
+            case "Draw Rect":
+                return new DrawRectMode(modeParams);
             case "Draw Ellipse":
                 return new DrawEllipseMode(modeParams);
             case "Flood Fill":
@@ -894,6 +898,19 @@ const PixelEditor: Component = () => {
                         }}
                     >
                         /
+                    </button>
+                    <button
+                        class="btn"
+                        style={{
+                            "font-size": "20pt",
+                            "padding": "5pt",
+                            "background-color": state.mode == "Draw Rect" ? "blue" : undefined,
+                        }}
+                        onClick={() => {
+                            setState("mode", "Draw Rect");
+                        }}
+                    >
+                        &square;
                     </button>
                     <button
                         class="btn"

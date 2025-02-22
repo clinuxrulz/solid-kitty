@@ -54,6 +54,25 @@ export function drawLine(
     }
 }
 
+export function drawRect(
+    minX: number,
+    minY: number,
+    width: number,
+    height: number,
+    drawPixel: (x: number, y: number) => void
+): void {
+    let maxY = minY + height;
+    let maxX = minX + width;
+    for (let x = minX; x <= minX + width; ++x) {
+        drawPixel(x, minY);
+        drawPixel(x, maxY);
+    }
+    for (let y = minY+1; y <= minY + height-1; ++y) {
+        drawPixel(minX, y);
+        drawPixel(maxX, y);
+    }
+}
+
 export function drawEllipse(
     minX: number,
     minY: number,
