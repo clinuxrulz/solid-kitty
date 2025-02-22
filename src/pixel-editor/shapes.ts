@@ -236,36 +236,27 @@ export function floodFill(
         if (!isSourceColour(atX, atY)) {
             continue;
         }
-        drawPixel(atX, atY);
-        for (let atX2 = atX+1; isSourceColour(atX2, atY); ++atX2) {
+        for (let atX2 = atX; isSourceColour(atX2, atY); ++atX2) {
             drawPixel(atX2, atY);
-            if (isSourceColour(atX2, atY-1) && !isSourceColour(atX2-1, atY-1)) {
+            if (isSourceColour(atX2, atY-1)) {
                 toVisitStack.push(atY-1);
                 toVisitStack.push(atX2);
             }
-            if (isSourceColour(atX2, atY+1) && !isSourceColour(atX2-1, atY+1)) {
+            if (isSourceColour(atX2, atY+1)) {
                 toVisitStack.push(atY+1);
                 toVisitStack.push(atX2);
             }
         }
         for (let atX2 = atX-1; isSourceColour(atX2, atY); --atX2) {
             drawPixel(atX2, atY);
-            if (isSourceColour(atX2, atY-1) && !isSourceColour(atX+1, atY-1)) {
+            if (isSourceColour(atX2, atY-1)) {
                 toVisitStack.push(atY-1);
                 toVisitStack.push(atX2);
             }
-            if (isSourceColour(atX2, atY+1) && !isSourceColour(atX+1, atY+1)) {
+            if (isSourceColour(atX2, atY+1)) {
                 toVisitStack.push(atY+1);
                 toVisitStack.push(atX2);
             }
-        }
-        if (isSourceColour(atX, atY-1)) {
-            toVisitStack.push(atY-1);
-            toVisitStack.push(atX);
-        }
-        if (isSourceColour(atX, atY+1)) {
-            toVisitStack.push(atY+1);
-            toVisitStack.push(atX);
         }
     }
 }
