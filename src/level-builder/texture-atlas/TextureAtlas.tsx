@@ -26,7 +26,7 @@ type State = {
     touchPanZoomInitScale: number | undefined,
     touchPanZoomInitGap: number | undefined,
     //
-    mode: "Idle" | "Make Frame",
+    mkMode: (() => Mode) | undefined,
     //
     world: EcsWorld,
 };
@@ -43,6 +43,10 @@ export class TextureAtlas {
     private setSvg: Setter<SVGSVGElement | undefined>;
     private mode: Accessor<Mode>;
     private renderSystem: RenderSystem;
+    Render: Component<{
+        style?: JSX.CSSProperties,
+        onBurger?: () => void,
+    }>;
 
     constructor(params: {
         image: Accessor<HTMLImageElement | undefined>,
@@ -58,7 +62,7 @@ export class TextureAtlas {
             touchPanZoomFrom: undefined,
             touchPanZoomInitScale: undefined,
             touchPanZoomInitGap: undefined,
-            mode: "Idle",
+            mkMode: undefined,
             world: new EcsWorld(),
         });
         let [ svg, setSvg, ] = createSignal<SVGSVGElement>();
@@ -116,15 +120,22 @@ export class TextureAtlas {
             worldPtToScreenPt,
             world: () => state.world,
             pickingSystem,
-            onDone: () => setState("mode", "Idle"),
+            onDone: () => idle(),
+        };
+        let setMode = (mkMode: () => void) => {
+            setState("mkMode", () => mkMode);
+        };
+        let idle = () => {
+            setMode(() => new IdleMode(modeParams));
+        };
+        let makeFrame = () => {
+            setMode(() => new MakeFrameMode(modeParams));
         };
         let mode = createMemo<Mode>(() => {
-            switch (state.mode) {
-                case "Idle":
-                    return new IdleMode(modeParams);
-                case "Make Frame":
-                    return new MakeFrameMode(modeParams);
+            if (state.mkMode == undefined) {
+                return new IdleMode(modeParams);
             }
+            return state.mkMode();
         });
         let highlightedEntitiesSet = createMemo(() => {
             return new Set(mode().highlightedEntities?.() ?? []);
@@ -150,359 +161,347 @@ export class TextureAtlas {
         this.setSvg = setSvg;
         this.mode = mode;
         this.renderSystem = renderSystem;
-    }
-
-    Render: Component<{
-        style?: JSX.CSSProperties,
-        onBurger?: () => void,
-    }> = (props) => {
-        let state = this.state;
-        let setState = this.setState;
-        let screenPtToWorldPt = this.screenPtToWorldPt;
-        let worldPtToScreenPt = this.worldPtToScreenPt;
-        let svg = this.svg;
-        let setSvg = this.setSvg;
-        let mode = this.mode;
-        let renderSystem = this.renderSystem;
         //
-        let Instructions = () => (<>{mode().instructions?.({})}</>);
-        let OverlaySvgUI = () => (<>{mode().overlaySvgUI?.({})}</>);
-        let OverlayHtmlUI = () => (<>{mode().overlayHtmlUI?.({})}</>)
-        let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
-        //
-        let zoomByFactor = (factor: number) => {
-            if (state.mousePos == undefined) {
-                return;
-            }
-            let pt = screenPtToWorldPt(state.mousePos);
-            if (pt == undefined) {
-                return;
-            }
-            let newScale = state.scale * factor;
-            let newPan = pt.clone()
-                .sub(
-                    state.mousePos
-                        .clone()
-                        .multScalar(1.0 / newScale)
-                );
-            batch(() => {
-                setState("pan", newPan);
-                setState("scale", state.scale * factor);
-            });
-        };
-        createComputed(on(
-            [
-                () => state.isTouchPanZoom,
-                () => state.touchPanZoomFrom,
-                () => state.touchPanZoomInitGap,
-                () => state.touchPanZoomInitScale,
-                () => state.touches,
-                () => state.mousePos,
-                disableOneFingerPan,
-            ],
-            () => {
-                if (!state.isTouchPanZoom) {
-                    return;
-                }
-                if (state.touchPanZoomFrom == undefined) {
-                    return;
-                }
+        this.Render = (props) => {
+            let Instructions = () => (<>{mode().instructions?.({})}</>);
+            let OverlaySvgUI = () => (<>{mode().overlaySvgUI?.({})}</>);
+            let OverlayHtmlUI = () => (<>{mode().overlayHtmlUI?.({})}</>)
+            let disableOneFingerPan = createMemo(() => mode().disableOneFingerPan?.() ?? false);
+            //
+            let zoomByFactor = (factor: number) => {
                 if (state.mousePos == undefined) {
-                    return;
-                }
-                if (state.touchPanZoomInitScale == undefined) {
-                    return;
-                }
-                if (disableOneFingerPan() && state.touches.length == 1) {
                     return;
                 }
                 let pt = screenPtToWorldPt(state.mousePos);
                 if (pt == undefined) {
                     return;
                 }
-                let gap: number | undefined;
-                if (state.touches.length != 2) {
-                    gap = undefined;
-                } else {
-                    gap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
-                }
-                let delta = state.touchPanZoomFrom.clone().sub(pt);
-                let initScale = state.touchPanZoomInitScale;
+                let newScale = state.scale * factor;
+                let newPan = pt.clone()
+                    .sub(
+                        state.mousePos
+                            .clone()
+                            .multScalar(1.0 / newScale)
+                    );
                 batch(() => {
-                    setState("pan", (pan) => pan.clone().add(delta));
-                    if (state.touchPanZoomInitGap != undefined && gap != undefined) {
-                        let newScale = initScale * gap / state.touchPanZoomInitGap;
-                        setState("scale", newScale);
+                    setState("pan", newPan);
+                    setState("scale", state.scale * factor);
+                });
+            };
+            createComputed(on(
+                [
+                    () => state.isTouchPanZoom,
+                    () => state.touchPanZoomFrom,
+                    () => state.touchPanZoomInitGap,
+                    () => state.touchPanZoomInitScale,
+                    () => state.touches,
+                    () => state.mousePos,
+                    disableOneFingerPan,
+                ],
+                () => {
+                    if (!state.isTouchPanZoom) {
+                        return;
+                    }
+                    if (state.touchPanZoomFrom == undefined) {
+                        return;
+                    }
+                    if (state.mousePos == undefined) {
+                        return;
+                    }
+                    if (state.touchPanZoomInitScale == undefined) {
+                        return;
+                    }
+                    if (disableOneFingerPan() && state.touches.length == 1) {
+                        return;
+                    }
+                    let pt = screenPtToWorldPt(state.mousePos);
+                    if (pt == undefined) {
+                        return;
+                    }
+                    let gap: number | undefined;
+                    if (state.touches.length != 2) {
+                        gap = undefined;
+                    } else {
+                        gap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+                    }
+                    let delta = state.touchPanZoomFrom.clone().sub(pt);
+                    let initScale = state.touchPanZoomInitScale;
+                    batch(() => {
+                        setState("pan", (pan) => pan.clone().add(delta));
+                        if (state.touchPanZoomInitGap != undefined && gap != undefined) {
+                            let newScale = initScale * gap / state.touchPanZoomInitGap;
+                            setState("scale", newScale);
+                        }
+                    });
+                },
+            ));
+            let startTouchPanZoom = () => {
+                if (state.touches.length == 0) {
+                    return;
+                }
+                if (state.mousePos == undefined) {
+                    return;
+                }
+                let initGap: number | undefined;
+                if (state.touches.length != 2) {
+                    initGap = undefined;
+                } else {
+                    initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+                }
+                let pt = screenPtToWorldPt(state.mousePos);
+                if (pt == undefined) {
+                    return;
+                }
+                batch(() => {
+                    setState("isTouchPanZoom", true);
+                    setState("touchPanZoomFrom", pt);
+                    setState("touchPanZoomInitGap", initGap);
+                    setState("touchPanZoomInitScale", state.scale);
+                });
+            };
+            let stopTouchPanZoom = () => {
+                batch(() => {
+                    setState("isTouchPanZoom", false);
+                    setState("touchPanZoomFrom", undefined);
+                    setState("touchPanZoomInitGap", undefined);
+                    setState("touchPanZoomInitScale", undefined);
+                });
+            };
+            let onWheel = (e: WheelEvent) => {
+                if (e.deltaY > 0) {
+                    zoomByFactor(1.0 / 1.1);
+                } else if (e.deltaY < 0) {
+                    zoomByFactor(1.1 / 1.0);
+                }
+            };
+            let onPointerDown = (e: PointerEvent) => {
+                e.preventDefault();
+                let svg2 = svg();
+                if (svg2 == undefined) {
+                    return;
+                }
+                svg2.setPointerCapture(e.pointerId);
+                let rect = svg2.getBoundingClientRect();
+                let id = e.pointerId;
+                let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+                let newTouches = [
+                    ...state.touches,
+                    { id, pos, },
+                ];
+                batch(() => {
+                    setState("touches", newTouches);
+                    setState("mousePos", newTouches[0].pos);
+                });
+                startTouchPanZoom();
+                if (newTouches.length == 1) {
+                    mode().dragStart?.();
+                }
+            };
+            let onPointerUp =  (e: PointerEvent) => {
+                e.preventDefault();
+                let svg2 = svg();
+                if (svg2 == undefined) {
+                    return;
+                }
+                svg2.releasePointerCapture(e.pointerId);
+                let id = e.pointerId;
+                let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
+                stopTouchPanZoom();
+                if (newTouches.length == 0) {
+                    mode().dragEnd?.();
+                    onClick();
+                }
+                batch(() => {
+                    setState("touches", newTouches);
+                    if (e.pointerType != "mouse") {
+                        setState("mousePos", newTouches.length != 0 ? newTouches[0].pos : undefined);
                     }
                 });
-            },
-        ));
-        let startTouchPanZoom = () => {
-            if (state.touches.length == 0) {
-                return;
-            }
-            if (state.mousePos == undefined) {
-                return;
-            }
-            let initGap: number | undefined;
-            if (state.touches.length != 2) {
-                initGap = undefined;
-            } else {
-                initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
-            }
-            let pt = screenPtToWorldPt(state.mousePos);
-            if (pt == undefined) {
-                return;
-            }
-            batch(() => {
-                setState("isTouchPanZoom", true);
-                setState("touchPanZoomFrom", pt);
-                setState("touchPanZoomInitGap", initGap);
-                setState("touchPanZoomInitScale", state.scale);
-            });
-        };
-        let stopTouchPanZoom = () => {
-            batch(() => {
-                setState("isTouchPanZoom", false);
-                setState("touchPanZoomFrom", undefined);
-                setState("touchPanZoomInitGap", undefined);
-                setState("touchPanZoomInitScale", undefined);
-            });
-        };
-        let onWheel = (e: WheelEvent) => {
-            if (e.deltaY > 0) {
-                zoomByFactor(1.0 / 1.1);
-            } else if (e.deltaY < 0) {
-                zoomByFactor(1.1 / 1.0);
-            }
-        };
-        let onPointerDown = (e: PointerEvent) => {
-            e.preventDefault();
-            let svg2 = svg();
-            if (svg2 == undefined) {
-                return;
-            }
-            svg2.setPointerCapture(e.pointerId);
-            let rect = svg2.getBoundingClientRect();
-            let id = e.pointerId;
-            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
-            let newTouches = [
-                ...state.touches,
-                { id, pos, },
-            ];
-            batch(() => {
-                setState("touches", newTouches);
-                setState("mousePos", newTouches[0].pos);
-            });
-            startTouchPanZoom();
-            if (newTouches.length == 1) {
-                mode().dragStart?.();
-            }
-        };
-        let onPointerUp =  (e: PointerEvent) => {
-            e.preventDefault();
-            let svg2 = svg();
-            if (svg2 == undefined) {
-                return;
-            }
-            svg2.releasePointerCapture(e.pointerId);
-            let id = e.pointerId;
-            let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
-            stopTouchPanZoom();
-            if (newTouches.length == 0) {
-                mode().dragEnd?.();
-                onClick();
-            }
-            batch(() => {
-                setState("touches", newTouches);
-                if (e.pointerType != "mouse") {
-                    setState("mousePos", newTouches.length != 0 ? newTouches[0].pos : undefined);
+                if (newTouches.length != 0) {
+                    startTouchPanZoom();
                 }
+            };
+            let onPointerCanceled = (e: PointerEvent) => {
+                onPointerUp(e);
+            };
+            let onPointerMove = (e: PointerEvent) => {
+                e.preventDefault();
+                let svg2 = svg();
+                if (svg2 == undefined) {
+                    return;
+                }
+                let rect = svg2.getBoundingClientRect();
+                let id = e.pointerId;
+                let touchIdx = state.touches.findIndex(({ id: id2, }) => id2 == id);
+                let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
+                if (touchIdx != -1) {
+                    setState("touches", touchIdx, "pos", (oldPos) => {
+                        oldPos.dispose();
+                        return pos;
+                    });
+                }
+                if (touchIdx == 0 || touchIdx == -1) {
+                    setState("mousePos", pos);
+                }
+            };
+            let onPointerLeave = (e: PointerEvent) => {
+                e.preventDefault();
+                if (state.touches.length == 0) {
+                    setState("mousePos", undefined);
+                }
+            };
+            let onClick = () => {
+                mode().click?.();
+            };
+            let onKeyDown = (e: KeyboardEvent) => {
+                if (e.key == "Escape") {
+                    idle();
+                }
+            };
+            document.addEventListener("keydown", onKeyDown);
+            onCleanup(() => {
+                document.removeEventListener("keydown", onKeyDown);
             });
-            if (newTouches.length != 0) {
-                startTouchPanZoom();
-            }
-        };
-        let onPointerCanceled = (e: PointerEvent) => {
-            onPointerUp(e);
-        };
-        let onPointerMove = (e: PointerEvent) => {
-            e.preventDefault();
-            let svg2 = svg();
-            if (svg2 == undefined) {
-                return;
-            }
-            let rect = svg2.getBoundingClientRect();
-            let id = e.pointerId;
-            let touchIdx = state.touches.findIndex(({ id: id2, }) => id2 == id);
-            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
-            if (touchIdx != -1) {
-                setState("touches", touchIdx, "pos", (oldPos) => {
-                    oldPos.dispose();
-                    return pos;
-                });
-            }
-            if (touchIdx == 0 || touchIdx == -1) {
-                setState("mousePos", pos);
-            }
-        };
-        let onPointerLeave = (e: PointerEvent) => {
-            e.preventDefault();
-            if (state.touches.length == 0) {
-                setState("mousePos", undefined);
-            }
-        };
-        let onClick = () => {
-            mode().click?.();
-        };
-        let onKeyDown = (e: KeyboardEvent) => {
-            if (e.key == "Escape") {
-                setState("mode", "Idle");
-            }
-        };
-        document.addEventListener("keydown", onKeyDown);
-        onCleanup(() => {
-            document.removeEventListener("keydown", onKeyDown);
-        });
-        //
-        let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
-        return (
-            <div
-                style={mergeProps<[ JSX.CSSProperties, JSX.CSSProperties, ]>(
-                    props.style ?? {},
-                    {
-                        "display": "flex",
-                        "flex-direction": "column",
-                    },
-                )}
-            >
-                <div>
-                    <Show when={props.onBurger}>
-                        {(onBurger) => (
-                            <button
-                                class="btn"
-                                style="font-size: 20pt;"
-                                onClick={() => onBurger()()}
-                            >
-                                <i class="fa-solid fa-burger"></i>
-                            </button>
-                        )}
-                    </Show>
-                    <button
-                        class="btn"
-                        style="font-size: 20pt;"
-                        disabled={!this.undoManager.canUndo()}
-                        onClick={() => this.undoManager.undo()}
-                    >
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </button>
-                    <button
-                        class="btn"
-                        style="font-size: 20pt;"
-                        disabled={!this.undoManager.canRedo()}
-                        onClick={() => this.undoManager.redo()}
-                    >
-                        <i class="fa-solid fa-rotate-right"></i>
-                    </button>
-                    <button
-                        class="btn"
-                        style="position: relative;"
-                        onClick={() => setState("mode", "Make Frame")}
-                    >
-                        {(() => {
-                            let s = 0.5;
-                            return (<>
-                                <i
-                                    class="fa-regular fa-square"
-                                    style={{
-                                        "font-size": `${40*s}pt`,
-                                    }}
-                                />
-                                <i
-                                    class="fa-solid fa-tree"
-                                    style={{
-                                        "position": "absolute",
-                                        "left": `50%`,
-                                        "top": `50%`,
-                                        "-webkit-transform": "translate(-50%, -50%)",
-                                        "transform": "translate(-50%, -50%)",
-                                        "font-size": `${24*s}pt`,
-                                    }}
-                                />
-                            </>);
-                        })()}
-                    </button>                    
-                </div>
+            //
+            let transform = createMemo(() => `scale(${this.state.scale}) translate(${-this.state.pan.x} ${-this.state.pan.y})`);
+            return (
                 <div
-                    style={{
-                        "flex-grow": "1",
-                        "display": "flex",
-                        "flex-direction": "column",
-                        "position": "relative",
-                    }}
+                    style={mergeProps<[ JSX.CSSProperties, JSX.CSSProperties, ]>(
+                        props.style ?? {},
+                        {
+                            "display": "flex",
+                            "flex-direction": "column",
+                        },
+                    )}
                 >
-                    <svg
-                        ref={setSvg}
+                    <div>
+                        <Show when={props.onBurger}>
+                            {(onBurger) => (
+                                <button
+                                    class="btn"
+                                    style="font-size: 20pt;"
+                                    onClick={() => onBurger()()}
+                                >
+                                    <i class="fa-solid fa-burger"></i>
+                                </button>
+                            )}
+                        </Show>
+                        <button
+                            class="btn"
+                            style="font-size: 20pt;"
+                            disabled={!this.undoManager.canUndo()}
+                            onClick={() => this.undoManager.undo()}
+                        >
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        <button
+                            class="btn"
+                            style="font-size: 20pt;"
+                            disabled={!this.undoManager.canRedo()}
+                            onClick={() => this.undoManager.redo()}
+                        >
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button
+                            class="btn"
+                            style="position: relative;"
+                            onClick={() => makeFrame()}
+                        >
+                            {(() => {
+                                let s = 0.5;
+                                return (<>
+                                    <i
+                                        class="fa-regular fa-square"
+                                        style={{
+                                            "font-size": `${40*s}pt`,
+                                        }}
+                                    />
+                                    <i
+                                        class="fa-solid fa-tree"
+                                        style={{
+                                            "position": "absolute",
+                                            "left": `50%`,
+                                            "top": `50%`,
+                                            "-webkit-transform": "translate(-50%, -50%)",
+                                            "transform": "translate(-50%, -50%)",
+                                            "font-size": `${24*s}pt`,
+                                        }}
+                                    />
+                                </>);
+                            })()}
+                        </button>                    
+                    </div>
+                    <div
                         style={{
                             "flex-grow": "1",
-                            "background-color": "#DDD",
-                            "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
-                            "background-size": "20px 20px",
-                            "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
-                            "touch-action": "none",
-                        }}
-                        onWheel={onWheel}
-                        onPointerDown={onPointerDown}
-                        onPointerUp={onPointerUp}
-                        onPointerCancel={onPointerCanceled}
-                        onPointerMove={onPointerMove}
-                        onPointerLeave={onPointerLeave}
-                        onContextMenu={(e) => { e.preventDefault(); return false; }}
-                    >
-                        <g transform={transform()}>
-                            <Show when={this.size()}>
-                                {(size) => (
-                                    <Show when={this.image()}>
-                                        {(image) => (
-                                            <foreignObject
-                                                width={size().x}
-                                                height={size().y}
-                                            >
-                                                {image()}
-                                            </foreignObject>
-                                        )}
-                                    </Show>
-                                )}
-                            </Show>
-                            <renderSystem.Render/>
-                        </g>
-                        <renderSystem.RenderOverlay/>
-                        <OverlaySvgUI/>
-                    </svg>
-                    <div
-                        style={{
-                            "position": "absolute",
-                            "left": "0",
-                            "top": "0",
-                            "right": "0",
-                            "bottom": "0",
-                            "pointer-events": "none",
+                            "display": "flex",
+                            "flex-direction": "column",
+                            "position": "relative",
                         }}
                     >
-                        <OverlayHtmlUI/>
-                    </div>
-                    <div
-                        style={{
-                            "position": "absolute",
-                            "left": "0",
-                            "top": "0",
-                            "background-color": "rgba(0,0,0,0.8)",
-                        }}
-                    >
-                        <Instructions/>
+                        <svg
+                            ref={setSvg}
+                            style={{
+                                "flex-grow": "1",
+                                "background-color": "#DDD",
+                                "background-image": "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
+                                "background-size": "20px 20px",
+                                "background-position": "0 0, 0 10px, 10px -10px, -10px 0px",
+                                "touch-action": "none",
+                            }}
+                            onWheel={onWheel}
+                            onPointerDown={onPointerDown}
+                            onPointerUp={onPointerUp}
+                            onPointerCancel={onPointerCanceled}
+                            onPointerMove={onPointerMove}
+                            onPointerLeave={onPointerLeave}
+                            onContextMenu={(e) => { e.preventDefault(); return false; }}
+                        >
+                            <g transform={transform()}>
+                                <Show when={this.size()}>
+                                    {(size) => (
+                                        <Show when={this.image()}>
+                                            {(image) => (
+                                                <foreignObject
+                                                    width={size().x}
+                                                    height={size().y}
+                                                >
+                                                    {image()}
+                                                </foreignObject>
+                                            )}
+                                        </Show>
+                                    )}
+                                </Show>
+                                <renderSystem.Render/>
+                            </g>
+                            <renderSystem.RenderOverlay/>
+                            <OverlaySvgUI/>
+                        </svg>
+                        <div
+                            style={{
+                                "position": "absolute",
+                                "left": "0",
+                                "top": "0",
+                                "right": "0",
+                                "bottom": "0",
+                                "pointer-events": "none",
+                            }}
+                        >
+                            <OverlayHtmlUI/>
+                        </div>
+                        <div
+                            style={{
+                                "position": "absolute",
+                                "left": "0",
+                                "top": "0",
+                                "background-color": "rgba(0,0,0,0.8)",
+                            }}
+                        >
+                            <Instructions/>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
-    };
+            );
+        };
+    }
 }
