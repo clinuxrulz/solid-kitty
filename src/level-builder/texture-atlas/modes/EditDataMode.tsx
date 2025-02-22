@@ -1,8 +1,9 @@
-import { Component, onMount } from "solid-js";
+import { Component, onMount, untrack } from "solid-js";
 import { EcsComponent } from "../../../ecs/EcsComponent";
 import { FrameState } from "../components/FrameComponent";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
+import { createStore } from "solid-js/store";
 
 export class EditDataMode implements Mode {
     overlayHtmlUI: Component;
@@ -13,6 +14,11 @@ export class EditDataMode implements Mode {
     }) {
         let modeParams = params.modeParams;
         let frameComponent = params.frameComponent;
+        let [ state, setState, ] = createStore<{
+            name: string,
+        }>({
+            name: untrack(() => frameComponent.state.name),
+        });
         this.overlayHtmlUI = () => (
             <div
                 style={{
@@ -44,6 +50,10 @@ export class EditDataMode implements Mode {
                                     <input
                                         type="text"
                                         style="color: black;"
+                                        value={state.name}
+                                        onInput={(e) => {
+                                            setState("name", e.currentTarget.name);
+                                        }}
                                     />
                                 </td>
                             </tr>
@@ -53,7 +63,10 @@ export class EditDataMode implements Mode {
                     <div style="text-align: right;">
                         <button
                             class="btn"
-                            onClick={() => modeParams.onDone()}
+                            onClick={() => {
+                                frameComponent.setState("name", state.name);
+                                modeParams.onDone();
+                            }}
                         >
                             OK
                         </button>
