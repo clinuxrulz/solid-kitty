@@ -112,6 +112,9 @@ export class TextureAtlas {
             world: () => state.world,
         });
         //
+        let setMode = (mkMode: () => void) => {
+            setState("mkMode", () => mkMode);
+        };
         let modeParams: ModeParams = {
             undoManager,
             mousePos: () => state.mousePos,
@@ -121,19 +124,17 @@ export class TextureAtlas {
             world: () => state.world,
             pickingSystem,
             onDone: () => idle(),
-        };
-        let setMode = (mkMode: () => void) => {
-            setState("mkMode", () => mkMode);
+            setMode,
         };
         let idle = () => {
-            setMode(() => new IdleMode(modeParams));
+            setMode(() => new IdleMode({ modeParams, }));
         };
         let makeFrame = () => {
             setMode(() => new MakeFrameMode(modeParams));
         };
         let mode = createMemo<Mode>(() => {
             if (state.mkMode == undefined) {
-                return new IdleMode(modeParams);
+                return new IdleMode({ modeParams, });
             }
             return state.mkMode();
         });

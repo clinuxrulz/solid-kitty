@@ -6,6 +6,7 @@ import { createStore } from "solid-js/store";
 import { frameComponentType } from "../components/FrameComponent";
 import { ResizeHelper } from "./ResizeHelper";
 import { Vec2 } from "../../../Vec2";
+import { EditDataMode } from "./EditDataMode";
 
 export class IdleMode implements Mode {
     overlaySvgUI: Component;
@@ -17,11 +18,15 @@ export class IdleMode implements Mode {
     click: () => void;
     disableOneFingerPan: Accessor<boolean>;
 
-    constructor(modeParams: ModeParams) {
+    constructor(params: {
+        modeParams: ModeParams,
+        initSelectedEntities?: string[],
+    }) {
+        let modeParams = params.modeParams;
         let [ state, setState, ] = createStore<{
             selectedEntities: string[],
         }>({
-            selectedEntities: [],
+            selectedEntities: params.initSelectedEntities ?? [],
         });
         //
         let entityUnderMouse = modeParams.pickingSystem.mkEntityUnderMouse();
@@ -89,6 +94,26 @@ export class IdleMode implements Mode {
                                                     "top": `${pt2().y}px`,
                                                     "transform": "translate(20px, -100%)",
                                                     "pointer-events": "auto",
+                                                }}
+                                                onClick={() => {
+                                                    let selectedEntities = state.selectedEntities;
+                                                    let frame3 = frame2();
+                                                    modeParams.setMode(() =>
+                                                        new EditDataMode({
+                                                            modeParams: {
+                                                                ...modeParams,
+                                                                onDone: () => {
+                                                                    modeParams.setMode(() =>
+                                                                        new IdleMode({
+                                                                            modeParams,
+                                                                            initSelectedEntities: selectedEntities,
+                                                                        })
+                                                                    );
+                                                                },
+                                                            },
+                                                            frameComponent: frame3,
+                                                        })
+                                                    );
                                                 }}
                                             >
                                                     Edit Data...
