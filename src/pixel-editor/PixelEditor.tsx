@@ -107,12 +107,12 @@ const PixelEditor: Component = () => {
             if (isAutoSaving) {
                 return;
             }
+            isAutoSaving = true;
             if (autoSaveTimerId != undefined) {
                 clearTimeout(autoSaveTimerId);
             }
             setState("autoSaving", true);
             autoSaveTimerId = setTimeout(() => {
-                isAutoSaving = true;
                 let image2 = image();
                 if (image2 == undefined) {
                     return;
