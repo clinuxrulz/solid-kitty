@@ -283,6 +283,7 @@ const PixelEditor: Component = () => {
             };
         });
     });
+    let imageDataIsDirty = false;
     function drawOnCanvas() {
         let canvas2 = canvas();
         if (canvas2 == undefined) {
@@ -295,6 +296,10 @@ const PixelEditor: Component = () => {
         let image2 = image();
         if (image2 == undefined) {
             return;
+        }
+        if (imageDataIsDirty) {
+            image2.ctx.putImageData(image2.imageData, 0, 0);
+            imageDataIsDirty = false;
         }
         ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.save();
@@ -408,15 +413,7 @@ const PixelEditor: Component = () => {
             data[offset+1] = colour.g;
             data[offset+2] = colour.b;
             data[offset+3] = colour.a;
-            image3.ctx.putImageData(
-                image3.imageData,
-                0,
-                0,
-                pt.x - minPt.x,
-                pt.y - minPt.y,
-                1,
-                1
-            );
+            imageDataIsDirty = true;
             render();
             triggerAutoSave();
         },
