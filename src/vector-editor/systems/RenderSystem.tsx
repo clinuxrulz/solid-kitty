@@ -77,13 +77,18 @@ const RenderCatmullRomSpline: Component<{
 
 const EPSILON = 1e-12;
 
+// Converts a Catmull-Rom spline defined by control points into SVG paths.
 export function romPointsToPathData(
     points: [number, number][],
     closed: boolean = false,
     alpha: number = 0.5,
-) {
+): {
+    type: string;
+    values: number[];
+}[] {
     let pathData;
 
+    // Determine if the curve should be closed or open and call the appropriate function.
     if (closed) {
         pathData = closedRomCurveToPathData(points, alpha);
     } else {
@@ -93,19 +98,22 @@ export function romPointsToPathData(
     return pathData;
 }
 
-function rotateArray<A>(array: A[], reverse = false) {
+function rotateArray<A>(array: A[], reverse = false): A[] {
+    // Check if the array is empty.
     if (array.length == 0) {
         return array;
     }
+    // Rotate the array to the left if reverse is true, otherwise rotate to the right.
     if (reverse) {
-        array.unshift(array.pop()!);
+        array.unshift(array.pop()!); // Move the last element to the beginning.
     } else {
-        array.push(array.shift()!);
+        array.push(array.shift()!); // Move the first element to the end.
     }
 
     return array;
 }
 
+// Get SVG path data for a open Catmull-Rom spline with given control points.
 function openRomCurveToPathData(
     points: [number, number][],
     alpha: number,
@@ -114,47 +122,51 @@ function openRomCurveToPathData(
         type: string;
         values: number[];
     }[] = [];
-    let defined = false;
-    let canClose = false;
+    let defined = false; // Flag to check if the path has started.
+    let canClose = false; // Flag to check if the path can be closed.
 
-    let x0: number, y0: number;
-    let x1: number, y1: number;
-    let x2: number, y2: number;
+    let x0: number, y0: number; // Previous point.
+    let x1: number, y1: number; // Current point.
+    let x2: number, y2: number; // Next point.
 
-    let l01a: number, l12a: number, l23a: number;
-    let l01a2: number, l12a2: number, l23a2: number;
+    let l01a: number, l12a: number, l23a: number; // Distances between points raised to alpha.
+    let l01a2: number, l12a2: number, l23a2: number; // Squared distances between points raised to alpha.
 
-    let pointFlag: number;
-    let lineFlag: number;
+    let pointFlag: number; // Flag to track the number of points processed.
+    let lineFlag: number; // Flag to track if the line is started.
 
     let startLine = () => {
+        // Reset distance variables.
         l01a = 0;
         l12a = 0;
         l23a = 0;
         l01a2 = 0;
         l12a2 = 0;
         l23a2 = 0;
-        pointFlag = 0;
+        pointFlag = 0; // Reset point flag.
     };
 
     let endLine = () => {
+        // Handle the end of the line segment based on the number of points processed.
         if (pointFlag === 2) {
             canClose = true;
-            pathData.push({ type: "L", values: [x2, y2] });
+            pathData.push({ type: "L", values: [x2, y2] }); // Add a line to the last point.
         } else if (pointFlag === 3) {
-            addPoint(x2, y2);
+            addPoint(x2, y2); // Add the last point to the curve.
         }
 
+        // Handle closing the path if necessary.
         if (lineFlag || (lineFlag !== 0 && pointFlag === 1)) {
             if (canClose) {
-                pathData.push({ type: "Z", values: [] });
+                pathData.push({ type: "Z", values: [] }); // Close the path.
             }
         }
 
-        lineFlag = 1 - lineFlag;
+        lineFlag = 1 - lineFlag; // Toggle the line flag.
     };
 
     let addPoint = (x: number, y: number) => {
+        // Calculate distances between points.
         if (pointFlag) {
             let x23 = x2 - x;
             let y23 = y2 - y;
@@ -163,15 +175,16 @@ function openRomCurveToPathData(
             l23a = Math.sqrt(l23a2);
         }
 
+        // Handle adding points to the path based on the number of points processed.
         if (pointFlag === 0) {
             pointFlag = 1;
 
             if (lineFlag) {
                 canClose = true;
-                pathData.push({ type: "L", values: [x, y] });
+                pathData.push({ type: "L", values: [x, y] }); // Add a line to the first point.
             } else {
                 canClose = true;
-                pathData.push({ type: "M", values: [x, y] });
+                pathData.push({ type: "M", values: [x, y] }); // Move to the first point.
             }
         } else if (pointFlag === 1) {
             pointFlag = 2;
@@ -180,11 +193,12 @@ function openRomCurveToPathData(
                 pointFlag = 3;
             }
 
-            let cx1 = x1;
-            let cy1 = y1;
-            let cx2 = x2;
-            let cy2 = y2;
+            let cx1 = x1; // First control point x.
+            let cy1 = y1; // First control point y.
+            let cx2 = x2; // Second control point x.
+            let cy2 = y2; // Second control point y.
 
+            // Calculate control points for the cubic Bezier curve.
             if (l01a > EPSILON) {
                 let a = 2 * l01a2 + 3 * l01a * l12a + l12a2;
                 let n = 3 * l01a * (l01a + l12a);
@@ -202,9 +216,10 @@ function openRomCurveToPathData(
             }
 
             canClose = true;
-            pathData.push({ type: "C", values: [cx1, cy1, cx2, cy2, x2, y2] });
+            pathData.push({ type: "C", values: [cx1, cy1, cx2, cy2, x2, y2] }); // Add a cubic Bezier curve.
         }
 
+        // Update distance and point variables.
         l01a = l12a;
         l12a = l23a;
         l01a2 = l12a2;
@@ -218,6 +233,7 @@ function openRomCurveToPathData(
         y2 = y;
     };
 
+    // Iterate through the points and add them to the path.
     for (let i = 0, n = points.length; i <= n; i += 1) {
         if (i < n) {
             if (defined === false) {
@@ -237,8 +253,6 @@ function openRomCurveToPathData(
     return pathData;
 }
 
-// @type (Array<Array<number,number>>) => Array<{type:String, values:Array<number>}>
-//
 // Get SVG path data for a closed Catmull-Rom spline with given control points.
 function closedRomCurveToPathData(
     points: [number, number][],
@@ -248,43 +262,48 @@ function closedRomCurveToPathData(
         type: string;
         values: number[];
     }[] = [];
-    let defined = false;
-    let canClose = false;
+    let defined = false; // Flag to track if the path has started.
+    let canClose = false; // Flag to track if the path can be closed.
 
-    let x0: number, y0: number;
-    let x1: number, y1: number;
-    let x2: number, y2: number;
-    let x3: number, y3: number;
-    let x4: number, y4: number;
-    let x5: number, y5: number;
+    let x0: number, y0: number; // Previous point.
+    let x1: number, y1: number; // Current point.
+    let x2: number, y2: number; // Next point.
+    let x3: number, y3: number; // First point of the closed loop (stored from the first point).
+    let x4: number, y4: number; // Second point of the closed loop (stored from the second point).
+    let x5: number, y5: number; // Third point of the closed loop (stored from the third point).
 
-    let l01a: number, l12a: number, l23a: number;
-    let l012a: number, l122a: number, l232a: number;
+    let l01a: number, l12a: number, l23a: number; // Distances between points raised to alpha.
+    let l012a: number, l122a: number, l232a: number; // Squared distances between points raised to alpha.
 
-    let pointFlag: number;
+    let pointFlag: number; // Flag to track the number of points processed.
 
     let startLine = () => {
+        // Reset distance variables.
         l01a = 0;
         l12a = 0;
         l23a = 0;
         l012a = 0;
         l122a = 0;
         l232a = 0;
-        pointFlag = 0;
+        pointFlag = 0; // Reset point flag.
     };
 
     let endLine = () => {
+        // Handle the end of the line segment based on the number of points processed.
         if (pointFlag === 1) {
+            // If only one point, move to it and close the path.
             pathData.push(
                 { type: "M", values: [x3, y3] },
                 { type: "Z", values: [] },
             );
         } else if (pointFlag === 2) {
+            // If two points, draw a line to the second and close the path.
             pathData.push(
                 { type: "L", values: [x3, y3] },
                 { type: "Z", values: [] },
             );
         } else if (pointFlag === 3) {
+            // If three or more points, add the last three points to the curve.
             addPoint(x3, y3);
             addPoint(x4, y4);
             addPoint(x5, y5);
@@ -292,6 +311,7 @@ function closedRomCurveToPathData(
     };
 
     let addPoint = (x: number, y: number) => {
+        // Calculate distances between points.
         if (pointFlag) {
             let x23 = x2 - x;
             let y23 = y2 - y;
@@ -300,27 +320,29 @@ function closedRomCurveToPathData(
             l23a = Math.sqrt(l232a);
         }
 
+        // Handle adding points to the path based on the number of points processed.
         if (pointFlag === 0) {
             pointFlag = 1;
-            x3 = x;
+            x3 = x; // Store the first point of the closed loop.
             y3 = y;
         } else if (pointFlag === 1) {
             pointFlag = 2;
-            x4 = x;
+            x4 = x; // Store the second point of the closed loop.
             y4 = y;
 
             canClose = true;
-            pathData.push({ type: "M", values: [x4, y4] });
+            pathData.push({ type: "M", values: [x4, y4] }); // Move to the second point.
         } else if (pointFlag === 2) {
             pointFlag = 3;
-            x5 = x;
+            x5 = x; // Store the third point of the closed loop.
             y5 = y;
         } else {
-            let cx1 = x1;
-            let cy1 = y1;
-            let cx2 = x2;
-            let cy2 = y2;
+            let cx1 = x1; // First control point x.
+            let cy1 = y1; // First control point y.
+            let cx2 = x2; // Second control point x.
+            let cy2 = y2; // Second control point y.
 
+            // Calculate control points for the cubic Bezier curve.
             if (l01a > EPSILON) {
                 let a = 2 * l012a + 3 * l01a * l12a + l122a;
                 let n = 3 * l01a * (l01a + l12a);
@@ -338,9 +360,10 @@ function closedRomCurveToPathData(
             }
 
             canClose = true;
-            pathData.push({ type: "C", values: [cx1, cy1, cx2, cy2, x2, y2] });
+            pathData.push({ type: "C", values: [cx1, cy1, cx2, cy2, x2, y2] }); // Add a cubic Bezier curve.
         }
 
+        // Update distance and point variables.
         l01a = l12a;
         l12a = l23a;
         l012a = l122a;
@@ -354,8 +377,10 @@ function closedRomCurveToPathData(
         y2 = y;
     };
 
+    // Rotate the array to start with the last point, ensuring closure.
     points = rotateArray(points, true);
 
+    // Iterate through the points and add them to the path.
     for (let i = 0, n = points.length; i <= n; i += 1) {
         if (i < n) {
             if (defined === false) {
