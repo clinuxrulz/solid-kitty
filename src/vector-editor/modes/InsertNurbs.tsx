@@ -1,5 +1,6 @@
 import {
     Accessor,
+    batch,
     Component,
     createComputed,
     createMemo,
@@ -12,10 +13,11 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
 import { Vec2 } from "../../Vec2";
-import { catmullRomSplineComponentType } from "../components/CatmullRomSplineComponent";
 import { opToArr } from "../../kitty-demo/util";
+import { nurbsComponentType } from "../components/NurbsComponent";
+import { err, ok, Result } from "../../kitty-demo/Result";
 
-export class InsertCatmullRomSplineMode implements Mode {
+export class InsertNurbsMode implements Mode {
     instructions: Component;
     click: () => void;
     constructor(modeParams: ModeParams) {
@@ -41,7 +43,13 @@ export class InsertCatmullRomSplineMode implements Mode {
             if (state.controlPoints.length == 1 && workingPt2 == undefined) {
                 return undefined;
             }
-            return [...state.controlPoints, ...opToArr(workingPt2)];
+            let controlPoints = [
+                ...state.controlPoints,
+                ...opToArr(workingPt2),
+            ];
+            return {
+                controlPoints,
+            };
         });
         let doInsert: () => void = () => {};
         {
@@ -56,9 +64,15 @@ export class InsertCatmullRomSplineMode implements Mode {
                     NonNullable<ReturnType<typeof wipControlPoints>>
                 >;
                 let world = modeParams.world();
-                let spline = catmullRomSplineComponentType.create({
-                    controlPoints: untrack(wipControlPoints2),
-                    isClosed: untrack(() => state.isClosed),
+                let spline = nurbsComponentType.create({
+                    controlPoints: untrack(
+                        () => wipControlPoints2().controlPoints,
+                    ),
+                    weights: untrack(
+                        () => wipControlPoints2().controlPoints,
+                    ).map((_) => 1.0),
+                    degree: 3,
+                    closed,
                 });
                 let entity = untrack(() => world.createEntity([spline]));
                 let keepIt = false;
@@ -74,16 +88,28 @@ export class InsertCatmullRomSplineMode implements Mode {
                     world.destroyEntity(entity);
                 });
                 createComputed(
-                    on(wipControlPoints2, () => {
-                        spline.setState("controlPoints", wipControlPoints2());
-                    }),
+                    on(
+                        wipControlPoints2,
+                        () => {
+                            let { controlPoints } = wipControlPoints2();
+                            batch(() => {
+                                spline.setState("controlPoints", controlPoints);
+                                spline.setState(
+                                    "weights",
+                                    controlPoints.map((_) => 1.0),
+                                );
+                            });
+                        },
+                        { defer: true },
+                    ),
                 );
                 createComputed(
                     on(
                         () => state.isClosed,
                         () => {
-                            spline.setState("isClosed", state.isClosed);
+                            spline.setState("closed", state.isClosed);
                         },
+                        { defer: true },
                     ),
                 );
             });

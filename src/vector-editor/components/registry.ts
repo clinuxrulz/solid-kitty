@@ -1,4 +1,8 @@
 import { EcsRegistry } from "../../ecs/EcsRegistry";
-import { catmullRomSplineComponentType } from "./CatmullRomSpline";
+import { catmullRomSplineComponentType } from "./CatmullRomSplineComponent";
+import { nurbsComponentType } from "./NurbsComponent";
 
-export const registry = new EcsRegistry([catmullRomSplineComponentType]);
+export const registry = new EcsRegistry([
+    catmullRomSplineComponentType,
+    nurbsComponentType,
+]);

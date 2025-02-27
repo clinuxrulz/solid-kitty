@@ -1,10 +1,14 @@
-import { Component, createMemo, For, Index, JSX } from "solid-js";
+import { Component, createMemo, For, Index, JSX, Show } from "solid-js";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import {
     catmullRomSplineComponentType,
     CatmullRomSplineState,
-} from "../components/CatmullRomSpline";
+} from "../components/CatmullRomSplineComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
+import { nurbsComponentType, NurbsState } from "../components/NurbsComponent";
+import { Vec2 } from "../../Vec2";
+// @ts-ignore
+import nurbs from "nurbs";
 
 export class RenderSystem {
     Render: Component;
@@ -19,16 +23,22 @@ export class RenderSystem {
                     for (let component of components) {
                         switch (component.type.typeName) {
                             case catmullRomSplineComponentType.typeName: {
-                                let catmullRomeSplineState = (
+                                let catmullRomSplineState = (
                                     component as EcsComponent<CatmullRomSplineState>
                                 ).state;
                                 result.push(
                                     <RenderCatmullRomSpline
-                                        state={catmullRomeSplineState}
+                                        state={catmullRomSplineState}
                                     />,
                                 );
                                 break;
                             }
+                            case nurbsComponentType.typeName:
+                                let nurbsState = (
+                                    component as EcsComponent<NurbsState>
+                                ).state;
+                                result.push(<RenderNurbs state={nurbsState} />);
+                                break;
                         }
                     }
                     return result;
@@ -398,3 +408,60 @@ function closedRomCurveToPathData(
 
     return pathData;
 }
+
+const RenderNurbs: Component<{
+    state: NurbsState;
+}> = (props) => {
+    let pathString = createMemo(() => {
+        let state = props.state;
+        if (state.controlPoints.length < 4) {
+            return undefined;
+        }
+        let catmullRomControlPoints: Vec2[] = [];
+        let n = state.controlPoints.length * 10;
+        let curve = nurbs({
+            points: state.controlPoints.map((x) => [x.x, x.y]),
+            degree: state.degree,
+            boundary: state.closed ? "closed" : "clamped",
+        });
+        let domain = curve.domain[0];
+        for (let i = 0; i <= n; ++i) {
+            let t = i / n;
+            let p = curve.evaluate({}, (domain[1] - domain[0]) * t + domain[0]);
+            catmullRomControlPoints.push(Vec2.create(p[0], p[1]));
+        }
+        let d = romPointsToPathData(
+            catmullRomControlPoints.map((pt) => [pt.x, pt.y]),
+            false,
+        );
+        return d
+            .map((part) => part.type + " " + part.values.join(" "))
+            .join(" ");
+    });
+    return (
+        <Show when={pathString()}>
+            {(pathString2) => (
+                <>
+                    <path
+                        d={pathString2()}
+                        stroke="black"
+                        stroke-width="2"
+                        fill="none"
+                    />
+                    <Index each={props.state.controlPoints}>
+                        {(pt) => (
+                            <circle
+                                cx={pt().x}
+                                cy={pt().y}
+                                r={8}
+                                stroke="red"
+                                stroke-width={1}
+                                fill="none"
+                            />
+                        )}
+                    </Index>
+                </>
+            )}
+        </Show>
+    );
+};

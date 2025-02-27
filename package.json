@@ -28,6 +28,7 @@
     "@solidjs/router": "^0.15.3",
     "@unocss/reset": "^65.4.3",
     "file-saver": "^2.0.5",
+    "nurbs": "^1.1.1",
     "pixi.js": "^8.6.6",
     "solid-js": "^1.9.3",
     "uuid": "^11.0.5"

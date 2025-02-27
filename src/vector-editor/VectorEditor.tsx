@@ -5,13 +5,14 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { ModeParams } from "./ModeParams";
 import { Vec2 } from "../Vec2";
 import { Mode } from "./Mode";
-import { InsertCatmullRomSpline } from "./modes/InsertCatmullRomSpline";
+import { InsertCatmullRomSplineMode } from "./modes/InsertCatmullRomSpline";
 import { IdleMode } from "./modes/IdleMode";
+import { InsertNurbsMode } from "./modes/InsertNurbs";
 
 const VectorEditor: Component = () => {
     let [state, setState] = createStore<{
         mousePos: Vec2 | undefined;
-        mode: "Idle" | "Insert Catmull Rom Spline";
+        mode: "Idle" | "Insert Catmull Rom Spline" | "Insert Nurbs";
     }>({
         mousePos: undefined,
         mode: "Idle",
@@ -34,7 +35,9 @@ const VectorEditor: Component = () => {
             case "Idle":
                 return new IdleMode(modeParams);
             case "Insert Catmull Rom Spline":
-                return new InsertCatmullRomSpline(modeParams);
+                return new InsertCatmullRomSplineMode(modeParams);
+            case "Insert Nurbs":
+                return new InsertNurbsMode(modeParams);
         }
     });
     let Instructions = () => <>{mode().instructions?.({})}</>;
@@ -86,7 +89,15 @@ const VectorEditor: Component = () => {
                         setState("mode", "Insert Catmull Rom Spline");
                     }}
                 >
-                    Catmull Rom Spline
+                    Insert Catmull Rom Spline
+                </button>
+                <button
+                    class="btn"
+                    onClick={() => {
+                        setState("mode", "Insert Nurbs");
+                    }}
+                >
+                    Insert Nurbs
                 </button>
             </div>
             <div
