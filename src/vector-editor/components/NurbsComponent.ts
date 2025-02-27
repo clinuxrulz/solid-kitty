@@ -24,6 +24,6 @@ export const nurbsComponentType = new EcsComponentType<NurbsState>({
             },
             degree: "Number",
             closed: "Boolean",
-        }
-    }
+        },
+    },
 });

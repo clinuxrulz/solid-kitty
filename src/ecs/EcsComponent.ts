@@ -14,10 +14,7 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
     readonly typeName: string;
     readonly typeSchema: TypeSchema<S>;
 
-    constructor(params: {
-        typeName: string;
-        typeSchema: TypeSchema<S>;
-    }) {
+    constructor(params: { typeName: string; typeSchema: TypeSchema<S> }) {
         this.typeName = params.typeName;
         this.typeSchema = params.typeSchema;
     }

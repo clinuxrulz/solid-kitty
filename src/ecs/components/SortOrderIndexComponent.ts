@@ -12,6 +12,6 @@ export const sortOrderIndexComponentType =
             type: "Object",
             properties: {
                 orderIndex: "Number",
-            }
-        }
+            },
+        },
     });

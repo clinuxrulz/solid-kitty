@@ -16,6 +16,6 @@ export const frameComponentType = new EcsComponentType<FrameState>({
             name: "String",
             pos: vec2TypeSchema,
             size: vec2TypeSchema,
-        }
+        },
     },
 });

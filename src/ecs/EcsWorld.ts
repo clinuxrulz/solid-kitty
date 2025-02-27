@@ -11,7 +11,10 @@ import { ReactiveSet } from "@solid-primitives/set";
 import { makeRefCountedMakeReactiveObject } from "../util";
 import { err, ok, Result } from "../kitty-demo/Result";
 import { EcsRegistry } from "./EcsRegistry";
-import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema } from "../TypeSchema";
+import {
+    loadFromJsonViaTypeSchema,
+    saveToJsonViaTypeSchema,
+} from "../TypeSchema";
 
 export class EcsWorld {
     private entityMap: ReactiveMap<string, Signal<IsEcsComponent[]>>;
@@ -124,9 +127,11 @@ export class EcsWorld {
         for (let entity of this.entities()) {
             let componentsSet: any = {};
             for (let component of this.getComponents(entity)) {
-                componentsSet[component.type.typeName] = saveToJsonViaTypeSchema((component.type as EcsComponentType<any>).typeSchema,
-                    (component as EcsComponent<any>).state,
-                );
+                componentsSet[component.type.typeName] =
+                    saveToJsonViaTypeSchema(
+                        (component.type as EcsComponentType<any>).typeSchema,
+                        (component as EcsComponent<any>).state,
+                    );
             }
             result[entity] = componentsSet;
         }
@@ -145,7 +150,8 @@ export class EcsWorld {
                 if (componentType2 == undefined) {
                     return err(`${componentType} not found`);
                 }
-                let component = loadFromJsonViaTypeSchema((componentType2 as any).typeSchema,
+                let component = loadFromJsonViaTypeSchema(
+                    (componentType2 as any).typeSchema,
                     components[componentType],
                 );
                 if (component.type == "Err") {

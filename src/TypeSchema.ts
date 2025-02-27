@@ -16,36 +16,36 @@ export type TypeSchema<A> = undefined extends A
         : A extends number
           ? "Number"
           : A extends string
-            ? "String" :
-            A extends unknown[] ?
-            { type: "Array", element: TypeSchema<A[0]>, }
-            : A extends { type: string; value: unknown }
-              ? {
-                    type: "Union";
-                    parts: {
-                        [K in A["type"]]: TypeSchema<
-                            Extract<A, { type: K }>["value"]
-                        >;
-                    };
-                }
-              : A extends object
+            ? "String"
+            : A extends unknown[]
+              ? { type: "Array"; element: TypeSchema<A[0]> }
+              : A extends { type: string; value: unknown }
                 ? {
-                      type: "Object";
-                      properties: {
-                          [K in keyof A]: TypeSchema<A[K]>;
+                      type: "Union";
+                      parts: {
+                          [K in A["type"]]: TypeSchema<
+                              Extract<A, { type: K }>["value"]
+                          >;
                       };
                   }
-                :
-                      | {
-                            type: "Recursive";
-                            typeSchema: () => TypeSchema<A>;
-                        }
-                      | {
-                            type: "Invariant";
-                            fn1: (a: unknown) => A;
-                            fn2: (a: A) => unknown;
-                            typeSchema: TypeSchema<unknown>;
+                : A extends object
+                  ? {
+                        type: "Object";
+                        properties: {
+                            [K in keyof A]: TypeSchema<A[K]>;
                         };
+                    }
+                  :
+                        | {
+                              type: "Recursive";
+                              typeSchema: () => TypeSchema<A>;
+                          }
+                        | {
+                              type: "Invariant";
+                              fn1: (a: unknown) => A;
+                              fn2: (a: A) => unknown;
+                              typeSchema: TypeSchema<unknown>;
+                          };
 
 export function makeInvariantTypeSchema<A, B>(
     fn1: (a: B) => A,
@@ -168,10 +168,7 @@ export function loadFromJsonViaTypeSchema<A>(
         case "Array": {
             let res: any[] = [];
             for (let x2 of x) {
-                let value = loadFromJsonViaTypeSchema(
-                    typeSchema.element,
-                    x2,
-                );
+                let value = loadFromJsonViaTypeSchema(typeSchema.element, x2);
                 if (value.type == "Err") {
                     return value;
                 }
@@ -259,10 +256,9 @@ export function saveToJsonViaTypeSchema<A>(
             return res;
         }
         case "Array": {
-            return (x as any).map((x2: any) => saveToJsonViaTypeSchema(
-                (typeSchema as any).element,
-                x2,
-            ));
+            return (x as any).map((x2: any) =>
+                saveToJsonViaTypeSchema((typeSchema as any).element, x2),
+            );
         }
         case "Recursive": {
             let typeSchema2 = typeSchema.typeSchema();

@@ -12,6 +12,6 @@ export const tilesetComponentType = new EcsComponentType<TilesetState>({
         properties: {
             imageBase64Data: "String",
             imageMimeType: "String",
-        }
+        },
     },
 });
