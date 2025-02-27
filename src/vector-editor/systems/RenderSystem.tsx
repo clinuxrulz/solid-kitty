@@ -5,7 +5,6 @@ import {
     CatmullRomSplineState,
 } from "../components/CatmullRomSpline";
 import { EcsComponent } from "../../ecs/EcsComponent";
-import { State } from "pixi.js";
 
 export class RenderSystem {
     Render: Component;
