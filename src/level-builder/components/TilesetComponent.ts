@@ -1,5 +1,4 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
-import { ok } from "../../kitty-demo/Result";
 
 export type TilesetState = {
     imageBase64Data: string;
@@ -8,16 +7,11 @@ export type TilesetState = {
 
 export const tilesetComponentType = new EcsComponentType<TilesetState>({
     typeName: "Tileset",
-    toJson(value) {
-        return {
-            imageBase64Data: value.imageBase64Data,
-            imageMimeType: value.imageMimeType,
-        };
-    },
-    fromJson(x) {
-        return ok({
-            imageBase64Data: x.imageBase64Data,
-            imageMimeType: x.imageMimeType,
-        });
+    typeSchema: {
+        type: "Object",
+        properties: {
+            imageBase64Data: "String",
+            imageMimeType: "String",
+        }
     },
 });

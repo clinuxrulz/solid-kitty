@@ -8,10 +8,10 @@ export type SortOrderIndexState = {
 export const sortOrderIndexComponentType =
     new EcsComponentType<SortOrderIndexState>({
         typeName: "SortOrderIndex",
-        toJson(value) {
-            return { orderIndex: value };
-        },
-        fromJson(x) {
-            return ok({ orderIndex: x.orderIndex });
-        },
+        typeSchema: {
+            type: "Object",
+            properties: {
+                orderIndex: "Number",
+            }
+        }
     });

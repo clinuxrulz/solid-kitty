@@ -1,4 +1,5 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
+import { vec2TypeSchema } from "../../TypeSchema";
 import { Vec2 } from "../../Vec2";
 
 export type NurbsState = {
@@ -10,18 +11,19 @@ export type NurbsState = {
 
 export const nurbsComponentType = new EcsComponentType<NurbsState>({
     typeName: "Nurbs",
-    toJson(value) {
-        return {
-            ...value,
-            controlPoints: value.controlPoints.map((x) => ({ x: x.x, y: x.y })),
-        };
-    },
-    fromJson(x) {
-        return {
-            ...x,
-            controlPoints: x.controlPoints.map((x2: any) =>
-                Vec2.create(x2.x, x2.y),
-            ),
-        };
-    },
+    typeSchema: {
+        type: "Object",
+        properties: {
+            controlPoints: {
+                type: "Array",
+                element: vec2TypeSchema,
+            },
+            weights: {
+                type: "Array",
+                element: "Number",
+            },
+            degree: "Number",
+            closed: "Boolean",
+        }
+    }
 });

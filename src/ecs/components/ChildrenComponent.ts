@@ -7,14 +7,13 @@ export type ChildrenState = {
 
 export const childrenComponentType = new EcsComponentType<ChildrenState>({
     typeName: "Children",
-    toJson(value) {
-        return {
-            childIds: value.childIds,
-        };
-    },
-    fromJson(x) {
-        return ok({
-            childIds: x.childIds,
-        });
+    typeSchema: {
+        type: "Object",
+        properties: {
+            childIds: {
+                type: "Array",
+                element: "String",
+            },
+        },
     },
 });

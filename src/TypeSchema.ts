@@ -16,7 +16,9 @@ export type TypeSchema<A> = undefined extends A
         : A extends number
           ? "Number"
           : A extends string
-            ? "String"
+            ? "String" :
+            A extends unknown[] ?
+            { type: "Array", element: TypeSchema<A[0]>, }
             : A extends { type: string; value: unknown }
               ? {
                     type: "Union";
@@ -163,6 +165,20 @@ export function loadFromJsonViaTypeSchema<A>(
                 value: x2,
             }) as any;
         }
+        case "Array": {
+            let res: any[] = [];
+            for (let x2 of x) {
+                let value = loadFromJsonViaTypeSchema(
+                    typeSchema.element,
+                    x2,
+                );
+                if (value.type == "Err") {
+                    return value;
+                }
+                res.push(value.value);
+            }
+            return ok(res) as any;
+        }
         case "Object": {
             let res: any = {};
             for (let key of Object.keys(typeSchema.properties)) {
@@ -241,6 +257,12 @@ export function saveToJsonViaTypeSchema<A>(
                 );
             }
             return res;
+        }
+        case "Array": {
+            return (x as any).map((x2: any) => saveToJsonViaTypeSchema(
+                (typeSchema as any).element,
+                x2,
+            ));
         }
         case "Recursive": {
             let typeSchema2 = typeSchema.typeSchema();
