@@ -1,8 +1,8 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
 
 export type TilesetState = {
-    imageBase64Data: string;
-    imageMimeType: string;
+    imageRef: string; // path to image in vfs
+    // frames are stored via children of entity
 };
 
 export const tilesetComponentType = new EcsComponentType<TilesetState>({
@@ -10,8 +10,7 @@ export const tilesetComponentType = new EcsComponentType<TilesetState>({
     typeSchema: {
         type: "Object",
         properties: {
-            imageBase64Data: "String",
-            imageMimeType: "String",
+            imageRef: "String",
         },
     },
 });

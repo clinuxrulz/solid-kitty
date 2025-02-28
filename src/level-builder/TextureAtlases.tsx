@@ -1,8 +1,10 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { Vec2 } from "../Vec2";
-import { Component, createMemo, JSX, mergeProps, Show } from "solid-js";
+import { Accessor, Component, createMemo, JSX, mergeProps, Show } from "solid-js";
 import { TextureAtlasList } from "./TextureAtlasList";
 import { TextureAtlas } from "./texture-atlas/TextureAtlas";
+import { AsyncResult } from "../AsyncResult";
+import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 
 type State = {
     showTextureAtlasList: boolean;
@@ -14,11 +16,19 @@ export class TextureAtlases {
     private textureAtlasList: TextureAtlasList;
     private textureAtlas: TextureAtlas;
 
-    constructor() {
+    constructor(params: {
+        vfs: Accessor<AsyncResult<VirtualFileSystem>>,
+        imagesFolderId: Accessor<AsyncResult<string>>,
+        imageFiles: Accessor<AsyncResult<VfsFile[]>>,
+    }) {
         let [state, setState] = createStore<State>({
             showTextureAtlasList: false,
         });
-        let textureAtlasList = new TextureAtlasList();
+        let textureAtlasList = new TextureAtlasList({
+            vfs: params.vfs,
+            imagesFolderId: params.imagesFolderId,
+            imageFiles: params.imageFiles,
+        });
         let selectedTilesetImage = createMemo(
             () => textureAtlasList.selectedTileset()?.image,
         );

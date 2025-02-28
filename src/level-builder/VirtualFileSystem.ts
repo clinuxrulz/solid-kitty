@@ -1,11 +1,19 @@
 import { err, ok, Result } from "../kitty-demo/Result";
 import { v4 as uuid } from "uuid";
 
-type FileOrFolder = {
-    id: string;
-    type: "File" | "Folder";
-    name: string;
+export type VfsFile = {
+    id: string,
+    type: "File",
+    name: string,
 };
+
+export type VfsFolder = {
+    id: string,
+    type: "Folder",
+    name: string,
+};
+
+export type VfsFileOrFolder = VfsFile | VfsFolder;
 
 export class VirtualFileSystem {
     db: IDBDatabase;
@@ -35,8 +43,8 @@ export class VirtualFileSystem {
 
     readonly rootFolderId = "root";
 
-    getFilesAndFolders(folderId: string): Promise<Result<FileOrFolder[]>> {
-        return new Promise<Result<FileOrFolder[]>>((resolve) => {
+    getFilesAndFolders(folderId: string): Promise<Result<VfsFileOrFolder[]>> {
+        return new Promise<Result<VfsFileOrFolder[]>>((resolve) => {
             let cursor = this.db
                 .transaction("files", "readwrite")
                 .objectStore("files")
@@ -61,7 +69,7 @@ export class VirtualFileSystem {
             return filesAndFolders;
         }
         let filesAndFolders2 = filesAndFolders.value;
-        let fileEntry: FileOrFolder = {
+        let fileEntry: VfsFileOrFolder = {
             id: uuid(),
             type: "File",
             name: filename,
@@ -235,7 +243,7 @@ export class VirtualFileSystem {
             return filesAndFolders;
         }
         let filesAndFolders2 = filesAndFolders.value;
-        let folderEntry: FileOrFolder = {
+        let folderEntry: VfsFileOrFolder = {
             id: uuid(),
             type: "Folder",
             name: folderName,
