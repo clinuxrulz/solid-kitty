@@ -5,12 +5,13 @@ export type TextureAtlasState = {
     // frames are stored via children of entity
 };
 
-export const textureAtlasComponentType = new EcsComponentType<TextureAtlasState>({
-    typeName: "TextureAtlas",
-    typeSchema: {
-        type: "Object",
-        properties: {
-            imageRef: "String",
+export const textureAtlasComponentType =
+    new EcsComponentType<TextureAtlasState>({
+        typeName: "TextureAtlas",
+        typeSchema: {
+            type: "Object",
+            properties: {
+                imageRef: "String",
+            },
         },
-    },
-});
+    });

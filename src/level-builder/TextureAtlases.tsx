@@ -52,8 +52,7 @@ export class TextureAtlases {
         this.textureAtlasList = textureAtlasList;
         this.textureAtlas = textureAtlas;
         //
-        this.dispose = () => {
-        };
+        this.dispose = () => {};
         this.Render = (props) => {
             let state = this.state;
             let setState = this.setState;

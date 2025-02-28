@@ -45,7 +45,7 @@ type State = {
     //
     mkMode: (() => Mode) | undefined;
     //
-    autoSaving: boolean,
+    autoSaving: boolean;
     world: EcsWorld;
 };
 
@@ -87,15 +87,16 @@ export class TextureAtlas {
             autoSaving: false,
             world: new EcsWorld(),
         });
-        let [ imageUrlDispose, setImageUrlDispose ] = createSignal<() => void>(() => {});
-        let [ image, setImage ] = createSignal<HTMLImageElement>();
-        let [ size, setSize ] = createSignal<Vec2>();
+        let [imageUrlDispose, setImageUrlDispose] = createSignal<() => void>(
+            () => {},
+        );
+        let [image, setImage] = createSignal<HTMLImageElement>();
+        let [size, setSize] = createSignal<Vec2>();
         onCleanup(() => {
             imageUrlDispose()();
         });
-        createComputed(on(
-            [ params.vfs, params.textureAtlasFileId, ],
-            async () => {
+        createComputed(
+            on([params.vfs, params.textureAtlasFileId], async () => {
                 let textureAtlasFileId = params.textureAtlasFileId();
                 if (textureAtlasFileId == undefined) {
                     setState("world", new EcsWorld());
@@ -118,27 +119,38 @@ export class TextureAtlas {
                 }
                 let textureAtlasData2 = textureAtlasData.value;
                 let textureAtlasData3 = await textureAtlasData2.text();
-                let world = EcsWorld.fromJson(registry, JSON.parse(textureAtlasData3));
+                let world = EcsWorld.fromJson(
+                    registry,
+                    JSON.parse(textureAtlasData3),
+                );
                 if (world.type == "Err") {
                     return;
                 }
                 let world2 = world.value;
-                let entities = world2.entitiesWithComponentType(textureAtlasComponentType);
+                let entities = world2.entitiesWithComponentType(
+                    textureAtlasComponentType,
+                );
                 if (entities.length != 1) {
                     return;
                 }
                 let entity = entities[0];
-                let textureAtlas = world2.getComponent(entity, textureAtlasComponentType)?.state;
+                let textureAtlas = world2.getComponent(
+                    entity,
+                    textureAtlasComponentType,
+                )?.state;
                 if (textureAtlas == undefined) {
                     return;
                 }
                 let imageFilename = textureAtlas.imageRef;
-                let filesAndFolders = await vfs2.getFilesAndFolders(imagesFolderId2);
+                let filesAndFolders =
+                    await vfs2.getFilesAndFolders(imagesFolderId2);
                 if (filesAndFolders.type == "Err") {
                     return;
                 }
                 let filesAndFolders2 = filesAndFolders.value;
-                let imageFile = filesAndFolders2.find((x) => x.type == "File" && x.name == imageFilename);
+                let imageFile = filesAndFolders2.find(
+                    (x) => x.type == "File" && x.name == imageFilename,
+                );
                 if (imageFile == undefined) {
                     return;
                 }
@@ -162,8 +174,8 @@ export class TextureAtlas {
                     });
                 };
                 setState("world", world2);
-            }
-        ));
+            }),
+        );
         let triggerAutoSave: () => void;
         {
             let isAutoSaving = false;
@@ -188,9 +200,16 @@ export class TextureAtlas {
                             return;
                         }
                         let vfs2 = vfs.value;
-                        let textureAtlasData = JSON.stringify(state.world.toJson());
-                        let textureAtlasData2 = new Blob([ textureAtlasData, ], { type: "application/json", });
-                        await vfs2.overwriteFile(textureAtlasFileId, textureAtlasData2);
+                        let textureAtlasData = JSON.stringify(
+                            state.world.toJson(),
+                        );
+                        let textureAtlasData2 = new Blob([textureAtlasData], {
+                            type: "application/json",
+                        });
+                        await vfs2.overwriteFile(
+                            textureAtlasFileId,
+                            textureAtlasData2,
+                        );
                     } finally {
                         isAutoSaving = false;
                         setState("autoSaving", false);
@@ -671,7 +690,8 @@ export class TextureAtlas {
                             }}
                         >
                             <Show when={state.autoSaving}>
-                                Saving...<br/>
+                                Saving...
+                                <br />
                             </Show>
                             <Instructions />
                         </div>

@@ -38,9 +38,8 @@ export class TextureAtlasList {
             textureAtlasFiles: [],
         });
         //
-        createEffect(on(
-            [ params.vfs, params.textureAtlasesFolderId, ],
-            async () => {
+        createEffect(
+            on([params.vfs, params.textureAtlasesFolderId], async () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
@@ -51,7 +50,9 @@ export class TextureAtlasList {
                     return textureAtlasesFolderId;
                 }
                 let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
-                let filesAndFolders = await vfs2.getFilesAndFolders(textureAtlasesFolderId2);
+                let filesAndFolders = await vfs2.getFilesAndFolders(
+                    textureAtlasesFolderId2,
+                );
                 if (filesAndFolders.type == "Err") {
                     console.log(filesAndFolders.message);
                     return;
@@ -59,12 +60,13 @@ export class TextureAtlasList {
                 let filesAndFolders2 = filesAndFolders.value;
                 let files = filesAndFolders2.filter((x) => x.type == "File");
                 setState("textureAtlasFiles", files);
-            }
-        ));
+            }),
+        );
         //
         this.state = state;
         this.setState = setState;
-        this.selectedTextureAtlasByFileId = () => state.selectedTextureAtlasByFileId;
+        this.selectedTextureAtlasByFileId = () =>
+            state.selectedTextureAtlasByFileId;
         //
         this.Render = (props) => {
             let addTextureAtlasInput!: HTMLInputElement;
@@ -88,7 +90,9 @@ export class TextureAtlasList {
                     return;
                 }
                 let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
-                let textureAtlasName = window.prompt("Enter filename for texture atlas");
+                let textureAtlasName = window.prompt(
+                    "Enter filename for texture atlas",
+                );
                 if (textureAtlasName == null) {
                     return;
                 }
@@ -100,19 +104,21 @@ export class TextureAtlasList {
                     textureAtlasName += ".json";
                 }
                 let world = new EcsWorld();
-                world.createEntity([textureAtlasComponentType.create({
-                    imageRef: imageFile.name,
-                })]);
+                world.createEntity([
+                    textureAtlasComponentType.create({
+                        imageRef: imageFile.name,
+                    }),
+                ]);
                 let textureAtlasJson = JSON.stringify(world.toJson());
                 await vfs2.createFile(
                     imagesFolderId2,
                     imageFile.name,
-                    imageFile
+                    imageFile,
                 );
                 let result = await vfs2.createFile(
                     textureAtlasesFolderId2,
                     textureAtlasName,
-                    new Blob([ textureAtlasJson ], { type: "application/json", }),
+                    new Blob([textureAtlasJson], { type: "application/json" }),
                 );
                 if (result.type == "Err") {
                     return;
@@ -130,7 +136,11 @@ export class TextureAtlasList {
             };
             //
             let selectTextureAtlasFile = (textureAtlasFileId: string) => {
-                if (!this.state.textureAtlasFiles.some((x) => x.id == textureAtlasFileId)) {
+                if (
+                    !this.state.textureAtlasFiles.some(
+                        (x) => x.id == textureAtlasFileId,
+                    )
+                ) {
                     return;
                 }
                 setState("selectedTextureAtlasByFileId", textureAtlasFileId);
@@ -161,22 +171,30 @@ export class TextureAtlasList {
                     return;
                 }
                 let world2 = world.value;
-                let entities = world2.entitiesWithComponentType(textureAtlasComponentType);
+                let entities = world2.entitiesWithComponentType(
+                    textureAtlasComponentType,
+                );
                 if (entities.length != 1) {
                     return;
                 }
                 let entity = entities[0];
-                let textureAtlas = world2.getComponent(entity, textureAtlasComponentType)?.state;
+                let textureAtlas = world2.getComponent(
+                    entity,
+                    textureAtlasComponentType,
+                )?.state;
                 if (textureAtlas == undefined) {
                     return;
                 }
                 let imageFilename = textureAtlas.imageRef;
-                let filesAndFolders = await vfs2.getFilesAndFolders(imagesFolderId2);
+                let filesAndFolders =
+                    await vfs2.getFilesAndFolders(imagesFolderId2);
                 if (filesAndFolders.type == "Err") {
                     return;
                 }
                 let filesAndFolders2 = filesAndFolders.value;
-                let imageFile = filesAndFolders2.find((x) => x.type == "File" && x.name == imageFilename);
+                let imageFile = filesAndFolders2.find(
+                    (x) => x.type == "File" && x.name == imageFilename,
+                );
                 if (imageFile == undefined) {
                     return;
                 }
@@ -212,7 +230,9 @@ export class TextureAtlasList {
                                 if (addTextureAtlasInput.files?.length != 1) {
                                     return;
                                 }
-                                onAddTextureAtlas(addTextureAtlasInput.files[0]);
+                                onAddTextureAtlas(
+                                    addTextureAtlasInput.files[0],
+                                );
                             }}
                         />
                     </div>
@@ -227,7 +247,9 @@ export class TextureAtlasList {
                                             : "list-item"
                                     }
                                     onClick={() => {
-                                        selectTextureAtlasFile(textureAtlasFile.id);
+                                        selectTextureAtlasFile(
+                                            textureAtlasFile.id,
+                                        );
                                     }}
                                 >
                                     {textureAtlasFile.name}
@@ -236,7 +258,9 @@ export class TextureAtlasList {
                                             class="list-item-button text-right"
                                             type="button"
                                             onClick={() => {
-                                                removeTextureAtlasFile(textureAtlasFile.id);
+                                                removeTextureAtlasFile(
+                                                    textureAtlasFile.id,
+                                                );
                                             }}
                                         >
                                             <i class="fa-solid fa-trash"></i>
