@@ -14,7 +14,7 @@ import {
 } from "solid-js";
 import { Vec2 } from "../../Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { UndoManager } from "../../pixel-editor/UndoManager";
+import { UndoManager, UndoUnit } from "../../pixel-editor/UndoManager";
 import { Mode } from "./Mode";
 import { ModeParams } from "./ModeParams";
 import { MakeFrameMode } from "./modes/MakeFrameMode";
@@ -23,6 +23,10 @@ import { EcsWorld } from "../../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
 import { RenderParams } from "./RenderParams";
 import { PickingSystem } from "./systems/PickingSystem";
+import { VfsFile, VirtualFileSystem } from "../VirtualFileSystem";
+import { AsyncResult } from "../../AsyncResult";
+import { registry } from "../components/registry";
+import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 
 type State = {
     mousePos: Vec2 | undefined;
@@ -41,8 +45,11 @@ type State = {
     //
     mkMode: (() => Mode) | undefined;
     //
+    autoSaving: boolean,
     world: EcsWorld;
 };
+
+const AUTO_SAVE_TIMEOUT = 2000;
 
 export class TextureAtlas {
     private undoManager: UndoManager;
@@ -62,8 +69,9 @@ export class TextureAtlas {
     }>;
 
     constructor(params: {
-        image: Accessor<HTMLImageElement | undefined>;
-        size: Accessor<Vec2 | undefined>;
+        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        imagesFolderId: Accessor<AsyncResult<string>>;
+        textureAtlasFileId: Accessor<string | undefined>;
     }) {
         let undoManager = new UndoManager();
         let [state, setState] = createStore<State>({
@@ -76,8 +84,127 @@ export class TextureAtlas {
             touchPanZoomInitScale: undefined,
             touchPanZoomInitGap: undefined,
             mkMode: undefined,
+            autoSaving: false,
             world: new EcsWorld(),
         });
+        let [ imageUrlDispose, setImageUrlDispose ] = createSignal<() => void>(() => {});
+        let [ image, setImage ] = createSignal<HTMLImageElement>();
+        let [ size, setSize ] = createSignal<Vec2>();
+        onCleanup(() => {
+            imageUrlDispose()();
+        });
+        createComputed(on(
+            [ params.vfs, params.textureAtlasFileId, ],
+            async () => {
+                let textureAtlasFileId = params.textureAtlasFileId();
+                if (textureAtlasFileId == undefined) {
+                    setState("world", new EcsWorld());
+                    return;
+                }
+                let vfs = params.vfs();
+                if (vfs.type != "Success") {
+                    return;
+                }
+                let vfs2 = vfs.value;
+                let imagesFolderId = params.imagesFolderId();
+                if (imagesFolderId.type != "Success") {
+                    return;
+                }
+                let imagesFolderId2 = imagesFolderId.value;
+                let textureAtlasFileId2 = textureAtlasFileId;
+                let textureAtlasData = await vfs2.readFile(textureAtlasFileId2);
+                if (textureAtlasData.type == "Err") {
+                    return;
+                }
+                let textureAtlasData2 = textureAtlasData.value;
+                let textureAtlasData3 = await textureAtlasData2.text();
+                let world = EcsWorld.fromJson(registry, JSON.parse(textureAtlasData3));
+                if (world.type == "Err") {
+                    return;
+                }
+                let world2 = world.value;
+                let entities = world2.entitiesWithComponentType(textureAtlasComponentType);
+                if (entities.length != 1) {
+                    return;
+                }
+                let entity = entities[0];
+                let textureAtlas = world2.getComponent(entity, textureAtlasComponentType)?.state;
+                if (textureAtlas == undefined) {
+                    return;
+                }
+                let imageFilename = textureAtlas.imageRef;
+                let filesAndFolders = await vfs2.getFilesAndFolders(imagesFolderId2);
+                if (filesAndFolders.type == "Err") {
+                    return;
+                }
+                let filesAndFolders2 = filesAndFolders.value;
+                let imageFile = filesAndFolders2.find((x) => x.type == "File" && x.name == imageFilename);
+                if (imageFile == undefined) {
+                    return;
+                }
+                let imageData = await vfs2.readFile(imageFile.id);
+                if (imageData.type == "Err") {
+                    return;
+                }
+                let imageData2 = imageData.value;
+                let imageUrl = URL.createObjectURL(imageData2);
+                imageUrlDispose()();
+                setImageUrlDispose(() => () => {
+                    URL.revokeObjectURL(imageUrl);
+                });
+                let image = new Image();
+                image.src = imageUrl;
+                image.style.setProperty("image-rendering", "pixelated");
+                image.onload = () => {
+                    batch(() => {
+                        setImage(image);
+                        setSize(Vec2.create(image.width, image.height));
+                    });
+                };
+                setState("world", world2);
+            }
+        ));
+        let triggerAutoSave: () => void;
+        {
+            let isAutoSaving = false;
+            let autoSaveTimerId: number | undefined = undefined;
+            triggerAutoSave = () => {
+                if (isAutoSaving) {
+                    return;
+                }
+                isAutoSaving = true;
+                if (autoSaveTimerId != undefined) {
+                    clearTimeout(autoSaveTimerId);
+                }
+                setState("autoSaving", true);
+                autoSaveTimerId = setTimeout(async () => {
+                    try {
+                        let textureAtlasFileId = params.textureAtlasFileId();
+                        if (textureAtlasFileId == undefined) {
+                            return;
+                        }
+                        let vfs = params.vfs();
+                        if (vfs.type != "Success") {
+                            return;
+                        }
+                        let vfs2 = vfs.value;
+                        let textureAtlasData = JSON.stringify(state.world.toJson());
+                        let textureAtlasData2 = new Blob([ textureAtlasData, ], { type: "application/json", });
+                        await vfs2.overwriteFile(textureAtlasFileId, textureAtlasData2);
+                    } finally {
+                        isAutoSaving = false;
+                        setState("autoSaving", false);
+                    }
+                }, AUTO_SAVE_TIMEOUT);
+            };
+        }
+        {
+            let pushUndoUnit = undoManager.pushUndoUnit.bind(undoManager);
+            (undoManager as any).pushUndoUnit = (undoUnit: UndoUnit) => {
+                pushUndoUnit(undoUnit);
+                triggerAutoSave();
+            };
+        }
         let [svg, setSvg] = createSignal<SVGSVGElement>();
         let [screenSize, setScreenSize] = createSignal<Vec2>();
         createComputed(
@@ -162,8 +289,8 @@ export class TextureAtlas {
         this.undoManager = undoManager;
         this.state = state;
         this.setState = setState;
-        this.image = params.image;
-        this.size = params.size;
+        this.image = image;
+        this.size = size;
         this.screenPtToWorldPt = screenPtToWorldPt;
         this.worldPtToScreenPt = worldPtToScreenPt;
         this.svg = svg;
@@ -543,6 +670,9 @@ export class TextureAtlas {
                                 "background-color": "rgba(0,0,0,0.8)",
                             }}
                         >
+                            <Show when={state.autoSaving}>
+                                Saving...<br/>
+                            </Show>
                             <Instructions />
                         </div>
                     </div>

@@ -1,51 +1,51 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
 
 export type LevelState = {
-    name: string,
+    name: string;
     tileToShortIdTable: {
-        textureAtlasRef: string,
+        textureAtlasRef: string;
         frames: {
-            frameName: string,
-            shortId: number,
-        }[],
-    }[],
+            frameName: string;
+            shortId: number;
+        }[];
+    }[];
     /** 2D Array of short IDs */
-    mapData: number[][],
+    mapData: number[][];
 };
 
-export const levelComponentType: EcsComponentType<LevelState> = new EcsComponentType({
-    typeName: "Level",
-    typeSchema: {
-        type: "Object",
-        properties: {
-            name: "String",
-            tileToShortIdTable: {
-                type: "Array",
-                element: {
-                    type: "Object",
-                    properties: {
-                        textureAtlasRef: "String",
-                        frames: {
-                            type: "Array",
-                            element: {
-                                type: "Object",
-                                properties: {
-                                    frameName: "String",
-                                    shortId: "Number",
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            mapData: {
-                type: "Array",
-                element: {
+export const levelComponentType: EcsComponentType<LevelState> =
+    new EcsComponentType({
+        typeName: "Level",
+        typeSchema: {
+            type: "Object",
+            properties: {
+                name: "String",
+                tileToShortIdTable: {
                     type: "Array",
-                    element: "Number"
-                }
-            }
-        }
-    },
-});
-
+                    element: {
+                        type: "Object",
+                        properties: {
+                            textureAtlasRef: "String",
+                            frames: {
+                                type: "Array",
+                                element: {
+                                    type: "Object",
+                                    properties: {
+                                        frameName: "String",
+                                        shortId: "Number",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                mapData: {
+                    type: "Array",
+                    element: {
+                        type: "Array",
+                        element: "Number",
+                    },
+                },
+            },
+        },
+    });

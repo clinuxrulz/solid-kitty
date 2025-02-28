@@ -158,7 +158,8 @@ export class EcsWorld {
                     return component;
                 }
                 let component2 = component.value as any;
-                components2.push(component2);
+                let component3 = (componentType2 as EcsComponentType<object>).create(component2);
+                components2.push(component3);
             }
             world.createEntityWithId(entity, components2);
         }

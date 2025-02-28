@@ -1,228 +1,188 @@
 import {
     Accessor,
-    batch,
     Component,
     createEffect,
-    createMemo,
     createSelector,
-    createUniqueId,
     For,
     JSX,
-    onMount,
+    on,
 } from "solid-js";
-import { Vec2 } from "../Vec2";
-import { createStore, produce, SetStoreFunction, Store } from "solid-js/store";
+import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { AsyncResult } from "../AsyncResult";
 import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
+import { EcsWorld } from "../ecs/EcsWorld";
+import { textureAtlasComponentType } from "./components/TextureAtlasComponent";
+import { registry } from "./components/registry";
 
 type State = {
-    selectedTilesetById: string | undefined;
-    tilesets: {
-        id: string;
-        name: string;
-        imageRef: string;
-        image: HTMLImageElement;
-        size: Vec2;
-        blockTable: {
-            name: string;
-            pos: Vec2;
-            size: Vec2;
-        }[];
-        dispose: () => void;
-    }[];
+    textureAtlasFiles: VfsFile[];
+    selectedTextureAtlasByFileId: string | undefined;
 };
 
 export class TextureAtlasList {
     private state: Store<State>;
     private setState: SetStoreFunction<State>;
-    readonly selectedTileset: Accessor<State["tilesets"][0] | undefined>;
-    readonly dispose: () => void;
+    readonly selectedTextureAtlasByFileId: Accessor<string | undefined>;
     readonly Render: Component<{
         style?: JSX.CSSProperties | string;
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>,
-        imagesFolderId: Accessor<AsyncResult<string>>,
-        imageFiles: Accessor<AsyncResult<VfsFile[]>>,
+        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        imagesFolderId: Accessor<AsyncResult<string>>;
+        imageFiles: Accessor<AsyncResult<VfsFile[]>>;
+        textureAtlasesFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<State>({
-            selectedTilesetById: undefined,
-            tilesets: [],
+            selectedTextureAtlasByFileId: undefined,
+            textureAtlasFiles: [],
         });
         //
-        createEffect(() => {
-            let vfs = params.vfs();
-            if (vfs.type != "Success") {
-                return;
-            }
-            let vfs2 = vfs.value;
-            let imageFiles = params.imageFiles();
-            if (imageFiles.type != "Success") {
-                return;
-            }
-            let imageFiles2 = imageFiles.value;
-            (async () => {
-                let result: State["tilesets"] = [];
-                for (let imageFile of imageFiles2) {
-                    let fileData = await vfs2.readFile(imageFile.id);
-                    if (fileData.type == "Err") {
-                        console.log(fileData.message);
-                        continue;
-                    }
-                    let fileData2 = fileData.value;
-                    let url = URL.createObjectURL(fileData2);
-                    let image = new Image();
-                    image.src = url;
-                    image.style.setProperty("image-rendering", "pixelated");
-                    image.style.setProperty("pointer-events", "none");
-                    image.onerror = () => {
-                        URL.revokeObjectURL(url);
-                    };
-                    image.onload = () => {
-                        image.onload = null;
-                        let size = Vec2.create(image.width, image.height);
-                        this.setState(
-                            "tilesets",
-                            produce((tilesets) => {
-                                tilesets.push({
-                                    id: createUniqueId(),
-                                    name: imageFile.name,
-                                    imageRef: imageFile.name,
-                                    image,
-                                    size,
-                                    blockTable: [],
-                                    dispose: () => {
-                                        URL.revokeObjectURL(url);
-                                    },
-                                });
-                            }),
-                        );
-                    };
-                }
-                setState("tilesets", result);
-            })();
-        });
-        //
-        let selectedTileset: Accessor<State["tilesets"][0] | undefined> =
-            createMemo(() => {
-                if (state.selectedTilesetById == undefined) {
-                    return undefined;
-                }
-                return state.tilesets.find(
-                    (x) => x.id === state.selectedTilesetById,
-                );
-            });
-        //
-        this.state = state;
-        this.setState = setState;
-        this.selectedTileset = selectedTileset;
-        //
-        this.dispose = () => {
-            for (let textureAtlas of this.state.tilesets) {
-                textureAtlas.dispose();
-            }
-        };
-        //
-        this.Render = (props) => {
-            let addTilesetInput!: HTMLInputElement;
-            let addTileset = () => {
-                addTilesetInput.click();
-                addTilesetInput.value = "";
-            };
-            let onAddTileset = async (file: File) => {
-                // Save to vfs
+        createEffect(on(
+            [ params.vfs, params.textureAtlasesFolderId, ],
+            async () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
                 }
                 let vfs2 = vfs.value;
-                let imagesFolderId = params.imagesFolderId();
-                if (imagesFolderId.type != "Success") {
-                    return;
+                let textureAtlasesFolderId = params.textureAtlasesFolderId();
+                if (textureAtlasesFolderId.type != "Success") {
+                    return textureAtlasesFolderId;
                 }
-                let imagesFolderId2 = imagesFolderId.value;
-                await vfs2.createFile(imagesFolderId2, file.name, file);
-                //
-                let url = URL.createObjectURL(file);
-                let image = new Image();
-                image.src = url;
-                image.style.setProperty("image-rendering", "pixelated");
-                image.style.setProperty("pointer-events", "none");
-                image.onerror = () => {
-                    URL.revokeObjectURL(url);
-                };
-                image.onload = () => {
-                    image.onload = null;
-                    let size = Vec2.create(image.width, image.height);
-                    this.setState(
-                        "tilesets",
-                        produce((tilesets) => {
-                            tilesets.push({
-                                id: createUniqueId(),
-                                name: file.name,
-                                imageRef: file.name,
-                                image,
-                                size,
-                                blockTable: [],
-                                dispose: () => {
-                                    URL.revokeObjectURL(url);
-                                },
-                            });
-                        }),
-                    );
-                };
-            };
-            let selectTileset = (tilesetId: string) => {
-                if (!this.state.tilesets.some((x) => x.id == tilesetId)) {
-                    return;
-                }
-                this.setState("selectedTilesetById", tilesetId);
-            };
-            let removeTileset = async (tileset: (typeof this.state.tilesets)[0]) => {
-                // delete from vfs
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
-                let imagesFolderId = params.imagesFolderId();
-                if (imagesFolderId.type != "Success") {
-                    return;
-                }
-                let imagesFolderId2 = imagesFolderId.value;
-                let filesAndFolders = await vfs2.getFilesAndFolders(imagesFolderId2);
+                let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
+                let filesAndFolders = await vfs2.getFilesAndFolders(textureAtlasesFolderId2);
                 if (filesAndFolders.type == "Err") {
                     console.log(filesAndFolders.message);
                     return;
                 }
                 let filesAndFolders2 = filesAndFolders.value;
-                let imageFile = filesAndFolders2.find((x) => x.type == "File" && x.name == tileset.imageRef);
+                let files = filesAndFolders2.filter((x) => x.type == "File");
+                setState("textureAtlasFiles", files);
+            }
+        ));
+        //
+        this.state = state;
+        this.setState = setState;
+        this.selectedTextureAtlasByFileId = () => state.selectedTextureAtlasByFileId;
+        //
+        this.Render = (props) => {
+            let addTextureAtlasInput!: HTMLInputElement;
+            let addTextureAtlas = () => {
+                addTextureAtlasInput.click();
+                addTextureAtlasInput.value = "";
+            };
+            let onAddTextureAtlas = async (imageFile: File) => {
+                let vfs = params.vfs();
+                if (vfs.type != "Success") {
+                    return;
+                }
+                let vfs2 = vfs.value;
+                let imagesFolderId = params.imagesFolderId();
+                if (imagesFolderId.type != "Success") {
+                    return;
+                }
+                let imagesFolderId2 = imagesFolderId.value;
+                let textureAtlasesFolderId = params.textureAtlasesFolderId();
+                if (textureAtlasesFolderId.type != "Success") {
+                    return;
+                }
+                let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
+                let textureAtlasName = window.prompt("Enter filename for texture atlas");
+                if (textureAtlasName == null) {
+                    return;
+                }
+                textureAtlasName = textureAtlasName.trim();
+                if (textureAtlasName.length == 0) {
+                    return;
+                }
+                if (!textureAtlasName.endsWith(".json")) {
+                    textureAtlasName += ".json";
+                }
+                let world = new EcsWorld();
+                world.createEntity([textureAtlasComponentType.create({
+                    imageRef: imageFile.name,
+                })]);
+                let textureAtlasJson = JSON.stringify(world.toJson());
+                await vfs2.createFile(
+                    imagesFolderId2,
+                    imageFile.name,
+                    imageFile
+                );
+                let result = await vfs2.createFile(
+                    textureAtlasesFolderId2,
+                    textureAtlasName,
+                    new Blob([ textureAtlasJson ], { type: "application/json", }),
+                );
+                if (result.type == "Err") {
+                    return;
+                }
+                let { fileId } = result.value;
+                //
+                setState("textureAtlasFiles", (x) => [
+                    ...x,
+                    {
+                        type: "File",
+                        id: fileId,
+                        name: textureAtlasName,
+                    },
+                ]);
+            };
+            //
+            let selectTextureAtlasFile = (textureAtlasFileId: string) => {
+                if (!this.state.textureAtlasFiles.some((x) => x.id == textureAtlasFileId)) {
+                    return;
+                }
+                setState("selectedTextureAtlasByFileId", textureAtlasFileId);
+            };
+            let isSelectedV2 = createSelector(
+                () => this.state.selectedTextureAtlasByFileId,
+            );
+            let removeTextureAtlasFile = async (textureAtlasFileId: string) => {
+                let vfs = params.vfs();
+                if (vfs.type != "Success") {
+                    return;
+                }
+                let vfs2 = vfs.value;
+                let imagesFolderId = params.imagesFolderId();
+                if (imagesFolderId.type != "Success") {
+                    return;
+                }
+                let imagesFolderId2 = imagesFolderId.value;
+                let textureAtlasData = await vfs2.readFile(textureAtlasFileId);
+                if (textureAtlasData.type == "Err") {
+                    return;
+                }
+                let textureAtlasData2 = await textureAtlasData.value.text();
+                let textureAtlasData3 = JSON.parse(textureAtlasData2);
+                let world = EcsWorld.fromJson(registry, textureAtlasData3);
+                if (world.type == "Err") {
+                    console.log(world.message);
+                    return;
+                }
+                let world2 = world.value;
+                let entities = world2.entitiesWithComponentType(textureAtlasComponentType);
+                if (entities.length != 1) {
+                    return;
+                }
+                let entity = entities[0];
+                let textureAtlas = world2.getComponent(entity, textureAtlasComponentType)?.state;
+                if (textureAtlas == undefined) {
+                    return;
+                }
+                let imageFilename = textureAtlas.imageRef;
+                let filesAndFolders = await vfs2.getFilesAndFolders(imagesFolderId2);
+                if (filesAndFolders.type == "Err") {
+                    return;
+                }
+                let filesAndFolders2 = filesAndFolders.value;
+                let imageFile = filesAndFolders2.find((x) => x.type == "File" && x.name == imageFilename);
                 if (imageFile == undefined) {
                     return;
                 }
                 await vfs2.deleteFile(imageFile.id);
-                //
-                batch(() => {
-                    if (this.state.selectedTilesetById == tileset.id) {
-                        this.setState("selectedTilesetById", undefined);
-                    }
-                    this.setState(
-                        "tilesets",
-                        produce((tilesets) => {
-                            let idx = tilesets.findIndex(
-                                (tileset2) => tileset2.id === tileset.id,
-                            );
-                            if (idx == -1) {
-                                return;
-                            }
-                            tilesets.splice(idx, 1);
-                        }),
-                    );
-                });
+                await vfs2.deleteFile(textureAtlasFileId);
             };
-            //
-            let isSelected = createSelector(() => this.state.selectedTilesetById);
             return (
                 <div style={props.style}>
                     <div
@@ -240,43 +200,43 @@ export class TextureAtlasList {
                         >
                             <b>Texture Atlases:</b>
                         </div>
-                        <button class="btn" onClick={addTileset}>
+                        <button class="btn" onClick={() => addTextureAtlas()}>
                             <i class="fa-solid fa-circle-plus"></i>
                         </button>
                         <input
-                            ref={addTilesetInput}
+                            ref={addTextureAtlasInput}
                             type="file"
                             hidden
                             accept="image/png"
                             onInput={(e) => {
-                                if (addTilesetInput.files?.length != 1) {
+                                if (addTextureAtlasInput.files?.length != 1) {
                                     return;
                                 }
-                                onAddTileset(addTilesetInput.files[0]);
+                                onAddTextureAtlas(addTextureAtlasInput.files[0]);
                             }}
                         />
                     </div>
                     <div class="list-container-2">
-                        <For each={this.state.tilesets}>
-                            {(tileset) => (
+                        <For each={this.state.textureAtlasFiles}>
+                            {(textureAtlasFile) => (
                                 <div
                                     role="button"
                                     class={
-                                        isSelected(tileset.id)
+                                        isSelectedV2(textureAtlasFile.id)
                                             ? "list-item-selected"
                                             : "list-item"
                                     }
                                     onClick={() => {
-                                        selectTileset(tileset.id);
+                                        selectTextureAtlasFile(textureAtlasFile.id);
                                     }}
                                 >
-                                    {tileset.name}
+                                    {textureAtlasFile.name}
                                     <div class="list-item-button-container">
                                         <button
                                             class="list-item-button text-right"
                                             type="button"
                                             onClick={() => {
-                                                removeTileset(tileset);
+                                                removeTextureAtlasFile(textureAtlasFile.id);
                                             }}
                                         >
                                             <i class="fa-solid fa-trash"></i>
@@ -288,6 +248,6 @@ export class TextureAtlasList {
                     </div>
                 </div>
             );
-        }
+        };
     }
 }

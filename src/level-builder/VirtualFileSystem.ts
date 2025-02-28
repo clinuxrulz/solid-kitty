@@ -2,15 +2,15 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { v4 as uuid } from "uuid";
 
 export type VfsFile = {
-    id: string,
-    type: "File",
-    name: string,
+    id: string;
+    type: "File";
+    name: string;
 };
 
 export type VfsFolder = {
-    id: string,
-    type: "Folder",
-    name: string,
+    id: string;
+    type: "Folder";
+    name: string;
 };
 
 export type VfsFileOrFolder = VfsFile | VfsFolder;
