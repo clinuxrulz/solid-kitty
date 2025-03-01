@@ -188,6 +188,41 @@ const LevelBuilder: Component = () => {
     onCleanup(() => {
         textureAtlases.dispose();
     });
+    // Keep all tiles available for level creation
+    {
+        let textureAtlasFiles_ = createMemo(() => {
+            let vfs2 = vfs();
+            if (vfs2.type != "Success") {
+                return vfs2;
+            }
+            let vfs3 = vfs2.value;
+            let textureAtlasesFolderId2 = textureAtlasesFolderId();
+            if (textureAtlasesFolderId2.type != "Success") {
+                return textureAtlasesFolderId2;
+            }
+            let textureAtlasesFolderId3 = textureAtlasesFolderId2.value;
+            let [ filesAndFolders ] = createResource(() => vfs3.getFilesAndFolders(textureAtlasesFolderId3));
+            return asyncSuccess(createMemo(() => {
+                let filesAndFolders2 = filesAndFolders();
+                if (filesAndFolders2 == undefined) {
+                    return asyncPending();
+                }
+                if (filesAndFolders2.type == "Err") {
+                    return asyncFailed(filesAndFolders2.message);
+                }
+                let filesAndFolders3 = filesAndFolders2.value;
+                return asyncSuccess(filesAndFolders3.filter((x) => x.type == "File"));
+            }));
+        });
+        let textureAtlasFiles = createMemo(() => {
+            let tmp = textureAtlasFiles_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    //
     let levels = new Levels({
         vfs,
         imagesFolderId,
