@@ -1,7 +1,6 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
 
 export type LevelState = {
-    name: string;
     tileToShortIdTable: {
         textureAtlasRef: string;
         frames: {
@@ -19,7 +18,6 @@ export const levelComponentType: EcsComponentType<LevelState> =
         typeSchema: {
             type: "Object",
             properties: {
-                name: "String",
                 tileToShortIdTable: {
                     type: "Array",
                     element: {

@@ -22,6 +22,7 @@ import {
     AsyncResult,
     asyncSuccess,
 } from "../AsyncResult";
+import { Levels } from "./Levels";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -29,6 +30,7 @@ type State = {
 
 const IMAGES_FOLDER_NAME = "images";
 const TEXTURE_ALIASES_FOLDER_NAME = "texture_aliases";
+const LEVELS_FOLDER_NAME = "levels";
 
 const LevelBuilder: Component = () => {
     let [state, setState] = createStore<State>({
@@ -81,48 +83,11 @@ const LevelBuilder: Component = () => {
             return tmp.value();
         });
     }
-    let imagesFolderId: Accessor<AsyncResult<string>>;
-    {
-        let imagesFolderId_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
-            let rootFolderFilesAndFolders2 = rootFolderFilesAndFolders();
-            if (rootFolderFilesAndFolders2.type != "Success") {
-                return rootFolderFilesAndFolders2;
-            }
-            let result = rootFolderFilesAndFolders2.value.find(
-                (x) => x.type == "Folder" && x.name == IMAGES_FOLDER_NAME,
-            );
-            if (result != undefined) {
-                return asyncSuccess(() => asyncSuccess(result.id));
-            }
-            let [result2] = createResource(() =>
-                vfs3.createFolder(vfs3.rootFolderId, IMAGES_FOLDER_NAME),
-            );
-            return asyncSuccess(
-                createMemo(() => {
-                    let result3 = result2();
-                    if (result3 == undefined) {
-                        return asyncPending();
-                    }
-                    if (result3.type == "Err") {
-                        return asyncFailed(result3.message);
-                    }
-                    return asyncSuccess(result3.value.folderId);
-                }),
-            );
+    let imagesFolderId: Accessor<AsyncResult<string>> =
+        createGetOrCreateRootFolderId({
+            vfs,
+            folderName: IMAGES_FOLDER_NAME,
         });
-        imagesFolderId = createMemo(() => {
-            let tmp = imagesFolderId_();
-            if (tmp.type != "Success") {
-                return tmp;
-            }
-            return tmp.value();
-        });
-    }
     let textureAtlasesFolderId: Accessor<AsyncResult<string>>;
     {
         let textureAtlasesFolderId_ = createMemo(() => {
@@ -132,45 +97,43 @@ const LevelBuilder: Component = () => {
                 return imagesFolderId2;
             }
             //
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
-            let rootFolderFilesAndFolders2 = rootFolderFilesAndFolders();
-            if (rootFolderFilesAndFolders2.type != "Success") {
-                return rootFolderFilesAndFolders2;
-            }
-            let rootFolderFilesAndFolders3 = rootFolderFilesAndFolders2.value;
-            let result = rootFolderFilesAndFolders3.find(
-                (x) =>
-                    x.type == "Folder" && x.name == TEXTURE_ALIASES_FOLDER_NAME,
+            return asyncSuccess(
+                createGetOrCreateRootFolderId({
+                    vfs,
+                    folderName: TEXTURE_ALIASES_FOLDER_NAME,
+                })
             );
-            if (result != undefined) {
-                return asyncSuccess(() => asyncSuccess(result.id));
-            } else {
-                let [result2] = createResource(() =>
-                    vfs3.createFolder(
-                        vfs3.rootFolderId,
-                        TEXTURE_ALIASES_FOLDER_NAME,
-                    ),
-                );
-                return asyncSuccess(
-                    createMemo(() => {
-                        let result3 = result2();
-                        if (result3 == undefined) {
-                            return asyncPending();
-                        }
-                        if (result3.type == "Err") {
-                            return asyncFailed(result3.message);
-                        }
-                        return asyncSuccess(result3.value.folderId);
-                    }),
-                );
-            }
         });
         textureAtlasesFolderId = createMemo(() => {
             let tmp = textureAtlasesFolderId_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    let levelsFolderId: Accessor<AsyncResult<string>>;
+    {
+        let levelsFolderId_ = createMemo(() => {
+            // Wait for image folder and texture atlas folder to be created first
+            let imagesFolderId2 = imagesFolderId();
+            if (imagesFolderId2.type != "Success") {
+                return imagesFolderId2;
+            }
+            let textureAtlasesFolderId2 = textureAtlasesFolderId();
+            if (textureAtlasesFolderId2.type != "Success") {
+                return textureAtlasesFolderId2;
+            }
+            //
+            return asyncSuccess(
+                createGetOrCreateRootFolderId({
+                    vfs,
+                    folderName: LEVELS_FOLDER_NAME,
+                })
+            );
+        });
+        levelsFolderId = createMemo(() => {
+            let tmp = levelsFolderId_();
             if (tmp.type != "Success") {
                 return tmp;
             }
@@ -225,6 +188,12 @@ const LevelBuilder: Component = () => {
     onCleanup(() => {
         textureAtlases.dispose();
     });
+    let levels = new Levels({
+        vfs,
+        imagesFolderId,
+        textureAtlasesFolderId,
+        levelsFolderId,
+    });
     return (
         <div
             style={{
@@ -271,11 +240,92 @@ const LevelBuilder: Component = () => {
                     />
                 </Match>
                 <Match when={state.selectedTab == "Levels"}>
-                    <></>
+                    <levels.Render
+                        style={{
+                            "flex-grow": "1",
+                        }}
+                    />
                 </Match>
             </Switch>
         </div>
     );
 };
+
+function createGetOrCreateRootFolderId(params: {
+    vfs: Accessor<AsyncResult<VirtualFileSystem>>,
+    folderName: string,
+}): Accessor<AsyncResult<string>> {
+    let rootFilesAndFolders: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+    {
+        let rootFilesAndFolders_ = createMemo(() => {
+            let vfs = params.vfs();
+            if (vfs.type != "Success") {
+                return vfs;
+            }
+            let vfs2 = vfs.value;
+            let [ filesAndFolders ] = createResource(() => vfs2.getFilesAndFolders(vfs2.rootFolderId));
+            return asyncSuccess(createMemo(() => {
+                let filesAndFolders2 = filesAndFolders();
+                if (filesAndFolders2 == undefined) {
+                    return asyncPending();
+                }
+                if (filesAndFolders2.type == "Err") {
+                    return asyncFailed(filesAndFolders2.message);
+                }
+                return asyncSuccess(filesAndFolders2.value);
+            }));
+        });
+        rootFilesAndFolders = createMemo(() => {
+            let tmp = rootFilesAndFolders_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    let folderId: Accessor<AsyncResult<string>>;
+    {
+        let folderId_ = createMemo(() => {
+            let vfs = params.vfs();
+            if (vfs.type != "Success") {
+                return vfs;
+            }
+            let vfs2 = vfs.value;
+            let rootFilesAndFolders2 = rootFilesAndFolders();
+            if (rootFilesAndFolders2.type != "Success") {
+                return rootFilesAndFolders2;
+            }
+            let result = rootFilesAndFolders2.value.find(
+                (x) => x.type == "Folder" && x.name == params.folderName,
+            );
+            if (result != undefined) {
+                return asyncSuccess(() => asyncSuccess(result.id));
+            }
+            let [result2] = createResource(() =>
+                vfs2.createFolder(vfs2.rootFolderId, params.folderName),
+            );
+            return asyncSuccess(
+                createMemo(() => {
+                    let result3 = result2();
+                    if (result3 == undefined) {
+                        return asyncPending();
+                    }
+                    if (result3.type == "Err") {
+                        return asyncFailed(result3.message);
+                    }
+                    return asyncSuccess(result3.value.folderId);
+                }),
+            );
+        });
+        folderId = createMemo(() => {
+            let tmp = folderId_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    return folderId;
+}
 
 export default LevelBuilder;
