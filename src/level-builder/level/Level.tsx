@@ -1,4 +1,4 @@
-import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Show } from "solid-js";
 import { AsyncResult } from "../../AsyncResult";
 import { VirtualFileSystem } from "../VirtualFileSystem";
 import { createStore } from "solid-js/store";
@@ -11,6 +11,7 @@ import { Mode } from "./Mode";
 import { RenderSystem } from "./systems/RenderSystem";
 import { IdleMode } from "./modes/IdleMode";
 import { RenderParams } from "./RenderParams";
+import { registry } from "../components/registry";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -59,6 +60,33 @@ export class Level {
             world: new EcsWorld(),
         });
         let undoManager = new UndoManager();
+        createEffect(on(
+            [ params.vfs, params.levelFileId ],
+            async () => {
+                let vfs = params.vfs();
+                if (vfs.type != "Success") {
+                    return;
+                }
+                let vfs2 = vfs.value;
+                let levelFileId = params.levelFileId();
+                if (levelFileId == undefined) {
+                    return;
+                }
+                let levelFileId2 = levelFileId;
+                let levelData = await vfs2.readFile(levelFileId2);
+                if (levelData.type == "Err") {
+                    return;
+                }
+                let levelData2 = levelData.value;
+                let levelData3 = await levelData2.text();
+                let world = EcsWorld.fromJson(registry, JSON.parse(levelData3));
+                if (world.type == "Err") {
+                    return;
+                }
+                let world2 = world.value;
+                setState("world", world2);
+            },
+        ));
         let triggerAutoSave: () => void;
         {
             let isAutoSaving = false;
