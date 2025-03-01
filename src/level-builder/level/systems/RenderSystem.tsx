@@ -46,6 +46,7 @@ export class RenderSystem {
                                                 height={tileHeight()}
                                                 stroke="black"
                                                 stroke-width={2}
+                                                fill="none"
                                             />
                                         );
                                     }}
