@@ -39,15 +39,25 @@ export class RenderSystem {
                                     {(cell, j) => {
                                         let posX = j * tileWidth();
                                         return (
-                                            <rect
-                                                x={posX}
-                                                y={posY}
-                                                width={tileWidth()}
-                                                height={tileHeight()}
-                                                stroke="black"
-                                                stroke-width={2}
-                                                fill="none"
-                                            />
+                                            <>
+                                                <rect
+                                                    x={posX}
+                                                    y={posY}
+                                                    width={tileWidth()}
+                                                    height={tileHeight()}
+                                                    stroke="black"
+                                                    stroke-width={2}
+                                                    fill="none"
+                                                />
+                                                <text
+                                                    x={posX + 0.5 * tileWidth()}
+                                                    y={posY + 0.5 * tileHeight()}
+                                                    text-anchor="middle"
+                                                    dominant-baseline="middle"
+                                                >
+                                                    {cell()}
+                                                </text>
+                                            </>
                                         );
                                     }}
                                 </Index>
