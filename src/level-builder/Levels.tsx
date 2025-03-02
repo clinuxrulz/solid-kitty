@@ -12,6 +12,8 @@ import { AsyncResult } from "../AsyncResult";
 import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { LevelList } from "./LevelList";
 import { Level } from "./level/Level";
+import { TextureAtlasState } from "./components/TextureAtlasComponent";
+import { FrameState } from "./components/FrameComponent";
 
 type State = {
     showLevelList: boolean;
@@ -27,6 +29,12 @@ export class Levels {
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelsFolderId: Accessor<AsyncResult<string>>;
+        textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
+            textureAtlasFilename: string,
+            textureAtlas: TextureAtlasState;
+            image: HTMLImageElement;
+            frames: FrameState[];
+        }[]>>;
     }) {
         let [state, setState] = createStore<State>({
             showLevelList: false,
@@ -40,6 +48,7 @@ export class Levels {
             imagesFolderId: params.imagesFolderId,
             textureAtlasesFolderId: params.textureAtlasesFolderId,
             levelFileId: levelList.selectedLevelByFileId,
+            textureAtlasWithImageAndFramesList: params.textureAtlasWithImageAndFramesList,
         });
         //
         this.Render = (props) => {

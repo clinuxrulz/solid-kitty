@@ -4,6 +4,9 @@ import { Vec2 } from "../../Vec2";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { PickingSystem } from "./systems/PickingSystem";
 import { Mode } from "./Mode";
+import { AsyncResult } from "../../AsyncResult";
+import { TextureAtlasState } from "../components/TextureAtlasComponent";
+import { FrameState } from "../components/FrameComponent";
 
 export type ModeParams = {
     undoManager: UndoManager;
@@ -13,6 +16,12 @@ export type ModeParams = {
     worldPtToScreenPt(worldPt: Vec2): Vec2 | undefined;
     world: Accessor<EcsWorld>;
     pickingSystem: PickingSystem;
+    textureAtlases: Accessor<AsyncResult<{
+        textureAtlasFilename: string;
+        textureAtlas: TextureAtlasState;
+        image: HTMLImageElement;
+        frames: FrameState[];
+    }[]>>;
     onDone: () => void;
     setMode: (mkMode: () => Mode) => void;
 };

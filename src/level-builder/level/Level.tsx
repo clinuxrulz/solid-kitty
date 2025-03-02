@@ -1,4 +1,4 @@
-import { Accessor, batch, Component, createComputed, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Show } from "solid-js";
 import { AsyncResult } from "../../AsyncResult";
 import { VirtualFileSystem } from "../VirtualFileSystem";
 import { createStore } from "solid-js/store";
@@ -11,6 +11,10 @@ import { Mode } from "./Mode";
 import { RenderSystem } from "./systems/RenderSystem";
 import { IdleMode } from "./modes/IdleMode";
 import { RenderParams } from "./RenderParams";
+import { registry } from "../components/registry";
+import { TextureAtlasState } from "../components/TextureAtlasComponent";
+import { FrameState } from "../components/FrameComponent";
+import { InsertTileMode } from "./modes/InsertTileMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -25,7 +29,16 @@ export class Level {
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelFileId: Accessor<string | undefined>;
+        textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
+            textureAtlasFilename: string;
+            textureAtlas: TextureAtlasState;
+            image: HTMLImageElement;
+            frames: FrameState[];
+        }[]>>;
     }) {
+        // Short name
+        let textureAtlases = params.textureAtlasWithImageAndFramesList;
+        //
         let [ state, setState ] = createStore<{
             mousePos: Vec2 | undefined;
             pan: Vec2;
@@ -59,6 +72,33 @@ export class Level {
             world: new EcsWorld(),
         });
         let undoManager = new UndoManager();
+        createEffect(on(
+            [ params.vfs, params.levelFileId ],
+            async () => {
+                let vfs = params.vfs();
+                if (vfs.type != "Success") {
+                    return;
+                }
+                let vfs2 = vfs.value;
+                let levelFileId = params.levelFileId();
+                if (levelFileId == undefined) {
+                    return;
+                }
+                let levelFileId2 = levelFileId;
+                let levelData = await vfs2.readFile(levelFileId2);
+                if (levelData.type == "Err") {
+                    return;
+                }
+                let levelData2 = levelData.value;
+                let levelData3 = await levelData2.text();
+                let world = EcsWorld.fromJson(registry, JSON.parse(levelData3));
+                if (world.type == "Err") {
+                    return;
+                }
+                let world2 = world.value;
+                setState("world", world2);
+            },
+        ));
         let triggerAutoSave: () => void;
         {
             let isAutoSaving = false;
@@ -133,6 +173,7 @@ export class Level {
         //
         let renderParams: RenderParams = {
             worldPtToScreenPt,
+            textureAtlases,
         };
         //
         let pickingSystem = new PickingSystem({
@@ -153,13 +194,16 @@ export class Level {
             worldPtToScreenPt,
             world: () => state.world,
             pickingSystem,
+            textureAtlases,
             onDone: () => idle(),
             setMode,
         };
         let idle = () => {
             setMode(() => new IdleMode({ modeParams }));
         };
-        const insertTile = () => {};
+        const insertTile = () => {
+            setMode(() => new InsertTileMode(modeParams));
+        };
         let mode = createMemo<Mode>(() => {
             if (state.mkMode == undefined) {
                 return new IdleMode({ modeParams });
@@ -501,12 +545,7 @@ export class Level {
                             ref={setSvg}
                             style={{
                                 "flex-grow": "1",
-                                "background-color": "#DDD",
-                                "background-image":
-                                    "linear-gradient(45deg, #FFFFFF 25%, transparent 25%), linear-gradient(-45deg, #FFFFFF 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #FFFFFF 75%), linear-gradient(-45deg, transparent 75%, #FFFFFF 75%)",
-                                "background-size": "20px 20px",
-                                "background-position":
-                                    "0 0, 0 10px, 10px -10px, -10px 0px",
+                                "background-color": "#FFF",
                                 "touch-action": "none",
                             }}
                             onWheel={onWheel}

@@ -75,7 +75,7 @@ export class LevelList {
                 });
                 let world = new EcsWorld();
                 world.createEntity([level]);
-                let levelJson = world.toJson();
+                let levelJson = JSON.stringify(world.toJson());
                 let result = await vfs2.createFile(
                     levelsFolderId2,
                     levelFilename,
