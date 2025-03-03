@@ -16,6 +16,7 @@ import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
 import { InsertTileMode } from "./modes/InsertTileMode";
 import { levelComponentType, LevelState } from "../components/LevelComponent";
+import { EcsComponent } from "../../ecs/EcsComponent";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -175,19 +176,20 @@ export class Level {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
-        let level: Accessor<LevelState | undefined>;
+        let levelComponent: Accessor<EcsComponent<LevelState> | undefined>;
         {
             let levelEntities = createMemo(() => state.world.entitiesWithComponentType(levelComponentType));
-            level = createMemo(() => {
+            levelComponent = createMemo(() => {
                 let levelEntities2 = levelEntities();
                 if (levelEntities2.length != 1) {
                     return undefined;
                 }
                 let levelEntity = levelEntities2[0];
-                return state.world.getComponent(levelEntity, levelComponentType)?.state;
+                return state.world.getComponent(levelEntity, levelComponentType);
             });
         }
-        let tileIndexToFrame = createMemo(() => {
+        let level = createMemo(() => levelComponent()?.state);
+        let tileIndexToFrameMap = createMemo(() => {
             let level2 = level();
             if (level2 == undefined) {
                 return undefined;
@@ -206,6 +208,107 @@ export class Level {
             }
             return result;
         });
+        let maxTileIndex = createMemo(() => {
+            let tileIndexToFrameMap2 = tileIndexToFrameMap();
+            if (tileIndexToFrameMap2 == undefined) {
+                return 0;
+            }
+            let maxTileIndex = 0;
+            for (let tileIndex of tileIndexToFrameMap2.keys()) {
+                maxTileIndex = Math.max(maxTileIndex, tileIndex);
+            }
+            return maxTileIndex;
+        });
+        let frameToTileIndexSep = "/";
+        let frameToTileIndexMap = createMemo(() => {
+            let level2 = level();
+            if (level2 == undefined) {
+                return undefined;
+            }
+            let result = new Map<string,number>();
+            for (let { textureAtlasRef, frames, } of level2.tileToShortIdTable) {
+                for (let frame of frames) {
+                    result.set(
+                        textureAtlasRef + frameToTileIndexSep + frame.frameName,
+                        frame.shortId,
+                    );
+                }
+            }
+            return result;
+        });
+        let frameToTileIndexOrCreate = (params: {
+            textureAtlasRef: string,
+            frameRef: string,
+        }) => {
+            let frameToTileIndexMap2 = frameToTileIndexMap();
+            if (frameToTileIndexMap2 == undefined) {
+                return undefined;
+            }
+            let r = frameToTileIndexMap2.get(
+                params.textureAtlasRef + frameToTileIndexSep + params.frameRef
+            );
+            if (r != undefined) {
+                return r;
+            }
+            let maxIndex = maxTileIndex();
+            let newIndex = maxIndex + 1;
+            let levelComponent2 = levelComponent();
+            if (levelComponent2 == undefined) {
+                return undefined;
+            }
+            let idx1 = levelComponent2.state.tileToShortIdTable.findIndex((x) => x.textureAtlasRef == params.textureAtlasRef);
+            if (idx1 == -1) {
+                levelComponent2.setState("tileToShortIdTable", (x) => [...x, {
+                    textureAtlasRef: params.textureAtlasRef,
+                    frames: [{
+                        frameName: params.frameRef,
+                        shortId: newIndex,
+                    }],
+                }]);
+            } else {
+                levelComponent2.setState(
+                    "tileToShortIdTable",
+                    idx1,
+                    "frames",
+                    [
+                        ...levelComponent2.state.tileToShortIdTable[idx1].frames,
+                        {
+                            frameName: params.frameRef,
+                            shortId: newIndex,
+                        },
+                    ]
+                );
+            }
+            return newIndex;
+        }
+        let writeTile = (params: {
+            xIdx: number, yIdx: number, textureAtlasRef: string, frameRef: string,
+        }) => {
+            let xIdx = params.xIdx;
+            let yIdx = params.yIdx;
+            let textureAtlasRef = params.textureAtlasRef;
+            let frameRef = params.frameRef;
+            let levelComponent2 = levelComponent();
+            if (levelComponent == undefined) {
+                return undefined;
+            }
+            let level2 = level();
+            if (level2 == undefined) {
+                return undefined;
+            }
+            if (yIdx < 0 || yIdx >= level2.mapData.length) {
+                return;
+            }
+            let row = level2.mapData[yIdx];
+            if (xIdx < 0 || xIdx >= row.length) {
+                return;
+            }
+            let tileIndex = frameToTileIndexOrCreate({
+                textureAtlasRef,
+                frameRef,
+            });
+            levelComponent();
+        }
         //
         let renderParams: RenderParams = {
             worldPtToScreenPt,
