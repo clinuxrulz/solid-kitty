@@ -635,6 +635,7 @@ export class Level {
                             style="font-size: 20pt;"
                             onClick={() => {
                                 console.log(state.world.toJson());
+                                triggerAutoSave();
                             }}
                         >
                             <i class="fa-solid fa-floppy-disk"></i>
