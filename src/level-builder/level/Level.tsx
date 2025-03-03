@@ -15,6 +15,7 @@ import { registry } from "../components/registry";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
 import { InsertTileMode } from "./modes/InsertTileMode";
+import { levelComponentType, LevelState } from "../components/LevelComponent";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -38,6 +39,9 @@ export class Level {
     }) {
         // Short name
         let textureAtlases = params.textureAtlasWithImageAndFramesList;
+        //
+        let tileWidth: Accessor<number> = () => 50;
+        let tileHeight: Accessor<number> = () => 50;
         //
         let [ state, setState ] = createStore<{
             mousePos: Vec2 | undefined;
@@ -171,9 +175,25 @@ export class Level {
             return worldPt.clone().sub(state.pan).multScalar(state.scale);
         };
         //
+        let level: Accessor<LevelState | undefined>;
+        {
+            let levelEntities = createMemo(() => state.world.entitiesWithComponentType(levelComponentType));
+            level = createMemo(() => {
+                let levelEntities2 = levelEntities();
+                if (levelEntities2.length != 1) {
+                    return undefined;
+                }
+                let levelEntity = levelEntities2[0];
+                return state.world.getComponent(levelEntity, levelComponentType)?.state;
+            });
+        }
+        //
         let renderParams: RenderParams = {
             worldPtToScreenPt,
             textureAtlases,
+            tileWidth,
+            tileHeight,
+            level,
         };
         //
         let pickingSystem = new PickingSystem({
@@ -193,6 +213,9 @@ export class Level {
             screenPtToWorldPt,
             worldPtToScreenPt,
             world: () => state.world,
+            tileWidth,
+            tileHeight,
+            level,
             pickingSystem,
             textureAtlases,
             onDone: () => idle(),

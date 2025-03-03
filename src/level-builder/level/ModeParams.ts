@@ -7,6 +7,7 @@ import { Mode } from "./Mode";
 import { AsyncResult } from "../../AsyncResult";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
+import { LevelState } from "../components/LevelComponent";
 
 export type ModeParams = {
     undoManager: UndoManager;
@@ -15,6 +16,9 @@ export type ModeParams = {
     screenPtToWorldPt(screenPt: Vec2): Vec2 | undefined;
     worldPtToScreenPt(worldPt: Vec2): Vec2 | undefined;
     world: Accessor<EcsWorld>;
+    tileWidth: Accessor<number>;
+    tileHeight: Accessor<number>;
+    level: Accessor<LevelState | undefined>;
     pickingSystem: PickingSystem;
     textureAtlases: Accessor<AsyncResult<{
         textureAtlasFilename: string;

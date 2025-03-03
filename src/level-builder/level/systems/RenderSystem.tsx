@@ -13,8 +13,8 @@ export class RenderSystem {
         highlightedEntitiesSet: Accessor<Set<string>>;
         selectedEntitiesSet: Accessor<Set<string>>;
     }) {
-        let tileWidth = () => 50;
-        let tileHeight = () => 50;
+        let tileWidth = params.renderParams.tileWidth;
+        let tileHeight = params.renderParams.tileHeight;
         let level: Accessor<LevelState | undefined>;
         {
             let levelEntities = createMemo(() => params.world().entitiesWithComponentType(levelComponentType));
