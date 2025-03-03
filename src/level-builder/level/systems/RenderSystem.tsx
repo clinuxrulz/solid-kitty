@@ -2,6 +2,7 @@ import { Accessor, Component, createMemo, For, Index, Show } from "solid-js";
 import { EcsWorld } from "../../../ecs/EcsWorld";
 import { RenderParams } from "../RenderParams";
 import { levelComponentType, LevelState } from "../../components/LevelComponent";
+import { FrameState } from "../../components/FrameComponent";
 
 export class RenderSystem {
     readonly Render: Component;
@@ -27,6 +28,35 @@ export class RenderSystem {
                 return params.world().getComponent(levelEntity, levelComponentType)?.state;
             });
         }
+        createMemo(() => {
+            let textureAtlases = params.renderParams.textureAtlases();
+            if (textureAtlases.type != "Success") {
+                return undefined;
+            }
+            let result = new Map<string,Map<string,{
+                image: HTMLImageElement,
+                frame: FrameState,
+            }>>();
+            for (let x of textureAtlases.value) {
+                let textureAtlasRef = x.textureAtlasFilename;
+                let image = x.image;
+                for (let frame of x.frames) {
+                    let tmp = result.get(textureAtlasRef);
+                    if (tmp == undefined) {
+                        tmp = new Map<string,{
+                            image: HTMLImageElement,
+                            frame: FrameState,
+                        }>();
+                        result.set(textureAtlasRef, tmp);
+                    }
+                    tmp.set(frame.name, {
+                        image,
+                        frame,
+                    });
+                }
+            }
+            return result;
+        });
         //
         this.Render = () => (
             <Show when={level()}>
