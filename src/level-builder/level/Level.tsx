@@ -289,7 +289,7 @@ export class Level {
             let textureAtlasRef = params.textureAtlasRef;
             let frameRef = params.frameRef;
             let levelComponent2 = levelComponent();
-            if (levelComponent == undefined) {
+            if (levelComponent2 == undefined) {
                 return undefined;
             }
             let level2 = level();
@@ -307,7 +307,15 @@ export class Level {
                 textureAtlasRef,
                 frameRef,
             });
-            levelComponent();
+            if (tileIndex == undefined) {
+                return;
+            }
+            levelComponent2.setState(
+                "mapData",
+                yIdx,
+                xIdx,
+                tileIndex,
+            );
         }
         //
         let renderParams: RenderParams = {
