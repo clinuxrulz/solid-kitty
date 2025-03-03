@@ -105,6 +105,34 @@ export class RenderSystem {
                                                 >
                                                     {cell()}
                                                 </text>
+                                                <Show when={frame()}>
+                                                    {(frame2) => {
+                                                        let frame3 = () => frame2().frame;
+                                                        let image = () => frame2().image;
+                                                        let scaleX = createMemo(() => params.renderParams.tileWidth() / frame3().size.x);
+                                                        let scaleY = createMemo(() => params.renderParams.tileHeight() / frame3().size.y);
+                                                        let backgroundWidth = createMemo(() =>  image().width * scaleX());
+                                                        let backgroundHeight = createMemo(() =>  image().height * scaleY());
+                                                        let imageUrl = () => image().src;
+                                                        return (
+                                                            <image
+                                                                x={posX}
+                                                                y={posY}
+                                                                width={tileWidth()}
+                                                                height={tileHeight()}
+                                                                style={{
+                                                                    "background-image": `url(${imageUrl()})`,
+                                                                    "background-position-x": `${-frame3().pos.x * scaleX()}px`,
+                                                                    "background-position-y": `${-frame3().pos.y * scaleY()}px`,
+                                                                    "background-size": `${backgroundWidth()}px ${backgroundHeight()}px`,
+                                                                    "image-rendering": "pixelated",
+                                                                    "margin-left": "20px",
+                                                                    "margin-top": "20px",
+                                                                }}
+                                                            />
+                                                        );
+                                                    }}
+                                                </Show>
                                             </>
                                         );
                                     }}
