@@ -118,16 +118,10 @@ export class RenderSystem {
                                                             <image
                                                                 x={posX}
                                                                 y={posY}
-                                                                width={tileWidth()}
-                                                                height={tileHeight()}
+                                                                //width={tileWidth()}
+                                                                //height={tileHeight()}
                                                                 style={{
-                                                                    "background-image": `url(${imageUrl()})`,
-                                                                    "background-position-x": `${-frame3().pos.x * scaleX()}px`,
-                                                                    "background-position-y": `${-frame3().pos.y * scaleY()}px`,
-                                                                    "background-size": `${backgroundWidth()}px ${backgroundHeight()}px`,
                                                                     "image-rendering": "pixelated",
-                                                                    "margin-left": "20px",
-                                                                    "margin-top": "20px",
                                                                 }}
                                                                 href={imageUrl()}
                                                                 attr:clip-path={`inset(${frame3().pos.y}px ${image().width - frame3().pos.x - frame3().size.x}px ${image().height - frame3().pos.y - frame3().size.y}px ${frame3().pos.x}px)`}
