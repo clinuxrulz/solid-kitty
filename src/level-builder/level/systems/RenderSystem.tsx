@@ -28,7 +28,7 @@ export class RenderSystem {
                 return params.world().getComponent(levelEntity, levelComponentType)?.state;
             });
         }
-        createMemo(() => {
+        let imageFrameLookupMap = createMemo(() => {
             let textureAtlases = params.renderParams.textureAtlases();
             if (textureAtlases.type != "Success") {
                 return undefined;
@@ -67,6 +67,24 @@ export class RenderSystem {
                             return (
                                 <Index each={row()}>
                                     {(cell, j) => {
+                                        let frame = createMemo(() => {
+                                            let tmp = params.renderParams.tileIndexToFrameMap()
+                                            if (tmp == undefined) {
+                                                return undefined;
+                                            }
+                                            let tmp2 = tmp.get(cell());
+                                            if (tmp2 == undefined) {
+                                                return undefined;
+                                            }
+                                            let frameRef = tmp2.frameRef;
+                                            let textureAtlasRef = tmp2.textureAtlasRef;
+                                            let imageFrameLookupMap2 = imageFrameLookupMap();
+                                            if (imageFrameLookupMap2 == undefined) {
+                                                return undefined;
+                                            }
+                                            let tmp3 = imageFrameLookupMap2.get(textureAtlasRef)?.get(frameRef);
+                                            return tmp3;
+                                        });
                                         let posX = j * tileWidth();
                                         return (
                                             <>

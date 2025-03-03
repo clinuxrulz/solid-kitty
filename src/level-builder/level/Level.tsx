@@ -324,6 +324,7 @@ export class Level {
             tileWidth,
             tileHeight,
             level,
+            tileIndexToFrameMap,
         };
         //
         let pickingSystem = new PickingSystem({

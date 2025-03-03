@@ -10,6 +10,10 @@ export interface RenderParams {
     tileWidth: Accessor<number>;
     tileHeight: Accessor<number>;
     level: Accessor<LevelState | undefined>;
+    tileIndexToFrameMap: Accessor<Map<number, {
+        textureAtlasRef: string;
+        frameRef: string;
+    }> | undefined>;
     textureAtlases: Accessor<AsyncResult<{
         textureAtlasFilename: string;
         textureAtlas: TextureAtlasState;
