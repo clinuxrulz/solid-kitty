@@ -346,6 +346,7 @@ export class Level {
             tileWidth,
             tileHeight,
             level,
+            writeTile,
             pickingSystem,
             textureAtlases,
             onDone: () => idle(),

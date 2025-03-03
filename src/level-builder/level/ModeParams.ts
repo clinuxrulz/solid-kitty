@@ -19,6 +19,9 @@ export type ModeParams = {
     tileWidth: Accessor<number>;
     tileHeight: Accessor<number>;
     level: Accessor<LevelState | undefined>;
+    writeTile: (params: {
+        xIdx: number, yIdx: number, textureAtlasRef: string, frameRef: string,
+    }) => void;
     pickingSystem: PickingSystem;
     textureAtlases: Accessor<AsyncResult<{
         textureAtlasFilename: string;
