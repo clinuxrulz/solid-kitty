@@ -5,6 +5,7 @@ import { createStore } from "solid-js/store";
 import { NoTrack } from "../../../util";
 
 export class InsertTileMode implements Mode {
+    instructions: Component;
     overlayHtmlUI: Component;
 
     constructor(modeParams: ModeParams) {
@@ -23,6 +24,11 @@ export class InsertTileMode implements Mode {
             }
             return textureAtlases2.value;
         });
+        this.instructions = () => (
+            <Show when={state.selectedTile != undefined}>
+                Click where you would like to insert tiles.
+            </Show>
+        );
         const DISPLAY_TILE_SIZE = 200;
         this.overlayHtmlUI = () => {
             return (
