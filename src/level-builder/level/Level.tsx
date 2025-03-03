@@ -1,4 +1,4 @@
-import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mergeProps, on, onCleanup, Show } from "solid-js";
+import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mapArray, mergeProps, on, onCleanup, Show } from "solid-js";
 import { AsyncResult } from "../../AsyncResult";
 import { VirtualFileSystem } from "../VirtualFileSystem";
 import { createStore } from "solid-js/store";
@@ -187,6 +187,25 @@ export class Level {
                 return state.world.getComponent(levelEntity, levelComponentType)?.state;
             });
         }
+        let tileIndexToFrame = createMemo(() => {
+            let level2 = level();
+            if (level2 == undefined) {
+                return undefined;
+            }
+            let result = new Map<number,{ textureAtlasRef: string, frameRef: string, }>;
+            for (let { textureAtlasRef, frames, } of level2.tileToShortIdTable) {
+                for (let frame of frames) {
+                    result.set(
+                        frame.shortId,
+                        {
+                            textureAtlasRef,
+                            frameRef: frame.frameName,
+                        }
+                    );
+                }
+            }
+            return result;
+        });
         //
         let renderParams: RenderParams = {
             worldPtToScreenPt,
