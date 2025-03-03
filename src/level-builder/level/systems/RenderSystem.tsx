@@ -130,6 +130,7 @@ export class RenderSystem {
                                                                     "margin-top": "20px",
                                                                 }}
                                                                 href={imageUrl()}
+                                                                attr:clip-path={`inset(${frame3().pos.y}px ${image().width - frame3().pos.x - frame3().size.x}px ${image().height - frame3().pos.y - frame3().size.y}px ${frame3().pos.x}px)`}
                                                             />
                                                         );
                                                     }}
