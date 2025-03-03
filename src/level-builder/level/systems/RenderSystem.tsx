@@ -2,6 +2,7 @@ import { Accessor, Component, createMemo, For, Index, Show } from "solid-js";
 import { EcsWorld } from "../../../ecs/EcsWorld";
 import { RenderParams } from "../RenderParams";
 import { levelComponentType, LevelState } from "../../components/LevelComponent";
+import { FrameState } from "../../components/FrameComponent";
 
 export class RenderSystem {
     readonly Render: Component;
@@ -13,8 +14,8 @@ export class RenderSystem {
         highlightedEntitiesSet: Accessor<Set<string>>;
         selectedEntitiesSet: Accessor<Set<string>>;
     }) {
-        let tileWidth = () => 50;
-        let tileHeight = () => 50;
+        let tileWidth = params.renderParams.tileWidth;
+        let tileHeight = params.renderParams.tileHeight;
         let level: Accessor<LevelState | undefined>;
         {
             let levelEntities = createMemo(() => params.world().entitiesWithComponentType(levelComponentType));
@@ -27,6 +28,35 @@ export class RenderSystem {
                 return params.world().getComponent(levelEntity, levelComponentType)?.state;
             });
         }
+        let imageFrameLookupMap = createMemo(() => {
+            let textureAtlases = params.renderParams.textureAtlases();
+            if (textureAtlases.type != "Success") {
+                return undefined;
+            }
+            let result = new Map<string,Map<string,{
+                image: HTMLImageElement,
+                frame: FrameState,
+            }>>();
+            for (let x of textureAtlases.value) {
+                let textureAtlasRef = x.textureAtlasFilename;
+                let image = x.image;
+                for (let frame of x.frames) {
+                    let tmp = result.get(textureAtlasRef);
+                    if (tmp == undefined) {
+                        tmp = new Map<string,{
+                            image: HTMLImageElement,
+                            frame: FrameState,
+                        }>();
+                        result.set(textureAtlasRef, tmp);
+                    }
+                    tmp.set(frame.name, {
+                        image,
+                        frame,
+                    });
+                }
+            }
+            return result;
+        });
         //
         this.Render = () => (
             <Show when={level()}>
@@ -37,6 +67,24 @@ export class RenderSystem {
                             return (
                                 <Index each={row()}>
                                     {(cell, j) => {
+                                        let frame = createMemo(() => {
+                                            let tmp = params.renderParams.tileIndexToFrameMap()
+                                            if (tmp == undefined) {
+                                                return undefined;
+                                            }
+                                            let tmp2 = tmp.get(cell());
+                                            if (tmp2 == undefined) {
+                                                return undefined;
+                                            }
+                                            let frameRef = tmp2.frameRef;
+                                            let textureAtlasRef = tmp2.textureAtlasRef;
+                                            let imageFrameLookupMap2 = imageFrameLookupMap();
+                                            if (imageFrameLookupMap2 == undefined) {
+                                                return undefined;
+                                            }
+                                            let tmp3 = imageFrameLookupMap2.get(textureAtlasRef)?.get(frameRef);
+                                            return tmp3;
+                                        });
                                         let posX = j * tileWidth();
                                         return (
                                             <>
@@ -57,6 +105,30 @@ export class RenderSystem {
                                                 >
                                                     {cell()}
                                                 </text>
+                                                <Show when={frame()}>
+                                                    {(frame2) => {
+                                                        let frame3 = () => frame2().frame;
+                                                        let image = () => frame2().image;
+                                                        let scaleX = createMemo(() => params.renderParams.tileWidth() / frame3().size.x);
+                                                        let scaleY = createMemo(() => params.renderParams.tileHeight() / frame3().size.y);
+                                                        let backgroundWidth = createMemo(() =>  image().width * scaleX());
+                                                        let backgroundHeight = createMemo(() =>  image().height * scaleY());
+                                                        let imageUrl = () => image().src;
+                                                        return (
+                                                            <image
+                                                                x={posX-frame3().pos.x*scaleX()}
+                                                                y={posY-frame3().pos.y*scaleY()}
+                                                                width={backgroundWidth()}
+                                                                height={backgroundHeight()}
+                                                                style={{
+                                                                    "image-rendering": "pixelated",
+                                                                }}
+                                                                href={imageUrl()}
+                                                                attr:clip-path={`inset(${frame3().pos.y*scaleY()}px ${(image().width - frame3().pos.x - frame3().size.x)*scaleX()}px ${(image().height - frame3().pos.y - frame3().size.y)*scaleY()}px ${frame3().pos.x*scaleX()}px)`}
+                                                            />
+                                                        );
+                                                    }}
+                                                </Show>
                                             </>
                                         );
                                     }}
