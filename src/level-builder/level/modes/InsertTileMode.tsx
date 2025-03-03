@@ -44,14 +44,17 @@ export class InsertTileMode implements Mode {
             return textureAtlases2.value;
         });
         this.instructions = () => (
-            <Show when={state.selectedTile != undefined}>
-                Click where you would like to insert tiles.<br/>
-                <button
-                    class="btn"
-                    onClick={() => modeParams.onDone()}
-                >
-                    End Mode
-                </button>
+            <Show when={state.selectedTile}>
+                {(tile) => (<>
+                    Click where you would like to insert tiles.<br/>
+                    ({tile().value.textureAtlasRef}, {tile().value.frameRef})<br/>
+                    <button
+                        class="btn"
+                        onClick={() => modeParams.onDone()}
+                    >
+                        End Mode
+                    </button>
+                </>)}
             </Show>
         );
         const DISPLAY_TILE_SIZE = 200;
