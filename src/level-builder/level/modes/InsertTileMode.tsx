@@ -45,7 +45,13 @@ export class InsertTileMode implements Mode {
         });
         this.instructions = () => (
             <Show when={state.selectedTile != undefined}>
-                Click where you would like to insert tiles.
+                Click where you would like to insert tiles.<br/>
+                <button
+                    class="btn"
+                    onClick={() => modeParams.onDone()}
+                >
+                    End Mode
+                </button>
             </Show>
         );
         const DISPLAY_TILE_SIZE = 200;
