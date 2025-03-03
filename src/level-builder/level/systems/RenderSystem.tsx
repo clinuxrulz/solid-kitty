@@ -129,6 +129,7 @@ export class RenderSystem {
                                                                     "margin-left": "20px",
                                                                     "margin-top": "20px",
                                                                 }}
+                                                                href={imageUrl()}
                                                             />
                                                         );
                                                     }}
