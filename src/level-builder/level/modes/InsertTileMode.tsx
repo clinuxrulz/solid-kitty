@@ -3,10 +3,12 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
 import { NoTrack } from "../../../util";
+import { Vec2 } from "../../../Vec2";
 
 export class InsertTileMode implements Mode {
     instructions: Component;
     overlayHtmlUI: Component;
+    click: () => void;
 
     constructor(modeParams: ModeParams) {
         let [ state, setState ] = createStore<{
@@ -16,6 +18,23 @@ export class InsertTileMode implements Mode {
             }> | undefined,
         }>({
             selectedTile: undefined,
+        });
+        let workingPt = createMemo(() => {
+            let mousePos = modeParams.mousePos();
+            if (mousePos == undefined) {
+                return undefined;
+            }
+            return modeParams.screenPtToWorldPt(mousePos);
+        });
+        let tilePos = createMemo(() => {
+            let pt = workingPt();
+            if (pt == undefined) {
+                return undefined;
+            }
+            return Vec2.create(
+                Math.floor(pt.x / modeParams.tileWidth()),
+                Math.floor(pt.y / modeParams.tileHeight()),
+            );
         });
         let textureAtlases = createMemo(() => {
             let textureAtlases2 = modeParams.textureAtlases();
@@ -119,6 +138,22 @@ export class InsertTileMode implements Mode {
                     </div>
                 </Show>
             );
+        };
+        this.click = () => {
+            if (state.selectedTile == undefined) {
+                return;
+            }
+            let tilePos2 = tilePos();
+            if (tilePos2 == undefined) {
+                return;
+            }
+            let { textureAtlasRef, frameRef, } = state.selectedTile.value;
+            modeParams.writeTile({
+                xIdx: tilePos2.x,
+                yIdx: tilePos2.y,
+                textureAtlasRef,
+                frameRef,
+            });
         };
     }
 }
