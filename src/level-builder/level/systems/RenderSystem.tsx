@@ -116,15 +116,15 @@ export class RenderSystem {
                                                         let imageUrl = () => image().src;
                                                         return (
                                                             <image
-                                                                x={posX}
-                                                                y={posY}
-                                                                //width={tileWidth()}
-                                                                //height={tileHeight()}
+                                                                x={posX-frame3().pos.x*scaleX()}
+                                                                y={posY-frame3().pos.y*scaleY()}
+                                                                width={backgroundWidth()}
+                                                                height={backgroundHeight()}
                                                                 style={{
                                                                     "image-rendering": "pixelated",
                                                                 }}
                                                                 href={imageUrl()}
-                                                                attr:clip-path={`inset(${frame3().pos.y}px ${image().width - frame3().pos.x - frame3().size.x}px ${image().height - frame3().pos.y - frame3().size.y}px ${frame3().pos.x}px)`}
+                                                                attr:clip-path={`inset(${frame3().pos.y*scaleY()}px ${(image().width - frame3().pos.x - frame3().size.x)*scaleX()}px ${(image().height - frame3().pos.y - frame3().size.y)*scaleY()}px ${frame3().pos.x*scaleX()}px)`}
                                                             />
                                                         );
                                                     }}
