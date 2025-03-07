@@ -11,11 +11,13 @@ export class InsertTileMode implements Mode {
     click: () => void;
 
     constructor(modeParams: ModeParams) {
-        let [ state, setState ] = createStore<{
-            selectedTile: NoTrack<{
-                textureAtlasRef: string,
-                frameRef: string,
-            }> | undefined,
+        let [state, setState] = createStore<{
+            selectedTile:
+                | NoTrack<{
+                      textureAtlasRef: string;
+                      frameRef: string;
+                  }>
+                | undefined;
         }>({
             selectedTile: undefined,
         });
@@ -45,16 +47,16 @@ export class InsertTileMode implements Mode {
         });
         this.instructions = () => (
             <Show when={state.selectedTile}>
-                {(tile) => (<>
-                    Click where you would like to insert tiles.<br/>
-                    ({tile().value.textureAtlasRef}, {tile().value.frameRef})<br/>
-                    <button
-                        class="btn"
-                        onClick={() => modeParams.onDone()}
-                    >
-                        End Mode
-                    </button>
-                </>)}
+                {(tile) => (
+                    <>
+                        Click where you would like to insert tiles.
+                        <br />({tile().value.textureAtlasRef},{" "}
+                        {tile().value.frameRef})<br />
+                        <button class="btn" onClick={() => modeParams.onDone()}>
+                            End Mode
+                        </button>
+                    </>
+                )}
             </Show>
         );
         const DISPLAY_TILE_SIZE = 200;
@@ -63,19 +65,17 @@ export class InsertTileMode implements Mode {
                 <Show when={state.selectedTile == undefined}>
                     <div
                         style={{
-                            "position": "absolute",
-                            "left": "0",
-                            "top": "0",
-                            "bottom": "0",
-                            "right": "0",
-                            "background": "rgba(0,0,0,0.8)",
-                            "display": "flex",
+                            position: "absolute",
+                            left: "0",
+                            top: "0",
+                            bottom: "0",
+                            right: "0",
+                            background: "rgba(0,0,0,0.8)",
+                            display: "flex",
                             "flex-direction": "column",
                         }}
                     >
-                        <div>
-                            Select a tile to insert:
-                        </div>
+                        <div>Select a tile to insert:</div>
                         <Show when={textureAtlases()}>
                             {(textureAtlases2) => (
                                 <div
@@ -87,7 +87,7 @@ export class InsertTileMode implements Mode {
                                 >
                                     <div
                                         style={{
-                                            "display": "flex",
+                                            display: "flex",
                                             "flex-wrap": "wrap",
                                             "flex-direction": "row",
                                         }}
@@ -97,41 +97,101 @@ export class InsertTileMode implements Mode {
                                                 let image = textureAtlas.image;
                                                 let imageUrl = image.src;
                                                 return (
-                                                    <For each={textureAtlas.frames}>
+                                                    <For
+                                                        each={
+                                                            textureAtlas.frames
+                                                        }
+                                                    >
                                                         {(frame) => {
-                                                            let scaleX = createMemo(() => DISPLAY_TILE_SIZE / frame.size.x);
-                                                            let scaleY = createMemo(() => DISPLAY_TILE_SIZE / frame.size.y);
-                                                            let backgroundWidth = createMemo(() =>  image.width * scaleX());
-                                                            let backgroundHeight = createMemo(() =>  image.height * scaleY());
-                                                            let [ highlightIt, setHighlightIt ] = createSignal(false);
-                                                            let onMouseOver = () => {
-                                                                setHighlightIt(true);
-                                                            };
-                                                            let onMouseOut = () => {
-                                                                setHighlightIt(false);
-                                                            };
+                                                            let scaleX =
+                                                                createMemo(
+                                                                    () =>
+                                                                        DISPLAY_TILE_SIZE /
+                                                                        frame
+                                                                            .size
+                                                                            .x,
+                                                                );
+                                                            let scaleY =
+                                                                createMemo(
+                                                                    () =>
+                                                                        DISPLAY_TILE_SIZE /
+                                                                        frame
+                                                                            .size
+                                                                            .y,
+                                                                );
+                                                            let backgroundWidth =
+                                                                createMemo(
+                                                                    () =>
+                                                                        image.width *
+                                                                        scaleX(),
+                                                                );
+                                                            let backgroundHeight =
+                                                                createMemo(
+                                                                    () =>
+                                                                        image.height *
+                                                                        scaleY(),
+                                                                );
+                                                            let [
+                                                                highlightIt,
+                                                                setHighlightIt,
+                                                            ] =
+                                                                createSignal(
+                                                                    false,
+                                                                );
+                                                            let onMouseOver =
+                                                                () => {
+                                                                    setHighlightIt(
+                                                                        true,
+                                                                    );
+                                                                };
+                                                            let onMouseOut =
+                                                                () => {
+                                                                    setHighlightIt(
+                                                                        false,
+                                                                    );
+                                                                };
                                                             return (
                                                                 <div
-                                                                    onMouseOver={onMouseOver}
-                                                                    onMouseOut={onMouseOut}
+                                                                    onMouseOver={
+                                                                        onMouseOver
+                                                                    }
+                                                                    onMouseOut={
+                                                                        onMouseOut
+                                                                    }
                                                                     onClick={() => {
-                                                                        setState("selectedTile", new NoTrack({
-                                                                            textureAtlasRef: textureAtlas.textureAtlasFilename,
-                                                                            frameRef: frame.name,
-                                                                        }))
+                                                                        setState(
+                                                                            "selectedTile",
+                                                                            new NoTrack(
+                                                                                {
+                                                                                    textureAtlasRef:
+                                                                                        textureAtlas.textureAtlasFilename,
+                                                                                    frameRef:
+                                                                                        frame.name,
+                                                                                },
+                                                                            ),
+                                                                        );
                                                                     }}
                                                                     style={{
                                                                         "background-image": `url(${imageUrl})`,
                                                                         "background-position-x": `${-frame.pos.x * scaleX()}px`,
                                                                         "background-position-y": `${-frame.pos.y * scaleY()}px`,
                                                                         "background-size": `${backgroundWidth()}px ${backgroundHeight()}px`,
-                                                                        "background-color": highlightIt() ? "blue" : undefined,
-                                                                        "background-blend-mode": highlightIt() ? "lighten" : undefined,
-                                                                        "width": `${DISPLAY_TILE_SIZE}px`,
-                                                                        "height": `${DISPLAY_TILE_SIZE}px`,
-                                                                        "image-rendering": "pixelated",
-                                                                        "margin-left": "20px",
-                                                                        "margin-top": "20px",
+                                                                        "background-color":
+                                                                            highlightIt()
+                                                                                ? "blue"
+                                                                                : undefined,
+                                                                        "background-blend-mode":
+                                                                            highlightIt()
+                                                                                ? "lighten"
+                                                                                : undefined,
+                                                                        width: `${DISPLAY_TILE_SIZE}px`,
+                                                                        height: `${DISPLAY_TILE_SIZE}px`,
+                                                                        "image-rendering":
+                                                                            "pixelated",
+                                                                        "margin-left":
+                                                                            "20px",
+                                                                        "margin-top":
+                                                                            "20px",
                                                                     }}
                                                                 />
                                                             );
@@ -156,7 +216,7 @@ export class InsertTileMode implements Mode {
             if (tilePos2 == undefined) {
                 return;
             }
-            let { textureAtlasRef, frameRef, } = state.selectedTile.value;
+            let { textureAtlasRef, frameRef } = state.selectedTile.value;
             modeParams.writeTile({
                 xIdx: tilePos2.x,
                 yIdx: tilePos2.y,

@@ -11,7 +11,7 @@ export type AsyncResult<A, E = string> =
           message: E;
       };
 
-const PENDING: AsyncResult<never,never> = { type: "Pending", };
+const PENDING: AsyncResult<never, never> = { type: "Pending" };
 
 export function asyncPending(): AsyncResult<never, never> {
     return PENDING;

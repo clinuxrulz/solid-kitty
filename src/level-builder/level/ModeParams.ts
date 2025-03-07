@@ -20,15 +20,22 @@ export type ModeParams = {
     tileHeight: Accessor<number>;
     level: Accessor<LevelState | undefined>;
     writeTile: (params: {
-        xIdx: number, yIdx: number, textureAtlasRef: string, frameRef: string,
+        xIdx: number;
+        yIdx: number;
+        textureAtlasRef: string;
+        frameRef: string;
     }) => void;
     pickingSystem: PickingSystem;
-    textureAtlases: Accessor<AsyncResult<{
-        textureAtlasFilename: string;
-        textureAtlas: TextureAtlasState;
-        image: HTMLImageElement;
-        frames: FrameState[];
-    }[]>>;
+    textureAtlases: Accessor<
+        AsyncResult<
+            {
+                textureAtlasFilename: string;
+                textureAtlas: TextureAtlasState;
+                image: HTMLImageElement;
+                frames: FrameState[];
+            }[]
+        >
+    >;
     onDone: () => void;
     setMode: (mkMode: () => Mode) => void;
 };

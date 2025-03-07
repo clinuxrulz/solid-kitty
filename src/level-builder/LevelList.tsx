@@ -1,4 +1,14 @@
-import { Accessor, Component, createEffect, createMemo, createResource, createSelector, For, JSX, on } from "solid-js";
+import {
+    Accessor,
+    Component,
+    createEffect,
+    createMemo,
+    createResource,
+    createSelector,
+    For,
+    JSX,
+    on,
+} from "solid-js";
 import { AsyncResult } from "../AsyncResult";
 import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { createStore } from "solid-js/store";
@@ -8,26 +18,22 @@ import { EcsWorld } from "../ecs/EcsWorld";
 export class LevelList {
     readonly selectedLevelByFileId: Accessor<string | undefined>;
     readonly Render: Component<{
-        style?: JSX.CSSProperties
+        style?: JSX.CSSProperties;
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>,
-        levelsFolderId: Accessor<AsyncResult<string>>,
+        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        levelsFolderId: Accessor<AsyncResult<string>>;
     }) {
-        let [ state, setState ] = createStore<{
-            levelFiles: VfsFile[],
-            seletedLevelByFileId: string | undefined,
+        let [state, setState] = createStore<{
+            levelFiles: VfsFile[];
+            seletedLevelByFileId: string | undefined;
         }>({
             levelFiles: [],
             seletedLevelByFileId: undefined,
         });
-        createEffect(on(
-            [
-                params.vfs,
-                params.levelsFolderId,
-            ],
-            async () => {
+        createEffect(
+            on([params.vfs, params.levelsFolderId], async () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
@@ -38,15 +44,18 @@ export class LevelList {
                     return;
                 }
                 let levelsFolderId2 = levelsFolderId.value;
-                let filesAndFolders = await vfs2.getFilesAndFolders(levelsFolderId2);
+                let filesAndFolders =
+                    await vfs2.getFilesAndFolders(levelsFolderId2);
                 if (filesAndFolders.type == "Err") {
                     return;
                 }
                 let filesAndFolders2 = filesAndFolders.value;
-                let levelFiles = filesAndFolders2.filter((x) => x.type == "File");
+                let levelFiles = filesAndFolders2.filter(
+                    (x) => x.type == "File",
+                );
                 setState("levelFiles", levelFiles);
-            },
-        ));
+            }),
+        );
         this.selectedLevelByFileId = () => state.seletedLevelByFileId;
         this.Render = (props) => {
             let addLevel = async () => {
@@ -71,7 +80,13 @@ export class LevelList {
                 levelFilename += ".json";
                 let level = levelComponentType.create({
                     tileToShortIdTable: [],
-                    mapData: Array(10).fill(undefined).map((_) => Array(10).fill(undefined).map((_) => 0)),
+                    mapData: Array(10)
+                        .fill(undefined)
+                        .map((_) =>
+                            Array(10)
+                                .fill(undefined)
+                                .map((_) => 0),
+                        ),
                 });
                 let world = new EcsWorld();
                 world.createEntity([level]);
@@ -79,17 +94,20 @@ export class LevelList {
                 let result = await vfs2.createFile(
                     levelsFolderId2,
                     levelFilename,
-                    new Blob([ levelJson ], { type: "application/json", }),
+                    new Blob([levelJson], { type: "application/json" }),
                 );
                 if (result.type == "Err") {
                     return;
                 }
-                let { fileId, } = result.value;
-                setState("levelFiles", (x) => [...x, {
-                    id: fileId,
-                    type: "File",
-                    name: levelFilename,
-                }]);
+                let { fileId } = result.value;
+                setState("levelFiles", (x) => [
+                    ...x,
+                    {
+                        id: fileId,
+                        type: "File",
+                        name: levelFilename,
+                    },
+                ]);
             };
             let isSelected = createSelector(() => state.seletedLevelByFileId);
             let selectLevel = (levelFileId: string) => {
@@ -136,9 +154,7 @@ export class LevelList {
                                             : "list-item"
                                     }
                                     onClick={() => {
-                                        selectLevel(
-                                            levelFile.id,
-                                        );
+                                        selectLevel(levelFile.id);
                                     }}
                                 >
                                     {levelFile.name}
@@ -147,9 +163,7 @@ export class LevelList {
                                             class="list-item-button text-right"
                                             type="button"
                                             onClick={() => {
-                                                removeLevel(
-                                                    levelFile.id,
-                                                );
+                                                removeLevel(levelFile.id);
                                             }}
                                         >
                                             <i class="fa-solid fa-trash"></i>

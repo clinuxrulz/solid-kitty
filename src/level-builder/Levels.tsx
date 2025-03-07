@@ -29,12 +29,16 @@ export class Levels {
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelsFolderId: Accessor<AsyncResult<string>>;
-        textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
-            textureAtlasFilename: string,
-            textureAtlas: TextureAtlasState;
-            image: HTMLImageElement;
-            frames: FrameState[];
-        }[]>>;
+        textureAtlasWithImageAndFramesList: Accessor<
+            AsyncResult<
+                {
+                    textureAtlasFilename: string;
+                    textureAtlas: TextureAtlasState;
+                    image: HTMLImageElement;
+                    frames: FrameState[];
+                }[]
+            >
+        >;
     }) {
         let [state, setState] = createStore<State>({
             showLevelList: false,
@@ -48,7 +52,8 @@ export class Levels {
             imagesFolderId: params.imagesFolderId,
             textureAtlasesFolderId: params.textureAtlasesFolderId,
             levelFileId: levelList.selectedLevelByFileId,
-            textureAtlasWithImageAndFramesList: params.textureAtlasWithImageAndFramesList,
+            textureAtlasWithImageAndFramesList:
+                params.textureAtlasWithImageAndFramesList,
         });
         //
         this.Render = (props) => {
@@ -91,14 +96,11 @@ export class Levels {
                                 }}
                             >
                                 <div>
-                                    <levelList.Render/>
+                                    <levelList.Render />
                                     <button
                                         class="btn"
                                         onClick={() =>
-                                            setState(
-                                                "showLevelList",
-                                                false,
-                                            )
+                                            setState("showLevelList", false)
                                         }
                                     >
                                         Close

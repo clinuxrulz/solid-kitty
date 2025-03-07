@@ -1,4 +1,18 @@
-import { Accessor, batch, Component, createComputed, createEffect, createMemo, createSignal, JSX, mapArray, mergeProps, on, onCleanup, Show } from "solid-js";
+import {
+    Accessor,
+    batch,
+    Component,
+    createComputed,
+    createEffect,
+    createMemo,
+    createSignal,
+    JSX,
+    mapArray,
+    mergeProps,
+    on,
+    onCleanup,
+    Show,
+} from "solid-js";
 import { AsyncResult } from "../../AsyncResult";
 import { VirtualFileSystem } from "../VirtualFileSystem";
 import { createStore } from "solid-js/store";
@@ -22,8 +36,8 @@ const AUTO_SAVE_TIMEOUT = 2000;
 
 export class Level {
     readonly Render: Component<{
-        style?: JSX.CSSProperties,
-        onBurger?: () => void,
+        style?: JSX.CSSProperties;
+        onBurger?: () => void;
     }>;
 
     constructor(params: {
@@ -31,12 +45,16 @@ export class Level {
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelFileId: Accessor<string | undefined>;
-        textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
-            textureAtlasFilename: string;
-            textureAtlas: TextureAtlasState;
-            image: HTMLImageElement;
-            frames: FrameState[];
-        }[]>>;
+        textureAtlasWithImageAndFramesList: Accessor<
+            AsyncResult<
+                {
+                    textureAtlasFilename: string;
+                    textureAtlas: TextureAtlasState;
+                    image: HTMLImageElement;
+                    frames: FrameState[];
+                }[]
+            >
+        >;
     }) {
         // Short name
         let textureAtlases = params.textureAtlasWithImageAndFramesList;
@@ -44,7 +62,7 @@ export class Level {
         let tileWidth: Accessor<number> = () => 50;
         let tileHeight: Accessor<number> = () => 50;
         //
-        let [ state, setState ] = createStore<{
+        let [state, setState] = createStore<{
             mousePos: Vec2 | undefined;
             pan: Vec2;
             scale: number;
@@ -61,8 +79,8 @@ export class Level {
             //
             mkMode: (() => Mode) | undefined;
             //
-            autoSaving: boolean,
-            world: EcsWorld,
+            autoSaving: boolean;
+            world: EcsWorld;
         }>({
             mousePos: undefined,
             pan: Vec2.create(-1, -1),
@@ -77,9 +95,8 @@ export class Level {
             world: new EcsWorld(),
         });
         let undoManager = new UndoManager();
-        createEffect(on(
-            [ params.vfs, params.levelFileId ],
-            async () => {
+        createEffect(
+            on([params.vfs, params.levelFileId], async () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
@@ -102,8 +119,8 @@ export class Level {
                 }
                 let world2 = world.value;
                 setState("world", world2);
-            },
-        ));
+            }),
+        );
         let triggerAutoSave: () => void;
         {
             let isAutoSaving = false;
@@ -128,9 +145,7 @@ export class Level {
                             return;
                         }
                         let vfs2 = vfs.value;
-                        let levelData = JSON.stringify(
-                            state.world.toJson(),
-                        );
+                        let levelData = JSON.stringify(state.world.toJson());
                         let textureAtlasData2 = new Blob([levelData], {
                             type: "application/json",
                         });
@@ -178,14 +193,19 @@ export class Level {
         //
         let levelComponent: Accessor<EcsComponent<LevelState> | undefined>;
         {
-            let levelEntities = createMemo(() => state.world.entitiesWithComponentType(levelComponentType));
+            let levelEntities = createMemo(() =>
+                state.world.entitiesWithComponentType(levelComponentType),
+            );
             levelComponent = createMemo(() => {
                 let levelEntities2 = levelEntities();
                 if (levelEntities2.length != 1) {
                     return undefined;
                 }
                 let levelEntity = levelEntities2[0];
-                return state.world.getComponent(levelEntity, levelComponentType);
+                return state.world.getComponent(
+                    levelEntity,
+                    levelComponentType,
+                );
             });
         }
         let level = createMemo(() => levelComponent()?.state);
@@ -194,16 +214,16 @@ export class Level {
             if (level2 == undefined) {
                 return undefined;
             }
-            let result = new Map<number,{ textureAtlasRef: string, frameRef: string, }>;
-            for (let { textureAtlasRef, frames, } of level2.tileToShortIdTable) {
+            let result = new Map<
+                number,
+                { textureAtlasRef: string; frameRef: string }
+            >();
+            for (let { textureAtlasRef, frames } of level2.tileToShortIdTable) {
                 for (let frame of frames) {
-                    result.set(
-                        frame.shortId,
-                        {
-                            textureAtlasRef,
-                            frameRef: frame.frameName,
-                        }
-                    );
+                    result.set(frame.shortId, {
+                        textureAtlasRef,
+                        frameRef: frame.frameName,
+                    });
                 }
             }
             return result;
@@ -225,8 +245,8 @@ export class Level {
             if (level2 == undefined) {
                 return undefined;
             }
-            let result = new Map<string,number>();
-            for (let { textureAtlasRef, frames, } of level2.tileToShortIdTable) {
+            let result = new Map<string, number>();
+            for (let { textureAtlasRef, frames } of level2.tileToShortIdTable) {
                 for (let frame of frames) {
                     result.set(
                         textureAtlasRef + frameToTileIndexSep + frame.frameName,
@@ -237,15 +257,15 @@ export class Level {
             return result;
         });
         let frameToTileIndexOrCreate = (params: {
-            textureAtlasRef: string,
-            frameRef: string,
+            textureAtlasRef: string;
+            frameRef: string;
         }) => {
             let frameToTileIndexMap2 = frameToTileIndexMap();
             if (frameToTileIndexMap2 == undefined) {
                 return undefined;
             }
             let r = frameToTileIndexMap2.get(
-                params.textureAtlasRef + frameToTileIndexSep + params.frameRef
+                params.textureAtlasRef + frameToTileIndexSep + params.frameRef,
             );
             if (r != undefined) {
                 return r;
@@ -256,33 +276,38 @@ export class Level {
             if (levelComponent2 == undefined) {
                 return undefined;
             }
-            let idx1 = levelComponent2.state.tileToShortIdTable.findIndex((x) => x.textureAtlasRef == params.textureAtlasRef);
+            let idx1 = levelComponent2.state.tileToShortIdTable.findIndex(
+                (x) => x.textureAtlasRef == params.textureAtlasRef,
+            );
             if (idx1 == -1) {
-                levelComponent2.setState("tileToShortIdTable", (x) => [...x, {
-                    textureAtlasRef: params.textureAtlasRef,
-                    frames: [{
+                levelComponent2.setState("tileToShortIdTable", (x) => [
+                    ...x,
+                    {
+                        textureAtlasRef: params.textureAtlasRef,
+                        frames: [
+                            {
+                                frameName: params.frameRef,
+                                shortId: newIndex,
+                            },
+                        ],
+                    },
+                ]);
+            } else {
+                levelComponent2.setState("tileToShortIdTable", idx1, "frames", [
+                    ...levelComponent2.state.tileToShortIdTable[idx1].frames,
+                    {
                         frameName: params.frameRef,
                         shortId: newIndex,
-                    }],
-                }]);
-            } else {
-                levelComponent2.setState(
-                    "tileToShortIdTable",
-                    idx1,
-                    "frames",
-                    [
-                        ...levelComponent2.state.tileToShortIdTable[idx1].frames,
-                        {
-                            frameName: params.frameRef,
-                            shortId: newIndex,
-                        },
-                    ]
-                );
+                    },
+                ]);
             }
             return newIndex;
-        }
+        };
         let writeTile = (params: {
-            xIdx: number, yIdx: number, textureAtlasRef: string, frameRef: string,
+            xIdx: number;
+            yIdx: number;
+            textureAtlasRef: string;
+            frameRef: string;
         }) => {
             let xIdx = params.xIdx;
             let yIdx = params.yIdx;
@@ -310,13 +335,8 @@ export class Level {
             if (tileIndex == undefined) {
                 return;
             }
-            levelComponent2.setState(
-                "mapData",
-                yIdx,
-                xIdx,
-                tileIndex,
-            );
-        }
+            levelComponent2.setState("mapData", yIdx, xIdx, tileIndex);
+        };
         //
         let renderParams: RenderParams = {
             worldPtToScreenPt,
@@ -424,10 +444,7 @@ export class Level {
                     if (state.touchPanZoomInitScale == undefined) {
                         return;
                     }
-                    if (
-                        disableOneFingerPan() &&
-                        state.touches.length == 1
-                    ) {
+                    if (disableOneFingerPan() && state.touches.length == 1) {
                         return;
                     }
                     let pt = screenPtToWorldPt(state.mousePos);
@@ -452,8 +469,7 @@ export class Level {
                             gap != undefined
                         ) {
                             let newScale =
-                                (initScale * gap) /
-                                state.touchPanZoomInitGap;
+                                (initScale * gap) / state.touchPanZoomInitGap;
                             setState("scale", newScale);
                         }
                     });
@@ -511,10 +527,7 @@ export class Level {
             svg2.setPointerCapture(e.pointerId);
             let rect = svg2.getBoundingClientRect();
             let id = e.pointerId;
-            let pos = Vec2.create(
-                e.clientX - rect.left,
-                e.clientY - rect.top,
-            );
+            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
             let newTouches = [...state.touches, { id, pos }];
             batch(() => {
                 setState("touches", newTouches);
@@ -533,9 +546,7 @@ export class Level {
             }
             svg2.releasePointerCapture(e.pointerId);
             let id = e.pointerId;
-            let newTouches = state.touches.filter(
-                ({ id: id2 }) => id2 != id,
-            );
+            let newTouches = state.touches.filter(({ id: id2 }) => id2 != id);
             stopTouchPanZoom();
             if (newTouches.length == 0) {
                 mode().dragEnd?.();
@@ -546,9 +557,7 @@ export class Level {
                 if (e.pointerType != "mouse") {
                     setState(
                         "mousePos",
-                        newTouches.length != 0
-                            ? newTouches[0].pos
-                            : undefined,
+                        newTouches.length != 0 ? newTouches[0].pos : undefined,
                     );
                 }
             });
@@ -567,13 +576,8 @@ export class Level {
             }
             let rect = svg2.getBoundingClientRect();
             let id = e.pointerId;
-            let touchIdx = state.touches.findIndex(
-                ({ id: id2 }) => id2 == id,
-            );
-            let pos = Vec2.create(
-                e.clientX - rect.left,
-                e.clientY - rect.top,
-            );
+            let touchIdx = state.touches.findIndex(({ id: id2 }) => id2 == id);
+            let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
             if (touchIdx != -1) {
                 setState("touches", touchIdx, "pos", (oldPos) => {
                     oldPos.dispose();
@@ -716,12 +720,12 @@ export class Level {
                             }}
                         >
                             <g transform={transform()}>
-                                <renderSystem.Render/>
+                                <renderSystem.Render />
                             </g>
                             <renderSystem.RenderOverlay />
                             <OverlaySvgUI />
                         </svg>
-                        {<OverlayHtmlUI/>}
+                        {<OverlayHtmlUI />}
                         <div
                             style={{
                                 position: "absolute",
