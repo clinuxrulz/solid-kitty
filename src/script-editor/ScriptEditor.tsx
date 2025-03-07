@@ -24,6 +24,7 @@ const ScriptEditor: Component = () => {
                 acceptSuggestionOnCommitCharacter: !isAndroid,
                 acceptSuggestionOnEnter: !isAndroid ? "on" : "off",
                 accessibilitySupport: !isAndroid ? "on" : "off",
+                theme: "vs-dark",
             }),
         );
     });
