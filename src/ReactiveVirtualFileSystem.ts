@@ -17,6 +17,66 @@ export class ReactiveVirtualFileSystem {
         dispose: () => void,
         refCount: number,
     }>();
+    private readerCount: number = 0;
+    private hasWriter: boolean = false;
+    private pendingWriters: (() => void)[] = [];
+    private pendingReaders: (() => void)[] = [];
+
+    awaitReadLock(): Promise<{}> {
+        return new Promise((resolve) => {
+            this.pendingReaders.push(() => resolve({}));
+        });
+    }
+
+    awaitWriteLock(): Promise<{}> {
+        return new Promise((resolve) => {
+            this.pendingWriters.push(() => resolve({}));
+        });
+    }
+
+    async lockRead<A>(callback: () => PromiseLike<A>): Promise<A> {
+        if (this.hasWriter) {
+            await this.awaitReadLock();
+        }
+        this.readerCount++;
+        let result = await callback();
+        this.readerCount--;
+        if (this.readerCount == 0) {
+            while (true) {
+                let pendingWriter = this.pendingWriters.pop();
+                if (pendingWriter == undefined) {
+                    break;
+                }
+                pendingWriter();
+            }
+        }
+        return result;
+    }
+
+    async lockWrite<A>(callback: () => PromiseLike<A>): Promise<A> {
+        if (this.readerCount != 0 || this.hasWriter) {
+            await this.awaitWriteLock();
+        }
+        this.hasWriter = true;
+        let result = await callback();
+        this.hasWriter = false;
+        while (true) {
+            let pendingReader = this.pendingReaders.pop();
+            if (pendingReader == undefined) {
+                break;
+            }
+            pendingReader();
+        }
+        while (true) {
+            let pendingWriter = this.pendingWriters.pop();
+            if (pendingWriter == undefined) {
+                break;
+            }
+            pendingWriter();
+        }
+        return result;
+    }
+
 
     constructor(params: { vfs: VirtualFileSystem, }) {
         this.vfs = params.vfs;
@@ -35,7 +95,7 @@ export class ReactiveVirtualFileSystem {
             folderMonitor.refCount++;
         } else {
             let { accessor, refetch, dispose } = createRoot((dispose) => {
-                let [ filesAndFolders, { refetch, }, ] = createResource(() => this.vfs.getFilesAndFolders(folderId));
+                let [ filesAndFolders, { refetch, }, ] = createResource(() => this.lockRead(() => this.vfs.getFilesAndFolders(folderId)));
                 let accessor = createMemo(() => {
                     let filesAndFolders2 = filesAndFolders();
                     if (filesAndFolders2 == undefined) {
@@ -77,7 +137,7 @@ export class ReactiveVirtualFileSystem {
         filename: string,
         blob: Blob,
     ): Promise<Result<{ fileId: string }>> {
-        let r = await this.vfs.createFile(folderId, filename, blob);
+        let r = await this.lockWrite(() => this.vfs.createFile(folderId, filename, blob));
         if (r.type != "Ok") {
             return r;
         }
@@ -97,7 +157,7 @@ export class ReactiveVirtualFileSystem {
             fileDataMonitor.refCount++;
         } else {
             let { accessor, refetch, dispose } = createRoot((dispose) => {
-                let [ fileData, { refetch, }, ] = createResource(() => this.vfs.readFile(fileId));
+                let [ fileData, { refetch, }, ] = createResource(() => this.lockRead(() => this.vfs.readFile(fileId)));
                 let accessor = createMemo(() => {
                     let fileData2 = fileData();
                     if (fileData2 == undefined) {
@@ -135,7 +195,7 @@ export class ReactiveVirtualFileSystem {
     }
 
     async overwriteFile(fileId: string, blob: Blob): Promise<Result<{}>> {
-        let r = await this.vfs.overwriteFile(fileId, blob);
+        let r = await this.lockWrite(() => this.vfs.overwriteFile(fileId, blob));
         if (r.type != "Ok") {
             return r;
         }
@@ -150,7 +210,7 @@ export class ReactiveVirtualFileSystem {
         parentFolderId: string,
         folderName: string,
     ): Promise<Result<{ folderId: string }>> {
-        let r = await this.vfs.createFolder(parentFolderId, folderName);
+        let r = await this.lockWrite(() => this.vfs.createFolder(parentFolderId, folderName));
         if (r.type != "Ok") {
             return r;
         }
@@ -162,7 +222,7 @@ export class ReactiveVirtualFileSystem {
     }
 
     async delete(fileOrFolderId: string): Promise<Result<{}>> {
-        let parentFolderId = await this.vfs.getParentFolderId(fileOrFolderId);
+        let parentFolderId = await this.lockRead(() => this.vfs.getParentFolderId(fileOrFolderId));
         if (parentFolderId.type != "Ok") {
             return parentFolderId;
         }
@@ -170,7 +230,7 @@ export class ReactiveVirtualFileSystem {
         if (parentFolderId2 == undefined) {
             return err("Can not delete the root folder.");
         }
-        let filesAndFolders = await this.vfs.getFilesAndFolders(parentFolderId2);
+        let filesAndFolders = await this.lockRead(() => this.vfs.getFilesAndFolders(parentFolderId2));
         if (filesAndFolders.type == "Err") {
             return filesAndFolders;
         }
@@ -188,7 +248,7 @@ export class ReactiveVirtualFileSystem {
     }
 
     private async deleteFile(parentFolderId: string, fileId: string): Promise<Result<{}>> {
-        let r = await this.vfs.deleteFile(fileId);
+        let r = await this.lockWrite(() => this.vfs.deleteFile(fileId));
         if (r.type != "Ok") {
             return r;
         }
@@ -200,7 +260,7 @@ export class ReactiveVirtualFileSystem {
     }
 
     private async deleteFolder(parentFolderId: string, folderId: string): Promise<Result<{}>> {
-        let filesAndFolders = await this.vfs.getFilesAndFolders(folderId);
+        let filesAndFolders = await this.lockRead(() => this.vfs.getFilesAndFolders(folderId));
         if (filesAndFolders.type == "Err") {
             return filesAndFolders;
         }
@@ -221,7 +281,7 @@ export class ReactiveVirtualFileSystem {
                 }
             }
         }
-        let r = await this.vfs.deleteFolder(folderId);
+        let r = await this.lockWrite(() => this.vfs.deleteFolder(folderId));
         if (r.type != "Ok") {
             return r;
         }
