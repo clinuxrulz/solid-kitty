@@ -37,6 +37,12 @@ const App: Component = (props) => {
                     </button>
                     <button
                         class="btn"
+                        onClick={() => navigate("/script-editor")}
+                    >
+                        Script Editor
+                    </button>
+                    <button
+                        class="btn"
                         onClick={() => navigate("/colour-picker")}
                     >
                         Colour Picker
