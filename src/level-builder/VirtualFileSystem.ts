@@ -413,6 +413,24 @@ export class VirtualFileSystem {
         return ok({});
     }
 
+    async getParentFolderId(fileOrFolderId: string): Promise<Result<string | undefined>> {
+        if (fileOrFolderId == this.rootFolderId) {
+            return Promise.resolve(ok(undefined));
+        }
+        return await new Promise<Result<string>>((resolve) => {
+            let cursor = this.db
+                .transaction("files", "readwrite")
+                .objectStore("files")
+                .get(fileOrFolderId + "_parent");
+            cursor.onerror = () => {
+                resolve(err("Failed to get parent folder of file."));
+            };
+            cursor.onsuccess = () => {
+                resolve(ok(cursor.result));
+            };
+        });
+    }
+
     async delete(fileOrFolderId: string) {
         let parentFolderId = await new Promise<Result<string>>((resolve) => {
             let cursor = this.db
