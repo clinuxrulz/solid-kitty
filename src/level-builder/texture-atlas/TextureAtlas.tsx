@@ -101,7 +101,11 @@ export class TextureAtlas {
             on([params.vfs, params.textureAtlasFileId], async () => {
                 let textureAtlasFileId = params.textureAtlasFileId();
                 if (textureAtlasFileId == undefined) {
-                    setState("world", new EcsWorld());
+                    batch(() => {
+                        setState("world", new EcsWorld());
+                        setImage(undefined);
+                        setSize(undefined);
+                    });
                     return;
                 }
                 let vfs = params.vfs();
