@@ -7,28 +7,108 @@ import {
     onMount,
     Show,
 } from "solid-js";
-import { VirtualFileSystem as VFS } from "./VirtualFileSystem";
+import { VirtualFileSystem as VFS, VfsFileOrFolder } from "./VirtualFileSystem";
+import JSZip from "jszip";
+import FileSaver from "file-saver";
 
 const VirtualFileSystemTest: Component = () => {
     let [vfs] = createResource(() => VFS.init());
-    return (
-        <Show when={vfs()} keyed fallback={<>Loading...</>}>
-            {(vfs2) => {
-                if (vfs2.type == "Err") {
-                    return vfs2.message;
+    let exportToZip = async () => {
+        let vfs2 = vfs();
+        if (vfs2?.type != "Ok") {
+            return;
+        }
+        let vfs3 = vfs2.value;
+        let zip = new JSZip();
+        let addFilesAndFolders = async (at: JSZip, folderId: string) => {
+            let filesAndFolders = await vfs3.getFilesAndFolders(folderId);
+            if (filesAndFolders.type == "Err") {
+                return;
+            }
+            let filesAndFolders2 = filesAndFolders.value;
+            for (let fileOrFolder of filesAndFolders2) {
+                switch (fileOrFolder.type) {
+                    case "File": {
+                        let data = await vfs3.readFile(fileOrFolder.id);
+                        if (data.type == "Err") {
+                            continue;
+                        }
+                        let data2 = data.value;
+                        at.file(fileOrFolder.name, data2);
+                        break;
+                    }
+                    case "Folder":
+                        let atNext = at.folder(fileOrFolder.name);
+                        if (atNext == null) {
+                            continue;
+                        }
+                        addFilesAndFolders(atNext, fileOrFolder.id);
+                        break;
                 }
-                let vfs3 = vfs2.value;
-                let filesAndFoldersUi = createFilesAndFoldersUI({
-                    vfs: vfs3,
-                    currentFolderId: () => vfs3.rootFolderId,
-                });
-                return (
-                    <>
-                        <filesAndFoldersUi.Render />
-                    </>
-                );
+            }
+        };
+        await addFilesAndFolders(zip, vfs3.rootFolderId);
+        let data = await zip.generateAsync({ type: "blob" });
+        FileSaver.saveAs(data, "kitty_export.zip");
+    };
+    let importFromZip = (file: File) => {
+
+    };
+    return (
+        <div
+            style={{
+                "width": "100%",
+                "height": "100%",
+                "overflow-y": "auto",
             }}
-        </Show>
+        >
+            <Show when={vfs()} keyed fallback={<>Loading...</>}>
+                {(vfs2) => {
+                    if (vfs2.type == "Err") {
+                        return vfs2.message;
+                    }
+                    let vfs3 = vfs2.value;
+                    let filesAndFoldersUi = createFilesAndFoldersUI({
+                        vfs: vfs3,
+                        currentFolderId: () => vfs3.rootFolderId,
+                    });
+                    let fileInput!: HTMLInputElement;
+                    return (
+                        <>
+                            <button
+                                class="btn"
+                                onClick={() => exportToZip()}
+                            >
+                                Export to Zip
+                            </button>
+                            <button
+                                class="btn"
+                                onClick={() => fileInput.click()}
+                            >
+                                Import from Zip
+                            </button>
+                            <input
+                                ref={fileInput}
+                                type="file"
+                                hidden
+                                onClick={(e) => {
+                                    let files = e.currentTarget.files;
+                                    if (files == null) {
+                                        return;
+                                    }
+                                    if (files.length != 1) {
+                                        return;
+                                    }
+                                    let file = files[0];
+                                    importFromZip(file);
+                                }}
+                            /><br/>
+                            <filesAndFoldersUi.Render />
+                        </>
+                    );
+                }}
+            </Show>
+        </div>
     );
 };
 
