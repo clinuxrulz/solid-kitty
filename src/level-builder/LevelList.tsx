@@ -24,7 +24,6 @@ export class LevelList {
 
     constructor(params: {
         vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
-
         levelsFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<{
@@ -112,6 +111,7 @@ export class LevelList {
                         name: levelFilename,
                     },
                 ]);
+                setState("seletedLevelByFileId", fileId);
             };
             let isSelected = createSelector(() => state.seletedLevelByFileId);
             let selectLevel = (levelFileId: string) => {
