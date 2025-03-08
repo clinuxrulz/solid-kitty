@@ -105,6 +105,7 @@ export class Level {
                 let vfs2 = vfs.value;
                 let levelFileId = params.levelFileId();
                 if (levelFileId == undefined) {
+                    setState("world", new EcsWorld());
                     return;
                 }
                 let levelFileId2 = levelFileId;
