@@ -1,7 +1,9 @@
 import { Component, createSignal, onMount } from "solid-js";
-import { editor } from "monaco-editor";
+import type { editor } from "monaco-editor";
 
-import "./monaco-workers";
+import loader from '@monaco-editor/loader';
+
+let monaco = await loader.init();
 
 const isAndroid = navigator && /android/i.test(navigator.userAgent);
 
@@ -14,7 +16,7 @@ const ScriptEditor: Component = () => {
             return;
         }
         setEditor2(
-            editor.create(div2, {
+            monaco.editor.create(div2, {
                 language: "typescript",
                 quickSuggestions: {
                     other: !isAndroid,
