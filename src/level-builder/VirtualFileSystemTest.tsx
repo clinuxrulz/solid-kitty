@@ -42,7 +42,7 @@ const VirtualFileSystemTest: Component = () => {
                         if (atNext == null) {
                             continue;
                         }
-                        addFilesAndFolders(atNext, fileOrFolder.id);
+                        await addFilesAndFolders(atNext, fileOrFolder.id);
                         break;
                 }
             }
