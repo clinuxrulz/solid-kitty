@@ -209,6 +209,9 @@ export class TextureAtlasList {
                 }
                 await vfs2.delete(imageFile.id);
                 await vfs2.delete(textureAtlasFileId);
+                if (state.selectedTextureAtlasByFileId == textureAtlasFileId) {
+                    setState("selectedTextureAtlasByFileId", undefined);
+                }
             };
             return (
                 <div style={props.style}>
