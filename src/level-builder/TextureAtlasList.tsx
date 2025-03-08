@@ -140,6 +140,7 @@ export class TextureAtlasList {
                         name: textureAtlasName,
                     },
                 ]);
+                setState("selectedTextureAtlasByFileId", fileId);
             };
             //
             let selectTextureAtlasFile = (textureAtlasFileId: string) => {
