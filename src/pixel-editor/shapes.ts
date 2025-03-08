@@ -160,6 +160,24 @@ export function drawEllipse(
     }
 }
 
+export function drawFilledCircle(
+    x: number,
+    y: number,
+    r: number,
+    drawPixel: (x: number, y: number) => void,
+) {
+    let r2 = r*r;
+    for (let i = -(r-1); i <= r-1; ++i) {
+        let i2 = i*i;
+        for (let j = -(r-1); j <= (r-1); ++j) {
+            let j2 = j*j;
+            if (i2 + j2 < r2) {
+                drawPixel(x + i, y + j);
+            }
+        }
+    }
+}
+
 export function drawWave(
     sx: number,
     sy: number,

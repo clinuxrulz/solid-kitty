@@ -12,7 +12,7 @@ import { ModeParams } from "../ModeParams";
 import { Vec2 } from "../../Vec2";
 import { UndoUnit } from "../UndoManager";
 import { createStore } from "solid-js/store";
-import { drawLine } from "../shapes";
+import { drawFilledCircle, drawLine } from "../shapes";
 import { Colour } from "../../Colour";
 
 export class DrawPixelsMode implements Mode {
@@ -97,6 +97,49 @@ export class DrawPixelsMode implements Mode {
                         if (!pt) {
                             return;
                         }
+                        // do without undo/redo if stroke thickness greater than 1
+                        let strokeThickness = params.strokeThickness();
+                        if (strokeThickness > 1) {
+                            let r = strokeThickness;
+                            if (lastPos == undefined) {
+                                drawFilledCircle(
+                                    pt.x,
+                                    pt.y,
+                                    strokeThickness,
+                                    (x, y) => {
+                                        let dummy = Vec2.create(x, y);
+                                        params.writePixel(dummy, params.currentColour());
+                                        dummy.dispose();
+                                    },
+                                );
+                                lastPos = pt;
+                            } else {
+                                let lastPos2 = lastPos;
+                                drawFilledCircle(
+                                    pt.x,
+                                    pt.y,
+                                    strokeThickness,
+                                    (x, y) => {
+                                        let fromX = x - pt.x + lastPos2.x;
+                                        let fromY = y - pt.y + lastPos2.y;
+                                        drawLine(
+                                            fromX,
+                                            fromY,
+                                            x,
+                                            y,
+                                            (x, y) => {
+                                                let dummy = Vec2.create(x, y);
+                                                params.writePixel(dummy, params.currentColour());
+                                                dummy.dispose();
+                                            },
+                                        );
+                                    },
+                                );
+                                lastPos = pt;
+                            }
+                            return;
+                        }
+                        //
                         if (lastPos == undefined) {
                             let undoUnit = writePixel(pt);
                             if (undoUnit != undefined) {

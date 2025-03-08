@@ -1024,29 +1024,31 @@ const PixelEditor: Component = () => {
                         <i class="fa-solid fa-fill-drip"></i>
                     </button>
                 </div>
-                <div
-                    style={{
-                        display: "grid",
-                        "grid-template-columns": "auto auto",
-                    }}
-                >
-                    {Array(10).fill(undefined).map((_,idx) => idx+1).map((strokeThickness) => (
-                        <button
-                            class="btn"
-                            style={{
-                                "font-size": "20pt",
-                                padding: "5pt",
-                                "background-color":
-                                    state.strokeThickness == strokeThickness ? "blue" : undefined,
-                            }}
-                            onClick={() => {
-                                setState("strokeThickness", strokeThickness);
-                            }}
-                        >
-                            {strokeThickness.toString(16).toLocaleUpperCase()}
-                        </button>
-                    ))}
-                </div>
+                <Show when={state.mode == "Draw Pixels"}>
+                    <div
+                        style={{
+                            display: "grid",
+                            "grid-template-columns": "auto auto",
+                        }}
+                    >
+                        {Array(10).fill(undefined).map((_,idx) => idx+1).map((strokeThickness) => (
+                            <button
+                                class="btn"
+                                style={{
+                                    "font-size": "20pt",
+                                    padding: "5pt",
+                                    "background-color":
+                                        state.strokeThickness == strokeThickness ? "blue" : undefined,
+                                }}
+                                onClick={() => {
+                                    setState("strokeThickness", strokeThickness);
+                                }}
+                            >
+                                {strokeThickness.toString(16).toLocaleUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                </Show>
             </div>
             <div
                 style={{
