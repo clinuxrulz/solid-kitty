@@ -70,6 +70,8 @@ const PixelEditor: Component = () => {
         currentColour: Colour;
         showColourPicker: boolean;
         //
+        strokeThickness: number,
+        //
         isLoading: boolean;
         autoSaving: boolean;
     }>({
@@ -94,6 +96,8 @@ const PixelEditor: Component = () => {
         //
         currentColour: new Colour(0, 255, 0, 255),
         showColourPicker: false,
+        //
+        strokeThickness: 1.0,
         //
         isLoading: false,
         autoSaving: false,
@@ -369,6 +373,7 @@ const PixelEditor: Component = () => {
         setCurrentColour(colour) {
             setState("currentColour", colour);
         },
+        strokeThickness: () => state.strokeThickness,
         isInBounds(pt) {
             let image2 = image();
             if (image2 == undefined) {
@@ -1018,6 +1023,29 @@ const PixelEditor: Component = () => {
                     >
                         <i class="fa-solid fa-fill-drip"></i>
                     </button>
+                </div>
+                <div
+                    style={{
+                        display: "grid",
+                        "grid-template-columns": "auto auto",
+                    }}
+                >
+                    {Array(10).fill(undefined).map((_,idx) => idx+1).map((strokeThickness) => (
+                        <button
+                            class="btn"
+                            style={{
+                                "font-size": "20pt",
+                                padding: "5pt",
+                                "background-color":
+                                    state.strokeThickness == strokeThickness ? "blue" : undefined,
+                            }}
+                            onClick={() => {
+                                setState("strokeThickness", strokeThickness);
+                            }}
+                        >
+                            {strokeThickness.toString(16).toLocaleUpperCase()}
+                        </button>
+                    ))}
                 </div>
             </div>
             <div
