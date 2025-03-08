@@ -13,7 +13,7 @@ import FileSaver from "file-saver";
 import { ok } from "../kitty-demo/Result";
 
 const VirtualFileSystemTest: Component = () => {
-    let [vfs, { mutate: mutateVfs, }] = createResource(() => VFS.init());
+    let [vfs, { mutate: mutateVfs }] = createResource(() => VFS.init());
     let exportToZip = async () => {
         let vfs2 = vfs();
         if (vfs2?.type != "Ok") {
@@ -94,13 +94,17 @@ const VirtualFileSystemTest: Component = () => {
                 console.warn(`Folder "${folderPath}" not found in the zip.`);
                 return;
             }
-            const entries: { name: string; relativePath: string, isFolder: boolean }[] = [];
+            const entries: {
+                name: string;
+                relativePath: string;
+                isFolder: boolean;
+            }[] = [];
             folder.forEach((relativePath, file) => {
                 const fullPath =
                     folderPath +
                     (folderPath && !folderPath.endsWith("/") ? "/" : "") +
                     relativePath;
-                
+
                 entries.push({
                     name: fullPath,
                     relativePath,
@@ -124,24 +128,25 @@ const VirtualFileSystemTest: Component = () => {
                         continue;
                     }
                     let data2 = await data.async("blob");
-                    await vfs3.createFile(vfsFolderId, entry.relativePath, data2);
+                    await vfs3.createFile(
+                        vfsFolderId,
+                        entry.relativePath,
+                        data2,
+                    );
                 }
             }
             for (const entry of entries) {
                 if (entry.isFolder) {
                     let folderName = entry.relativePath;
                     if (folderName.endsWith("/")) {
-                        folderName = folderName.slice(0, folderName.length-1);
+                        folderName = folderName.slice(0, folderName.length - 1);
                     }
                     let r = await vfs3.createFolder(vfsFolderId, folderName);
                     if (r.type == "Err") {
                         continue;
                     }
                     let { folderId: nextVfsFolderId } = r.value;
-                    await addFilesAndFoldersToVfs(
-                        entry.name,
-                        nextVfsFolderId,
-                    );
+                    await addFilesAndFoldersToVfs(entry.name, nextVfsFolderId);
                 }
             }
         }
