@@ -10,9 +10,10 @@ import {
 import { VirtualFileSystem as VFS, VfsFileOrFolder } from "./VirtualFileSystem";
 import JSZip from "jszip";
 import FileSaver from "file-saver";
+import { ok } from "../kitty-demo/Result";
 
 const VirtualFileSystemTest: Component = () => {
-    let [vfs] = createResource(() => VFS.init());
+    let [vfs, { mutate: mutateVfs, }] = createResource(() => VFS.init());
     let exportToZip = async () => {
         let vfs2 = vfs();
         if (vfs2?.type != "Ok") {
@@ -51,14 +52,109 @@ const VirtualFileSystemTest: Component = () => {
         let data = await zip.generateAsync({ type: "blob" });
         FileSaver.saveAs(data, "kitty_export.zip");
     };
-    let importFromZip = (file: File) => {
+    let importFromZip = async (file: File) => {
+        debugger;
+        let vfs2 = vfs();
+        if (vfs2?.type != "Ok") {
+            return;
+        }
+        let vfs3 = vfs2.value;
+        // clear out existing files/folders
+        {
+            let filesAndFolders = await vfs3.getFilesAndFolders(
+                vfs3.rootFolderId,
+            );
+            if (filesAndFolders.type == "Err") {
+                return;
+            }
+            let filesAndfolders2 = filesAndFolders.value;
+            for (let fileOrFolder of filesAndfolders2) {
+                await vfs3.delete(fileOrFolder.id);
+            }
+        }
+        //
+        let zip = await JSZip.loadAsync(file);
+        async function addFilesAndFoldersToVfs(
+            folderPath: string,
+            vfsFolderId: string,
+        ): Promise<void> {
+            debugger;
+            let folder: JSZip;
+            if (folderPath == "") {
+                folder = zip;
+            } else {
+                let folder2 = zip.folder(folderPath);
+                if (folder2 == undefined) {
+                    return;
+                }
+                folder = folder2;
+            }
 
+            if (!folder) {
+                console.warn(`Folder "${folderPath}" not found in the zip.`);
+                return;
+            }
+            const entries: { name: string; relativePath: string, isFolder: boolean }[] = [];
+            folder.forEach((relativePath, file) => {
+                const fullPath =
+                    folderPath +
+                    (folderPath && !folderPath.endsWith("/") ? "/" : "") +
+                    relativePath;
+                
+                entries.push({
+                    name: fullPath,
+                    relativePath,
+                    isFolder: file.dir,
+                });
+            });
+            let folderPaths: string[] = [];
+            for (let entry of entries) {
+                if (entry.isFolder) {
+                    folderPaths.push(entry.relativePath);
+                }
+            }
+
+            for (const entry of entries) {
+                if (folderPaths.some((x) => entry.relativePath.startsWith(x))) {
+                    continue;
+                }
+                if (!entry.isFolder) {
+                    let data = zip.file(entry.name);
+                    if (data == null) {
+                        continue;
+                    }
+                    let data2 = await data.async("blob");
+                    await vfs3.createFile(vfsFolderId, entry.relativePath, data2);
+                }
+            }
+            for (const entry of entries) {
+                if (entry.isFolder) {
+                    let folderName = entry.relativePath;
+                    if (folderName.endsWith("/")) {
+                        folderName = folderName.slice(0, folderName.length-1);
+                    }
+                    let r = await vfs3.createFolder(vfsFolderId, folderName);
+                    if (r.type == "Err") {
+                        continue;
+                    }
+                    let { folderId: nextVfsFolderId } = r.value;
+                    await addFilesAndFoldersToVfs(
+                        entry.name,
+                        nextVfsFolderId,
+                    );
+                }
+            }
+        }
+        await addFilesAndFoldersToVfs("", vfs3.rootFolderId);
+        // refresh
+        mutateVfs(undefined);
+        mutateVfs(ok(vfs3));
     };
     return (
         <div
             style={{
-                "width": "100%",
-                "height": "100%",
+                width: "100%",
+                height: "100%",
                 "overflow-y": "auto",
             }}
         >
@@ -75,10 +171,7 @@ const VirtualFileSystemTest: Component = () => {
                     let fileInput!: HTMLInputElement;
                     return (
                         <>
-                            <button
-                                class="btn"
-                                onClick={() => exportToZip()}
-                            >
+                            <button class="btn" onClick={() => exportToZip()}>
                                 Export to Zip
                             </button>
                             <button
@@ -91,7 +184,7 @@ const VirtualFileSystemTest: Component = () => {
                                 ref={fileInput}
                                 type="file"
                                 hidden
-                                onClick={(e) => {
+                                onInput={(e) => {
                                     let files = e.currentTarget.files;
                                     if (files == null) {
                                         return;
@@ -102,7 +195,8 @@ const VirtualFileSystemTest: Component = () => {
                                     let file = files[0];
                                     importFromZip(file);
                                 }}
-                            /><br/>
+                            />
+                            <br />
                             <filesAndFoldersUi.Render />
                         </>
                     );
