@@ -31,6 +31,7 @@ import { FrameState } from "../components/FrameComponent";
 import { InsertTileMode } from "./modes/InsertTileMode";
 import { levelComponentType, LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
+import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -41,7 +42,7 @@ export class Level {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelFileId: Accessor<string | undefined>;
@@ -96,7 +97,7 @@ export class Level {
         });
         let undoManager = new UndoManager();
         createEffect(
-            on([params.vfs, params.levelFileId], async () => {
+            on([params.vfs, params.levelFileId], () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
@@ -107,18 +108,24 @@ export class Level {
                     return;
                 }
                 let levelFileId2 = levelFileId;
-                let levelData = await vfs2.readFile(levelFileId2);
-                if (levelData.type == "Err") {
-                    return;
-                }
-                let levelData2 = levelData.value;
-                let levelData3 = await levelData2.text();
-                let world = EcsWorld.fromJson(registry, JSON.parse(levelData3));
-                if (world.type == "Err") {
-                    return;
-                }
-                let world2 = world.value;
-                setState("world", world2);
+                let levelData = vfs2.readFile(levelFileId2);
+                createEffect(async () => {
+                    let levelData2 = levelData();
+                    if (levelData2.type != "Success") {
+                        return;
+                    }
+                    let levelData3 = levelData2.value;
+                    let levelData4 = await levelData3.text();
+                    let world = EcsWorld.fromJson(
+                        registry,
+                        JSON.parse(levelData4),
+                    );
+                    if (world.type == "Err") {
+                        return;
+                    }
+                    let world2 = world.value;
+                    setState("world", world2);
+                });
             }),
         );
         let triggerAutoSave: () => void;

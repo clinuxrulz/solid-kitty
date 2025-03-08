@@ -12,6 +12,7 @@ import { TextureAtlasList } from "./TextureAtlasList";
 import { TextureAtlas } from "./texture-atlas/TextureAtlas";
 import { AsyncResult } from "../AsyncResult";
 import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
+import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 
 type State = {
     showTextureAtlasList: boolean;
@@ -28,7 +29,7 @@ export class TextureAtlases {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
         imagesFolderId: Accessor<AsyncResult<string>>;
         imageFiles: Accessor<AsyncResult<VfsFile[]>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;

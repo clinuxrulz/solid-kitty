@@ -13,6 +13,7 @@ import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { textureAtlasComponentType } from "./components/TextureAtlasComponent";
 import { registry } from "./components/registry";
+import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 
 type State = {
     textureAtlasFiles: VfsFile[];
@@ -28,7 +29,7 @@ export class TextureAtlasList {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
         imagesFolderId: Accessor<AsyncResult<string>>;
         imageFiles: Accessor<AsyncResult<VfsFile[]>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
@@ -39,7 +40,7 @@ export class TextureAtlasList {
         });
         //
         createEffect(
-            on([params.vfs, params.textureAtlasesFolderId], async () => {
+            on([params.vfs, params.textureAtlasesFolderId], () => {
                 let vfs = params.vfs();
                 if (vfs.type != "Success") {
                     return;
@@ -50,16 +51,22 @@ export class TextureAtlasList {
                     return textureAtlasesFolderId;
                 }
                 let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
-                let filesAndFolders = await vfs2.getFilesAndFolders(
+                let filesAndFolders = vfs2.getFilesAndFolders(
                     textureAtlasesFolderId2,
                 );
-                if (filesAndFolders.type == "Err") {
-                    console.log(filesAndFolders.message);
-                    return;
-                }
-                let filesAndFolders2 = filesAndFolders.value;
-                let files = filesAndFolders2.filter((x) => x.type == "File");
-                setState("textureAtlasFiles", files);
+                createEffect(
+                    on(filesAndFolders, () => {
+                        let filesAndFolders2 = filesAndFolders();
+                        if (filesAndFolders2.type != "Success") {
+                            return;
+                        }
+                        let filesAndFolders3 = filesAndFolders2.value;
+                        let files = filesAndFolders3.filter(
+                            (x) => x.type == "File",
+                        );
+                        setState("textureAtlasFiles", files);
+                    }),
+                );
             }),
         );
         //
@@ -159,7 +166,8 @@ export class TextureAtlasList {
                     return;
                 }
                 let imagesFolderId2 = imagesFolderId.value;
-                let textureAtlasData = await vfs2.readFile(textureAtlasFileId);
+                let textureAtlasData =
+                    await vfs2.vfs.readFile(textureAtlasFileId);
                 if (textureAtlasData.type == "Err") {
                     return;
                 }
@@ -187,7 +195,7 @@ export class TextureAtlasList {
                 }
                 let imageFilename = textureAtlas.imageRef;
                 let filesAndFolders =
-                    await vfs2.getFilesAndFolders(imagesFolderId2);
+                    await vfs2.vfs.getFilesAndFolders(imagesFolderId2);
                 if (filesAndFolders.type == "Err") {
                     return;
                 }
@@ -198,8 +206,8 @@ export class TextureAtlasList {
                 if (imageFile == undefined) {
                     return;
                 }
-                await vfs2.deleteFile(imageFile.id);
-                await vfs2.deleteFile(textureAtlasFileId);
+                await vfs2.delete(imageFile.id);
+                await vfs2.delete(textureAtlasFileId);
             };
             return (
                 <div style={props.style}>

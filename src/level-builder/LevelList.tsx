@@ -14,6 +14,7 @@ import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { createStore } from "solid-js/store";
 import { levelComponentType } from "./components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
+import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 
 export class LevelList {
     readonly selectedLevelByFileId: Accessor<string | undefined>;
@@ -22,7 +23,8 @@ export class LevelList {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+
         levelsFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<{
@@ -44,16 +46,18 @@ export class LevelList {
                     return;
                 }
                 let levelsFolderId2 = levelsFolderId.value;
-                let filesAndFolders =
-                    await vfs2.getFilesAndFolders(levelsFolderId2);
-                if (filesAndFolders.type == "Err") {
-                    return;
-                }
-                let filesAndFolders2 = filesAndFolders.value;
-                let levelFiles = filesAndFolders2.filter(
-                    (x) => x.type == "File",
-                );
-                setState("levelFiles", levelFiles);
+                let filesAndFolders = vfs2.getFilesAndFolders(levelsFolderId2);
+                createEffect(() => {
+                    let filesAndFolders2 = filesAndFolders();
+                    if (filesAndFolders2.type != "Success") {
+                        return;
+                    }
+                    let filesAndFolders3 = filesAndFolders2.value;
+                    let levelFiles = filesAndFolders3.filter(
+                        (x) => x.type == "File",
+                    );
+                    setState("levelFiles", levelFiles);
+                });
             }),
         );
         this.selectedLevelByFileId = () => state.seletedLevelByFileId;
@@ -119,7 +123,7 @@ export class LevelList {
                     return;
                 }
                 let vfs2 = vfs.value;
-                await vfs2.deleteFile(levelFileId);
+                await vfs2.delete(levelFileId);
                 setState("seletedLevelByFileId", undefined);
             };
             return (

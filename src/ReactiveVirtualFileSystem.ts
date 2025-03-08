@@ -1,22 +1,43 @@
-import { Accessor, createMemo, createResource, createRoot, getListener, onCleanup } from "solid-js";
-import { asyncFailed, asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
+import {
+    Accessor,
+    createMemo,
+    createResource,
+    createRoot,
+    getListener,
+    onCleanup,
+} from "solid-js";
+import {
+    asyncFailed,
+    asyncPending,
+    AsyncResult,
+    asyncSuccess,
+} from "./AsyncResult";
 import { err, Result } from "./kitty-demo/Result";
-import { VfsFileOrFolder, VirtualFileSystem } from "./level-builder/VirtualFileSystem";
+import {
+    VfsFileOrFolder,
+    VirtualFileSystem,
+} from "./level-builder/VirtualFileSystem";
 
 export class ReactiveVirtualFileSystem {
-    private vfs: VirtualFileSystem;
-    private folderMonitors = new Map<string,{
-        accessor: Accessor<AsyncResult<VfsFileOrFolder[]>>,
-        refetch: () => void,
-        dispose: () => void,
-        refCount: number,
-    }>();
-    private fileDataMonitors = new Map<string,{
-        accessor: Accessor<AsyncResult<Blob>>,
-        refetch: () => void,
-        dispose: () => void,
-        refCount: number,
-    }>();
+    readonly vfs: VirtualFileSystem;
+    private folderMonitors = new Map<
+        string,
+        {
+            accessor: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+            refetch: () => void;
+            dispose: () => void;
+            refCount: number;
+        }
+    >();
+    private fileDataMonitors = new Map<
+        string,
+        {
+            accessor: Accessor<AsyncResult<Blob>>;
+            refetch: () => void;
+            dispose: () => void;
+            refCount: number;
+        }
+    >();
     private readerCount: number = 0;
     private hasWriter: boolean = false;
     private pendingWriters: (() => void)[] = [];
@@ -77,8 +98,7 @@ export class ReactiveVirtualFileSystem {
         return result;
     }
 
-
-    constructor(params: { vfs: VirtualFileSystem, }) {
+    constructor(params: { vfs: VirtualFileSystem }) {
         this.vfs = params.vfs;
     }
 
@@ -86,16 +106,17 @@ export class ReactiveVirtualFileSystem {
         return this.vfs.rootFolderId;
     }
 
-    getFilesAndFolders(folderId: string): Accessor<AsyncResult<VfsFileOrFolder[]>> {
-        if (getListener() == null) {
-            throw new Error("ReactiveVirtualFileSystem.getFilesAndFolders must be called inside root.");
-        }
+    getFilesAndFolders(
+        folderId: string,
+    ): Accessor<AsyncResult<VfsFileOrFolder[]>> {
         let folderMonitor = this.folderMonitors.get(folderId);
         if (folderMonitor != undefined) {
             folderMonitor.refCount++;
         } else {
             let { accessor, refetch, dispose } = createRoot((dispose) => {
-                let [ filesAndFolders, { refetch, }, ] = createResource(() => this.lockRead(() => this.vfs.getFilesAndFolders(folderId)));
+                let [filesAndFolders, { refetch }] = createResource(() =>
+                    this.lockRead(() => this.vfs.getFilesAndFolders(folderId)),
+                );
                 let accessor = createMemo(() => {
                     let filesAndFolders2 = filesAndFolders();
                     if (filesAndFolders2 == undefined) {
@@ -121,6 +142,7 @@ export class ReactiveVirtualFileSystem {
                 dispose,
                 refCount: 1,
             };
+            this.folderMonitors.set(folderId, folderMonitor);
         }
         onCleanup(() => {
             folderMonitor.refCount--;
@@ -137,7 +159,9 @@ export class ReactiveVirtualFileSystem {
         filename: string,
         blob: Blob,
     ): Promise<Result<{ fileId: string }>> {
-        let r = await this.lockWrite(() => this.vfs.createFile(folderId, filename, blob));
+        let r = await this.lockWrite(() =>
+            this.vfs.createFile(folderId, filename, blob),
+        );
         if (r.type != "Ok") {
             return r;
         }
@@ -148,16 +172,43 @@ export class ReactiveVirtualFileSystem {
         return r;
     }
 
+    readFileAsText(fileId: string): Accessor<AsyncResult<string>> {
+        let data = this.readFile(fileId);
+        let text_ = createMemo(() => {
+            let data2 = data();
+            if (data2.type != "Success") {
+                return data2;
+            }
+            let data3 = data2.value;
+            let [text] = createResource(() => data3.text());
+            return asyncSuccess(
+                createMemo(() => {
+                    let text2 = text();
+                    if (text2 == undefined) {
+                        return asyncPending();
+                    }
+                    return asyncSuccess(text2);
+                }),
+            );
+        });
+        return createMemo(() => {
+            let tmp = text_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+
     readFile(fileId: string): Accessor<AsyncResult<Blob>> {
-        if (getListener() == null) {
-            throw new Error("ReactiveVirtualFileSystem.readFile must be called inside root.");
-        }
         let fileDataMonitor = this.fileDataMonitors.get(fileId);
         if (fileDataMonitor != undefined) {
             fileDataMonitor.refCount++;
         } else {
             let { accessor, refetch, dispose } = createRoot((dispose) => {
-                let [ fileData, { refetch, }, ] = createResource(() => this.lockRead(() => this.vfs.readFile(fileId)));
+                let [fileData, { refetch }] = createResource(() =>
+                    this.lockRead(() => this.vfs.readFile(fileId)),
+                );
                 let accessor = createMemo(() => {
                     let fileData2 = fileData();
                     if (fileData2 == undefined) {
@@ -183,6 +234,7 @@ export class ReactiveVirtualFileSystem {
                 dispose,
                 refCount: 1,
             };
+            this.fileDataMonitors.set(fileId, fileDataMonitor);
         }
         onCleanup(() => {
             fileDataMonitor.refCount--;
@@ -195,7 +247,9 @@ export class ReactiveVirtualFileSystem {
     }
 
     async overwriteFile(fileId: string, blob: Blob): Promise<Result<{}>> {
-        let r = await this.lockWrite(() => this.vfs.overwriteFile(fileId, blob));
+        let r = await this.lockWrite(() =>
+            this.vfs.overwriteFile(fileId, blob),
+        );
         if (r.type != "Ok") {
             return r;
         }
@@ -210,7 +264,9 @@ export class ReactiveVirtualFileSystem {
         parentFolderId: string,
         folderName: string,
     ): Promise<Result<{ folderId: string }>> {
-        let r = await this.lockWrite(() => this.vfs.createFolder(parentFolderId, folderName));
+        let r = await this.lockWrite(() =>
+            this.vfs.createFolder(parentFolderId, folderName),
+        );
         if (r.type != "Ok") {
             return r;
         }
@@ -222,7 +278,9 @@ export class ReactiveVirtualFileSystem {
     }
 
     async delete(fileOrFolderId: string): Promise<Result<{}>> {
-        let parentFolderId = await this.lockRead(() => this.vfs.getParentFolderId(fileOrFolderId));
+        let parentFolderId = await this.lockRead(() =>
+            this.vfs.getParentFolderId(fileOrFolderId),
+        );
         if (parentFolderId.type != "Ok") {
             return parentFolderId;
         }
@@ -230,7 +288,9 @@ export class ReactiveVirtualFileSystem {
         if (parentFolderId2 == undefined) {
             return err("Can not delete the root folder.");
         }
-        let filesAndFolders = await this.lockRead(() => this.vfs.getFilesAndFolders(parentFolderId2));
+        let filesAndFolders = await this.lockRead(() =>
+            this.vfs.getFilesAndFolders(parentFolderId2),
+        );
         if (filesAndFolders.type == "Err") {
             return filesAndFolders;
         }
@@ -247,7 +307,10 @@ export class ReactiveVirtualFileSystem {
         }
     }
 
-    private async deleteFile(parentFolderId: string, fileId: string): Promise<Result<{}>> {
+    private async deleteFile(
+        parentFolderId: string,
+        fileId: string,
+    ): Promise<Result<{}>> {
         let r = await this.lockWrite(() => this.vfs.deleteFile(fileId));
         if (r.type != "Ok") {
             return r;
@@ -259,8 +322,13 @@ export class ReactiveVirtualFileSystem {
         return r;
     }
 
-    private async deleteFolder(parentFolderId: string, folderId: string): Promise<Result<{}>> {
-        let filesAndFolders = await this.lockRead(() => this.vfs.getFilesAndFolders(folderId));
+    private async deleteFolder(
+        parentFolderId: string,
+        folderId: string,
+    ): Promise<Result<{}>> {
+        let filesAndFolders = await this.lockRead(() =>
+            this.vfs.getFilesAndFolders(folderId),
+        );
         if (filesAndFolders.type == "Err") {
             return filesAndFolders;
         }

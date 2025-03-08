@@ -413,7 +413,9 @@ export class VirtualFileSystem {
         return ok({});
     }
 
-    async getParentFolderId(fileOrFolderId: string): Promise<Result<string | undefined>> {
+    async getParentFolderId(
+        fileOrFolderId: string,
+    ): Promise<Result<string | undefined>> {
         if (fileOrFolderId == this.rootFolderId) {
             return Promise.resolve(ok(undefined));
         }

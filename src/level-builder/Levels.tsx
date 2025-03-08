@@ -14,6 +14,7 @@ import { LevelList } from "./LevelList";
 import { Level } from "./level/Level";
 import { TextureAtlasState } from "./components/TextureAtlasComponent";
 import { FrameState } from "./components/FrameComponent";
+import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 
 type State = {
     showLevelList: boolean;
@@ -25,7 +26,7 @@ export class Levels {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelsFolderId: Accessor<AsyncResult<string>>;

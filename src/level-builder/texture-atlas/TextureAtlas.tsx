@@ -3,6 +3,7 @@ import {
     batch,
     Component,
     createComputed,
+    createEffect,
     createMemo,
     createSignal,
     JSX,
@@ -24,9 +25,10 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { RenderParams } from "./RenderParams";
 import { PickingSystem } from "./systems/PickingSystem";
 import { VfsFile, VirtualFileSystem } from "../VirtualFileSystem";
-import { AsyncResult } from "../../AsyncResult";
+import { asyncFailed, AsyncResult } from "../../AsyncResult";
 import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
+import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
 
 type State = {
     mousePos: Vec2 | undefined;
@@ -69,7 +71,7 @@ export class TextureAtlas {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<VirtualFileSystem>>;
+        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasFileId: Accessor<string | undefined>;
     }) {
@@ -113,67 +115,92 @@ export class TextureAtlas {
                 }
                 let imagesFolderId2 = imagesFolderId.value;
                 let textureAtlasFileId2 = textureAtlasFileId;
-                let textureAtlasData = await vfs2.readFile(textureAtlasFileId2);
-                if (textureAtlasData.type == "Err") {
-                    return;
-                }
-                let textureAtlasData2 = textureAtlasData.value;
-                let textureAtlasData3 = await textureAtlasData2.text();
-                let world = EcsWorld.fromJson(
-                    registry,
-                    JSON.parse(textureAtlasData3),
+                let textureAtlasData = vfs2.readFileAsText(textureAtlasFileId2);
+                createEffect(
+                    on(textureAtlasData, () => {
+                        let textureAtlasData2 = textureAtlasData();
+                        if (textureAtlasData2.type != "Success") {
+                            return;
+                        }
+                        let textureAtlasData3 = textureAtlasData2.value;
+                        let world = EcsWorld.fromJson(
+                            registry,
+                            JSON.parse(textureAtlasData3),
+                        );
+                        if (world.type == "Err") {
+                            return;
+                        }
+                        let world2 = world.value;
+                        let entities = world2.entitiesWithComponentType(
+                            textureAtlasComponentType,
+                        );
+                        if (entities.length != 1) {
+                            return;
+                        }
+                        let entity = entities[0];
+                        let textureAtlas = world2.getComponent(
+                            entity,
+                            textureAtlasComponentType,
+                        )?.state;
+                        if (textureAtlas == undefined) {
+                            return;
+                        }
+                        let imageFilename = textureAtlas.imageRef;
+                        let filesAndFolders =
+                            vfs2.getFilesAndFolders(imagesFolderId2);
+                        createEffect(
+                            on(filesAndFolders, () => {
+                                let filesAndFolders2 = filesAndFolders();
+                                if (filesAndFolders2.type != "Success") {
+                                    return;
+                                }
+                                let filesAndFolders3 = filesAndFolders2.value;
+                                let imageFile = filesAndFolders3.find(
+                                    (x) =>
+                                        x.type == "File" &&
+                                        x.name == imageFilename,
+                                );
+                                if (imageFile == undefined) {
+                                    return;
+                                }
+                                let imageData = vfs2.readFile(imageFile.id);
+                                createEffect(
+                                    on(imageData, () => {
+                                        let imageData2 = imageData();
+                                        if (imageData2.type != "Success") {
+                                            return;
+                                        }
+                                        let imageData3 = imageData2.value;
+                                        let imageUrl =
+                                            URL.createObjectURL(imageData3);
+                                        imageUrlDispose()();
+                                        setImageUrlDispose(() => () => {
+                                            URL.revokeObjectURL(imageUrl);
+                                        });
+                                        let image = new Image();
+                                        image.src = imageUrl;
+                                        image.style.setProperty(
+                                            "image-rendering",
+                                            "pixelated",
+                                        );
+                                        image.onload = () => {
+                                            batch(() => {
+                                                setImage(image);
+                                                setSize(
+                                                    Vec2.create(
+                                                        image.width,
+                                                        image.height,
+                                                    ),
+                                                );
+                                            });
+                                        };
+                                        setState("world", world2);
+                                    }),
+                                );
+                            }),
+                        );
+                    }),
                 );
-                if (world.type == "Err") {
-                    return;
-                }
-                let world2 = world.value;
-                let entities = world2.entitiesWithComponentType(
-                    textureAtlasComponentType,
-                );
-                if (entities.length != 1) {
-                    return;
-                }
-                let entity = entities[0];
-                let textureAtlas = world2.getComponent(
-                    entity,
-                    textureAtlasComponentType,
-                )?.state;
-                if (textureAtlas == undefined) {
-                    return;
-                }
-                let imageFilename = textureAtlas.imageRef;
-                let filesAndFolders =
-                    await vfs2.getFilesAndFolders(imagesFolderId2);
-                if (filesAndFolders.type == "Err") {
-                    return;
-                }
-                let filesAndFolders2 = filesAndFolders.value;
-                let imageFile = filesAndFolders2.find(
-                    (x) => x.type == "File" && x.name == imageFilename,
-                );
-                if (imageFile == undefined) {
-                    return;
-                }
-                let imageData = await vfs2.readFile(imageFile.id);
-                if (imageData.type == "Err") {
-                    return;
-                }
-                let imageData2 = imageData.value;
-                let imageUrl = URL.createObjectURL(imageData2);
-                imageUrlDispose()();
-                setImageUrlDispose(() => () => {
-                    URL.revokeObjectURL(imageUrl);
-                });
-                let image = new Image();
-                image.src = imageUrl;
-                image.style.setProperty("image-rendering", "pixelated");
-                image.onload = () => {
-                    batch(() => {
-                        setImage(image);
-                        setSize(Vec2.create(image.width, image.height));
-                    });
-                };
-                setState("world", world2);
             }),
         );
         let triggerAutoSave: () => void;
