@@ -124,7 +124,9 @@ export class LevelList {
                 }
                 let vfs2 = vfs.value;
                 await vfs2.delete(levelFileId);
-                setState("seletedLevelByFileId", undefined);
+                if (state.seletedLevelByFileId == levelFileId) {
+                    setState("seletedLevelByFileId", undefined);
+                }
             };
             return (
                 <div style={props.style}>
