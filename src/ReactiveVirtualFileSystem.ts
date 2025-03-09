@@ -18,13 +18,15 @@ import {
     VirtualFileSystem,
 } from "./level-builder/VirtualFileSystem";
 
+const channel = "rvfs";
+
 export class ReactiveVirtualFileSystem {
     readonly vfs: VirtualFileSystem;
     private folderMonitors = new Map<
         string,
         {
             accessor: Accessor<AsyncResult<VfsFileOrFolder[]>>;
-            refetch: () => void;
+            refetch: (options?: { skipBroadcast?: boolean, }) => void;
             dispose: () => void;
             refCount: number;
         }
@@ -33,7 +35,7 @@ export class ReactiveVirtualFileSystem {
         string,
         {
             accessor: Accessor<AsyncResult<Blob>>;
-            refetch: () => void;
+            refetch: (options?: { skipBroadcast?: boolean, }) => void;
             dispose: () => void;
             refCount: number;
         }
@@ -42,6 +44,7 @@ export class ReactiveVirtualFileSystem {
     private hasWriter: boolean = false;
     private pendingWriters: (() => void)[] = [];
     private pendingReaders: (() => void)[] = [];
+    private bc: BroadcastChannel;
 
     awaitReadLock(): Promise<{}> {
         return new Promise((resolve) => {
@@ -100,6 +103,25 @@ export class ReactiveVirtualFileSystem {
 
     constructor(params: { vfs: VirtualFileSystem }) {
         this.vfs = params.vfs;
+        this.bc = new BroadcastChannel(channel);
+        //
+        this.bc.onmessage = (e) => {
+            let data = e.data;
+            if (data.type == "FolderChanged") {
+                let folderId = data.folderId;
+                let monitor = this.folderMonitors.get(folderId);
+                if (monitor != undefined) {
+                    monitor.refetch({ skipBroadcast: true });
+                }
+            }
+            if (data.type == "FileDataChanged") {
+                let fileId = data.fileId;
+                let monitor = this.fileDataMonitors.get(fileId);
+                if (monitor != undefined) {
+                    monitor.refetch({ skipBroadcast: true });
+                }
+            }
+        };
     }
 
     get rootFolderId(): string {
@@ -127,8 +149,14 @@ export class ReactiveVirtualFileSystem {
                     }
                     return asyncSuccess(filesAndFolders2.value);
                 });
-                let refetch2 = () => {
+                let refetch2 = (options?: { skipBroadcast?: boolean, }) => {
                     refetch();
+                    if (!(options?.skipBroadcast ?? false)) {
+                        this.bc.postMessage({
+                            type: "FolderChanged",
+                            folderId,
+                        });
+                    }
                 };
                 return {
                     accessor,
@@ -219,8 +247,14 @@ export class ReactiveVirtualFileSystem {
                     }
                     return asyncSuccess(fileData2.value);
                 });
-                let refetch2 = () => {
+                let refetch2 = (options?: { skipBroadcast?: boolean, }) => {
                     refetch();
+                    if (!(options?.skipBroadcast ?? false)) {
+                        this.bc.postMessage({
+                            type: "FileDataChanged",
+                            fileId,
+                        });
+                    }
                 };
                 return {
                     accessor,
