@@ -71,6 +71,9 @@ const App: Component = (props) => {
                     <button class="btn" onClick={() => navigate("/vfs-test")}>
                         Virtual File System Test
                     </button>
+                    <button class="btn" onClick={() => navigate("/automerge-webrtc-test")}>
+                        Automerge WebRTC Test
+                    </button>
                 </div>
             </div>
         </div>

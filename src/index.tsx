@@ -19,6 +19,7 @@ const VectorEditor = lazy(() => import("./vector-editor/VectorEditor"));
 const GravityTest = lazy(() => import("./gravity-test/GravityTest"));
 const ThreeBody = lazy(() => import("./three-body/ThreeBody"));
 const VfsTest = lazy(() => import("./level-builder/VirtualFileSystemTest"));
+const AutomergeWebRtcTest = lazy(() => import("./automerge-webrtc-test/AutomergeWebRtcTest"));
 
 const root = document.getElementById("root");
 
@@ -60,6 +61,7 @@ render(
             <Route path="/gravity-test" component={GravityTest} />
             <Route path="/three-body" component={ThreeBody} />
             <Route path="/vfs-test" component={VfsTest} />
+            <Route path="/automerge-webrtc-test" component={AutomergeWebRtcTest}/>
         </HashRouter>
     ),
     root!,
