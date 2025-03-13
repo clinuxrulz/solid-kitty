@@ -1,30 +1,97 @@
-import { Component, For, Show } from "solid-js";
+import { Component, createMemo, For, Show } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { NoTrack } from "../util";
+import { loadFromJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
+
+type OfferWithIce = {
+    offer: string,
+    iceCandidates: string[],
+};
+
+const offerWithIceTypeSchema: TypeSchema<OfferWithIce> = {
+    type: "Object",
+    properties: {
+        offer: "String",
+        iceCandidates: {
+            type: "Array",
+            element: "String",
+        },
+    },
+};
 
 const AutomergeWebRtcTest: Component = () => {
+    let searchParams = new URLSearchParams(window.location.search);
+    let initOffer: string | undefined = undefined;
+    let initIceCandidates: string[] | undefined = undefined;
+    let offerWithIce = searchParams.get("offerWithIce");
+    if (offerWithIce != null) {
+        let result = loadFromJsonViaTypeSchema<OfferWithIce>(offerWithIceTypeSchema, JSON.parse(offerWithIce));
+        if (result.type == "Ok") {
+            let result2 = result.value;
+            initOffer = result2.offer;
+            initIceCandidates = result2.iceCandidates;
+            console.log(initIceCandidates);
+        }
+    }
+    let initIceCandidates2: NoTrack<RTCIceCandidate>[] = [];
+    if (initIceCandidates != undefined) {
+        initIceCandidates2 = initIceCandidates.map((x) => new NoTrack(JSON.parse(x)));
+    }
     let [ state, setState, ] = createStore<{
+        offer: NoTrack<RTCSessionDescriptionInit> | undefined,
+        answer: NoTrack<RTCSessionDescriptionInit> | undefined,
         iceCandidates: NoTrack<RTCIceCandidate>[],
         connectionEstablished: boolean,
         messages: string[],
     }>({
-        iceCandidates: [],
+        offer: undefined,
+        answer: undefined,
+        iceCandidates: initIceCandidates2,
         connectionEstablished: false,
         messages: [],
     });
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
     const peerConnection = new RTCPeerConnection(configuration);
+    if (initOffer != undefined) {
+        let offer = JSON.parse(initOffer);
+        (async () => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            let answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            setState("answer", new NoTrack(answer));
+        })();
+    }
+    if (initIceCandidates2 != undefined) {
+        let ice = initIceCandidates2.map((x) => x.value);
+        (async () => {
+            for (let ice2 of ice) {
+                try {
+                    await peerConnection.addIceCandidate(ice2);
+                } catch (ex) {
+                    // ~\:)/~
+                }
+            }
+        })();
+    }
     const msgDataChannel = peerConnection.createDataChannel("msg");
-    let makeCallAndCopyOffer = async () => {
+    (async () => {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
+        setState("offer", new NoTrack(offer));
+    })();
+    let makeCallAndCopyOffer = async () => {
+        const offer = state.offer?.value;
+        if (offer == undefined) {
+            return;
+        }
         await navigator.clipboard.writeText(JSON.stringify(offer));
     }
     let pasteOfferAndCopyAnswer = async () => {
         let offer = JSON.parse(await navigator.clipboard.readText());
-        peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
         let answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
+        setState("answer", new NoTrack(answer));
         await navigator.clipboard.writeText(JSON.stringify(answer));
     };
     let pasteAnswer = async () => {
@@ -38,7 +105,7 @@ const AutomergeWebRtcTest: Component = () => {
         let iceCandidates: RTCIceCandidate[] = JSON.parse(await navigator.clipboard.readText());
         for (let iceCandidate of iceCandidates) {
             try {
-                peerConnection.addIceCandidate(iceCandidate);
+                await peerConnection.addIceCandidate(iceCandidate);
             } catch (ex) {
                 console.error('Error adding received ice candidate', ex);
             }
@@ -50,23 +117,6 @@ const AutomergeWebRtcTest: Component = () => {
             setState("iceCandidates", produce((x) => x.push(new NoTrack(candidate))));
         }
     });
-    /*
-peerConnection.addEventListener('icecandidate', event => {
-    if (event.candidate) {
-        signalingChannel.send({'new-ice-candidate': event.candidate});
-    }
-});
-
-// Listen for remote ICE candidates and add them to the local RTCPeerConnection
-signalingChannel.addEventListener('message', async message => {
-    if (message.iceCandidate) {
-        try {
-            await peerConnection.addIceCandidate(message.iceCandidate);
-        } catch (e) {
-            console.error('Error adding received ice candidate', e);
-        }
-    }
-});    */
     peerConnection.addEventListener("connectionstatechange", (e) => {
         console.log(e);
         if (peerConnection.connectionState == "connected") {
@@ -88,8 +138,31 @@ signalingChannel.addEventListener('message', async message => {
             setState("messages", produce((x) => x.push(e.data)));
         });
     });
+    let offerWithIceUrl = createMemo(() => {
+        let offer = state.offer?.value;
+        if (offer == undefined) {
+            return undefined;
+        }
+        let ice = state.iceCandidates.map((x) => JSON.stringify(x.value));
+        if (ice == undefined) {
+            return undefined;
+        }
+        let url = new URL(window.location.href);
+        let offerWithIce: OfferWithIce = {
+            offer: JSON.stringify(offer),
+            iceCandidates: ice,
+        };
+        url.searchParams.append("offerWithIce", JSON.stringify(offerWithIce));
+        return url.toString();
+    });
     return (
-        <div>
+        <div
+            style={{
+                "width": "100%",
+                "height": "100%",
+                "overflow-y": "auto",
+            }}
+        >
             Automege WebRTC Test<br/>
             <Show when={!state.connectionEstablished}>
                 <b>Calling Side:</b><br/>
@@ -130,6 +203,34 @@ signalingChannel.addEventListener('message', async message => {
                 >
                     Paste ICE Candidates
                 </button>
+                <hr/>
+                <b>Fast Track:</b><br/>
+                <Show when={offerWithIceUrl()}>
+                    {(offerWithIceUrl2) => (<>
+                        Call URL:
+                        <button
+                            class="btn"
+                            onClick={async () => {
+                                await navigator.clipboard.writeText(offerWithIceUrl2());
+                            }}
+                        >
+                            Copy
+                        </button>
+                    </>)}
+                </Show>
+                <Show when={state.answer}>
+                    {(answer) => (<>
+                        Answer:
+                        <button
+                            class="btn"
+                            onClick={async () => {
+                                await navigator.clipboard.writeText(JSON.stringify(answer().value));
+                            }}
+                        >
+                            Copy
+                        </button>
+                    </>)}
+                </Show>
             </Show>
             <Show when={state.connectionEstablished}>
                 <For each={state.messages}>
@@ -151,22 +252,5 @@ signalingChannel.addEventListener('message', async message => {
         </div>
     );
 };
-
-
-/*
-async function makeCall() {
-    const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
-    const peerConnection = new RTCPeerConnection(configuration);
-    signalingChannel.addEventListener('message', async message => {
-        if (message.answer) {
-            const remoteDesc = new RTCSessionDescription(message.answer);
-            await peerConnection.setRemoteDescription(remoteDesc);
-        }
-    });
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    signalingChannel.send({'offer': offer});
-}
-*/
 
 export default AutomergeWebRtcTest;
