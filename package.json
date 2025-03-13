@@ -29,10 +29,12 @@
     "@solid-primitives/set": "^0.6.0",
     "@solidjs/router": "^0.15.3",
     "@unocss/reset": "^65.4.3",
+    "awesome-qr": "^2.1.5-rc.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "nurbs": "^1.1.1",
     "pixi.js": "^8.6.6",
+    "qr-scanner": "^1.4.2",
     "solid-js": "^1.9.3",
     "uuid": "^11.0.5"
   }

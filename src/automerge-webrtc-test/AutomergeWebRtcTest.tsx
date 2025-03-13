@@ -1,7 +1,9 @@
-import { Component, createMemo, For, Show } from "solid-js";
+import { Component, createMemo, createResource, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { NoTrack } from "../util";
 import { loadFromJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
+import { makeQrForText } from "./qr_gen";
+import QrScanner from "qr-scanner";
 
 type OfferWithIce = {
     offer: string,
@@ -42,12 +44,14 @@ const AutomergeWebRtcTest: Component = () => {
         answer: NoTrack<RTCSessionDescriptionInit> | undefined,
         iceCandidates: NoTrack<RTCIceCandidate>[],
         connectionEstablished: boolean,
+        doScan: boolean,
         messages: string[],
     }>({
         offer: undefined,
         answer: undefined,
         iceCandidates: initIceCandidates2,
         connectionEstablished: false,
+        doScan: false,
         messages: [],
     });
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
@@ -155,6 +159,79 @@ const AutomergeWebRtcTest: Component = () => {
         url.searchParams.append("offerWithIce", JSON.stringify(offerWithIce));
         return url.toString();
     });
+    let OfferWithIceUrlQR: Component = () => (
+        <Show when={offerWithIceUrl()}>
+            {(offerWithIceUrl2) => {
+                let [ offerWithIceQrDataUrl ] = createResource(() => makeQrForText(offerWithIceUrl2()));
+                return (
+                    <Show when={offerWithIceQrDataUrl()}>
+                        {(dataUrl) => (
+                            <img src={dataUrl()}/>
+                        )}
+                    </Show>
+                );
+            }}
+        </Show>
+    );
+    let AnswerQR: Component = () => (
+        <Show when={state.answer?.value}>
+            {(answer) => {
+                let [ answerQrDataUrl ] = createResource(() => makeQrForText(JSON.stringify(answer())));
+                return (
+                    <Show when={answerQrDataUrl()}>
+                        {(dataUrl) => (
+                            <img src={dataUrl()}/>
+                        )}
+                    </Show>
+                );
+            }}
+        </Show>
+    );
+    let AnswerScannerDoScan: Component = () => {
+        let [ videoEl, setVideoEl ] = createSignal<HTMLVideoElement>();
+        onMount(async () => {
+            let videoEl2 = videoEl();
+            if (videoEl2 == undefined) {
+                return;
+            }
+            const qrScanner = new QrScanner(
+                videoEl2,
+                async (result) => {
+                    console.log(result);
+                    let answer = JSON.parse(result.data);
+                    await qrScanner.stop();
+                    await peerConnection.setRemoteDescription(answer);
+                },
+                {}
+            );
+            await qrScanner.start();
+        });
+        return (
+            <video
+                ref={setVideoEl}
+                width={800}
+                height={600}
+                style={{
+                    "border": "1px solid green",
+                }}
+            />
+        );
+    };
+    let AnswerScanner: Component = () => (
+        <Switch>
+            <Match when={!state.doScan}>
+                <button
+                    class="btn"
+                    onClick={() => setState("doScan", true)}
+                >
+                    Do Scan
+                </button>
+            </Match>
+            <Match when={state.doScan}>
+                <AnswerScannerDoScan/>
+            </Match>
+        </Switch>
+    );
     return (
         <div
             style={{
@@ -216,6 +293,8 @@ const AutomergeWebRtcTest: Component = () => {
                         >
                             Copy
                         </button>
+                        <br/>
+                        <OfferWithIceUrlQR/>
                     </>)}
                 </Show>
                 <Show when={state.answer}>
@@ -229,8 +308,12 @@ const AutomergeWebRtcTest: Component = () => {
                         >
                             Copy
                         </button>
+                        <br/>
+                        <AnswerQR/>
                     </>)}
                 </Show>
+                Scan Answer:<br/>
+                <AnswerScanner/>
             </Show>
             <Show when={state.connectionEstablished}>
                 <For each={state.messages}>
