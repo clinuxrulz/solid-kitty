@@ -4,6 +4,7 @@ import { NoTrack } from "../util";
 import { loadFromJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
 import { makeQrForText } from "./qr_gen";
 import QrScanner from "qr-scanner";
+import * as pako from "pako";
 
 type OfferWithIce = {
     offer: string,
@@ -27,7 +28,12 @@ const AutomergeWebRtcTest: Component = () => {
     let initIceCandidates: string[] | undefined = undefined;
     let offerWithIce = searchParams.get("offerWithIce");
     if (offerWithIce != null) {
-        let result = loadFromJsonViaTypeSchema<OfferWithIce>(offerWithIceTypeSchema, JSON.parse(offerWithIce));
+        let data = base64ToArrayBuffer(offerWithIce);
+        let data2 = pako.ungzip(data);
+        let decoder = new TextDecoder("utf-8");
+        let data3 = decoder.decode(data2);
+        let data4 = JSON.parse(data3);
+        let result = loadFromJsonViaTypeSchema<OfferWithIce>(offerWithIceTypeSchema, data4);
         if (result.type == "Ok") {
             let result2 = result.value;
             initOffer = result2.offer;
@@ -156,7 +162,11 @@ const AutomergeWebRtcTest: Component = () => {
             offer: JSON.stringify(offer),
             iceCandidates: ice,
         };
-        url.searchParams.append("offerWithIce", JSON.stringify(offerWithIce));
+        let data = JSON.stringify(offerWithIce);
+        let data2 = pako.gzip(data);
+        let data3 = uint8ArrayToBase64(data2);
+        url.searchParams.append("offerWithIce", data3);
+        console.log("encode-size", url.toString().length);
         return url.toString();
     });
     let OfferWithIceUrlQR: Component = () => (
@@ -176,7 +186,10 @@ const AutomergeWebRtcTest: Component = () => {
     let AnswerQR: Component = () => (
         <Show when={state.answer?.value}>
             {(answer) => {
-                let [ answerQrDataUrl ] = createResource(() => makeQrForText(JSON.stringify(answer())));
+                let data = JSON.stringify(answer());
+                let data2 = pako.gzip(data);
+                let data3 = uint8ArrayToBase64(data2);
+                let [ answerQrDataUrl ] = createResource(() => makeQrForText(data3));
                 return (
                     <Show when={answerQrDataUrl()}>
                         {(dataUrl) => (
@@ -197,8 +210,13 @@ const AutomergeWebRtcTest: Component = () => {
             const qrScanner = new QrScanner(
                 videoEl2,
                 async (result) => {
-                    console.log(result);
-                    let answer = JSON.parse(result.data);
+                    let data = result.data;
+                    let data2 = base64ToArrayBuffer(data);
+                    let data3 = pako.ungzip(data2);
+                    let decoder = new TextDecoder("utf-8");
+                    let data4 = decoder.decode(data3);
+                    let answer = JSON.parse(data4);
+                    console.log(answer);
                     await qrScanner.stop();
                     await peerConnection.setRemoteDescription(answer);
                 },
@@ -335,5 +353,23 @@ const AutomergeWebRtcTest: Component = () => {
         </div>
     );
 };
+
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+    var binary = '';
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): Uint8Array {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
 
 export default AutomergeWebRtcTest;
