@@ -1,126 +1,38 @@
 import { Component, createMemo, createResource, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { NoTrack } from "../util";
-import { loadFromJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
 import { makeQrForText } from "./qr_gen";
 import QrScanner from "qr-scanner";
 import * as pako from "pako";
 
-type OfferWithIce = {
-    offer: string,
-    iceCandidates: string[],
-};
-
-const offerWithIceTypeSchema: TypeSchema<OfferWithIce> = {
-    type: "Object",
-    properties: {
-        offer: "String",
-        iceCandidates: {
-            type: "Array",
-            element: "String",
-        },
-    },
-};
-
 const AutomergeWebRtcTest: Component = () => {
-    let searchParams = new URLSearchParams(window.location.search);
-    let initOffer: string | undefined = undefined;
-    let initIceCandidates: string[] | undefined = undefined;
-    let offerWithIce = searchParams.get("offerWithIce");
-    if (offerWithIce != null) {
-        let data = base64ToArrayBuffer(offerWithIce);
-        let data2 = pako.ungzip(data);
-        let decoder = new TextDecoder("utf-8");
-        let data3 = decoder.decode(data2);
-        let data4 = JSON.parse(data3);
-        let result = loadFromJsonViaTypeSchema<OfferWithIce>(offerWithIceTypeSchema, data4);
-        if (result.type == "Ok") {
-            let result2 = result.value;
-            initOffer = result2.offer;
-            initIceCandidates = result2.iceCandidates;
-            console.log(initIceCandidates);
-        }
-    }
-    let initIceCandidates2: NoTrack<RTCIceCandidate>[] = [];
-    if (initIceCandidates != undefined) {
-        initIceCandidates2 = initIceCandidates.map((x) => new NoTrack(JSON.parse(x)));
-    }
     let [ state, setState, ] = createStore<{
         offer: NoTrack<RTCSessionDescriptionInit> | undefined,
         answer: NoTrack<RTCSessionDescriptionInit> | undefined,
         iceCandidates: NoTrack<RTCIceCandidate>[],
         connectionEstablished: boolean,
-        doScan: boolean,
+        doScanOffer: boolean,
+        doScanAnswer: boolean,
+        doScanIce: boolean,
         messages: string[],
     }>({
         offer: undefined,
         answer: undefined,
-        iceCandidates: initIceCandidates2,
+        iceCandidates: [],
         connectionEstablished: false,
-        doScan: false,
+        doScanOffer: false,
+        doScanAnswer: false,
+        doScanIce: false,
         messages: [],
     });
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
     const peerConnection = new RTCPeerConnection(configuration);
-    if (initOffer != undefined) {
-        let offer = JSON.parse(initOffer);
-        (async () => {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-            let answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            setState("answer", new NoTrack(answer));
-        })();
-    }
-    if (initIceCandidates2 != undefined) {
-        let ice = initIceCandidates2.map((x) => x.value);
-        (async () => {
-            for (let ice2 of ice) {
-                try {
-                    await peerConnection.addIceCandidate(ice2);
-                } catch (ex) {
-                    // ~\:)/~
-                }
-            }
-        })();
-    }
     const msgDataChannel = peerConnection.createDataChannel("msg");
     (async () => {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         setState("offer", new NoTrack(offer));
     })();
-    let makeCallAndCopyOffer = async () => {
-        const offer = state.offer?.value;
-        if (offer == undefined) {
-            return;
-        }
-        await navigator.clipboard.writeText(JSON.stringify(offer));
-    }
-    let pasteOfferAndCopyAnswer = async () => {
-        let offer = JSON.parse(await navigator.clipboard.readText());
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-        let answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        setState("answer", new NoTrack(answer));
-        await navigator.clipboard.writeText(JSON.stringify(answer));
-    };
-    let pasteAnswer = async () => {
-        let answer = JSON.parse(await navigator.clipboard.readText());
-        await peerConnection.setRemoteDescription(answer);
-    };
-    let copyIceCandidates = async () => {
-        await navigator.clipboard.writeText(JSON.stringify(state.iceCandidates.map((x) => x.value)));
-    };
-    let pasteIceCandidates = async () => {
-        let iceCandidates: RTCIceCandidate[] = JSON.parse(await navigator.clipboard.readText());
-        for (let iceCandidate of iceCandidates) {
-            try {
-                await peerConnection.addIceCandidate(iceCandidate);
-            } catch (ex) {
-                console.error('Error adding received ice candidate', ex);
-            }
-        }
-    };
     peerConnection.addEventListener("icecandidate", (event) => {
         if (event.candidate != null) {
             let candidate = event.candidate;
@@ -128,7 +40,6 @@ const AutomergeWebRtcTest: Component = () => {
         }
     });
     peerConnection.addEventListener("connectionstatechange", (e) => {
-        console.log(e);
         if (peerConnection.connectionState == "connected") {
             setState("connectionEstablished", true);
         }
@@ -148,33 +59,69 @@ const AutomergeWebRtcTest: Component = () => {
             setState("messages", produce((x) => x.push(e.data)));
         });
     });
-    let offerWithIceUrl = createMemo(() => {
+    let offerDataCompressed = createMemo(() => {
         let offer = state.offer?.value;
         if (offer == undefined) {
             return undefined;
         }
-        let ice = state.iceCandidates.map((x) => JSON.stringify(x.value));
-        if (ice == undefined) {
+        let data = JSON.stringify(offer);
+        let encoder = new TextEncoder();
+        let data2 = encoder.encode(data);
+        let data3 = pako.gzip(data2);
+        let data4 = uint8ArrayToBase64(data3);
+        return data4;
+    });
+    let decompressOfferData = (offerData: string): RTCSessionDescriptionInit => {
+        let data = base64ToArrayBuffer(offerData);
+        let data2 = pako.ungzip(data);
+        let decoder = new TextDecoder("utf-8");
+        let data3 = decoder.decode(data2);
+        let data4 = JSON.parse(data3);
+        return data4;
+    };
+    let answerDataCompressed = createMemo(() => {
+        let answer = state.answer?.value;
+        if (answer == undefined) {
             return undefined;
         }
-        let url = new URL(window.location.href);
-        let offerWithIce: OfferWithIce = {
-            offer: JSON.stringify(offer),
-            iceCandidates: ice,
-        };
-        let data = JSON.stringify(offerWithIce);
-        let data2 = pako.gzip(data);
-        let data3 = uint8ArrayToBase64(data2);
-        url.searchParams.append("offerWithIce", data3);
-        console.log("encode-size", url.toString().length);
-        return url.toString();
+        let data = JSON.stringify(answer);
+        let encoder = new TextEncoder();
+        let data2 = encoder.encode(data);
+        let data3 = pako.gzip(data2);
+        let data4 = uint8ArrayToBase64(data3);
+        return data4;
     });
-    let OfferWithIceUrlQR: Component = () => (
-        <Show when={offerWithIceUrl()}>
-            {(offerWithIceUrl2) => {
-                let [ offerWithIceQrDataUrl ] = createResource(() => makeQrForText(offerWithIceUrl2()));
+    let decompressAnswerData = (answerData: string): RTCSessionDescriptionInit => {
+        let data = base64ToArrayBuffer(answerData);
+        let data2 = pako.ungzip(data);
+        let decoder = new TextDecoder("utf-8");
+        let data3 = decoder.decode(data2);
+        let data4 = JSON.parse(data3);
+        return data4;
+    };
+    let iceDataCompressed = createMemo(() => {
+        let ice = state.iceCandidates.map((x) => x.value);
+        let data = JSON.stringify(ice);
+        let encoder = new TextEncoder();
+        let data2 = encoder.encode(data);
+        let data3 = pako.gzip(data2);
+        let data4 = uint8ArrayToBase64(data3);
+        return data4;
+    });
+    let decompressIceData = (iceData: string): RTCIceCandidate[] => {
+        let data = base64ToArrayBuffer(iceData);
+        let data2 = pako.ungzip(data);
+        let decoder = new TextDecoder("utf-8");
+        let data3 = decoder.decode(data2);
+        let data4 = JSON.parse(data3);
+        return data4;
+    };
+    let OfferQR: Component = () => (
+        <Show when={offerDataCompressed()} keyed={true}>
+            {(data) => {
+                let [ offerQrDataUrl ] = createResource(() => makeQrForText(data));
                 return (
-                    <Show when={offerWithIceQrDataUrl()}>
+                    <Show when={offerQrDataUrl()}>
                         {(dataUrl) => (
                             <img src={dataUrl()}/>
                         )}
@@ -183,13 +130,61 @@ const AutomergeWebRtcTest: Component = () => {
             }}
         </Show>
     );
+    let OfferScannerDoScan: Component = () => {
+        let [ videoEl, setVideoEl ] = createSignal<HTMLVideoElement>();
+        onMount(async () => {
+            let videoEl2 = videoEl();
+            if (videoEl2 == undefined) {
+                return;
+            }
+            const qrScanner = new QrScanner(
+                videoEl2,
+                async (result) => {
+                    let offer = decompressOfferData(result.data);
+                    console.log(offer);
+                    await qrScanner.stop();
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    let answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    setState("answer", new NoTrack(answer));
+                    setState("doScanOffer", false);
+                },
+                {
+                    highlightScanRegion: true,
+                }
+            );
+            await qrScanner.start();
+        });
+        return (
+            <video
+                ref={setVideoEl}
+                width={800}
+                height={600}
+                style={{
+                    "border": "1px solid green",
+                }}
+            />
+        );
+    };
+    let OfferScanner: Component = () => (
+        <Switch>
+            <Match when={!state.doScanOffer}>
+                <button
+                    class="btn"
+                    onClick={() => setState("doScanOffer", true)}
+                >
+                    Do Scan
+                </button>
+            </Match>
+            <Match when={state.doScanOffer}>
+                <OfferScannerDoScan/>
+            </Match>
+        </Switch>
+    );
     let AnswerQR: Component = () => (
-        <Show when={state.answer?.value}>
-            {(answer) => {
-                let data = JSON.stringify(answer());
-                let data2 = pako.gzip(data);
-                let data3 = uint8ArrayToBase64(data2);
-                let [ answerQrDataUrl ] = createResource(() => makeQrForText(data3));
+        <Show when={answerDataCompressed()} keyed={true}>
+            {(data) => {
+                let [ answerQrDataUrl ] = createResource(() => makeQrForText(data));
                 return (
                     <Show when={answerQrDataUrl()}>
                         {(dataUrl) => (
@@ -210,17 +205,16 @@ const AutomergeWebRtcTest: Component = () => {
             const qrScanner = new QrScanner(
                 videoEl2,
                 async (result) => {
-                    let data = result.data;
-                    let data2 = base64ToArrayBuffer(data);
-                    let data3 = pako.ungzip(data2);
-                    let decoder = new TextDecoder("utf-8");
-                    let data4 = decoder.decode(data3);
-                    let answer = JSON.parse(data4);
+                    let answer = decompressAnswerData(result.data);
                     console.log(answer);
                     await qrScanner.stop();
                     await peerConnection.setRemoteDescription(answer);
+                    setState("doScanAnswer", false);
                 },
-                {}
+                {
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
             );
             await qrScanner.start();
         });
@@ -237,16 +231,79 @@ const AutomergeWebRtcTest: Component = () => {
     };
     let AnswerScanner: Component = () => (
         <Switch>
-            <Match when={!state.doScan}>
+            <Match when={!state.doScanAnswer}>
                 <button
                     class="btn"
-                    onClick={() => setState("doScan", true)}
+                    onClick={() => setState("doScanAnswer", true)}
                 >
                     Do Scan
                 </button>
             </Match>
-            <Match when={state.doScan}>
+            <Match when={state.doScanAnswer}>
                 <AnswerScannerDoScan/>
+            </Match>
+        </Switch>
+    );
+    let IceQR: Component = () => (
+        <Show when={iceDataCompressed()} keyed={true}>
+            {(data) => {
+                let [ iceQrDataUrl ] = createResource(() => makeQrForText(data));
+                return (
+                    <Show when={iceQrDataUrl()}>
+                        {(dataUrl) => (
+                            <img src={dataUrl()}/>
+                        )}
+                    </Show>
+                );
+            }}
+        </Show>
+    );
+    let IceScannerDoScan: Component = () => {
+        let [ videoEl, setVideoEl ] = createSignal<HTMLVideoElement>();
+        onMount(async () => {
+            let videoEl2 = videoEl();
+            if (videoEl2 == undefined) {
+                return;
+            }
+            const qrScanner = new QrScanner(
+                videoEl2,
+                async (result) => {
+                    let ice = decompressIceData(result.data);
+                    await qrScanner.stop();
+                    for (let ice2 of ice) {
+                        await peerConnection.addIceCandidate(ice2);
+                    }
+                },
+                {
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+            await qrScanner.start();
+        });
+        return (
+            <video
+                ref={setVideoEl}
+                width={800}
+                height={600}
+                style={{
+                    "border": "1px solid green",
+                }}
+            />
+        );
+    };
+    let IceScanner: Component = () => (
+        <Switch>
+            <Match when={!state.doScanIce}>
+                <button
+                    class="btn"
+                    onClick={() => setState("doScanIce", true)}
+                >
+                    Do Scan
+                </button>
+            </Match>
+            <Match when={state.doScanIce}>
+                <IceScannerDoScan/>
             </Match>
         </Switch>
     );
@@ -260,68 +317,30 @@ const AutomergeWebRtcTest: Component = () => {
         >
             Automege WebRTC Test<br/>
             <Show when={!state.connectionEstablished}>
-                <b>Calling Side:</b><br/>
-                <button
-                    class="btn"
-                    onClick={() => makeCallAndCopyOffer()}
-                >
-                    Call (Copy Offer)
-                </button>
-                <button
-                    class="btn"
-                    onClick={() => pasteAnswer()}
-                >
-                    Paste Answer (Call Accepted)
-                </button>
-                <br/>
-                <b>Answering Side:</b><br/>
-                <button
-                    class="btn"
-                    onClick={() => pasteOfferAndCopyAnswer()}
-                >
-                    Paste Offer, and Copy Answer
-                </button>
-                <br/>
-                <br/>
-                <b>ICE Candidates:</b><br/>
-                <Show when={state.iceCandidates.length != 0}>
-                    <button
-                        class="btn"
-                        onClick={() => copyIceCandidates()}
-                    >
-                        Copy ICE Candidates
-                    </button>
-                </Show>
-                <button
-                    class="btn"
-                    onClick={() => pasteIceCandidates()}
-                >
-                    Paste ICE Candidates
-                </button>
-                <hr/>
-                <b>Fast Track:</b><br/>
-                <Show when={offerWithIceUrl()}>
-                    {(offerWithIceUrl2) => (<>
-                        Call URL:
+                <Show when={offerDataCompressed()}>
+                    {(offerDataCompressed2) => (<>
+                        Call:
                         <button
                             class="btn"
                             onClick={async () => {
-                                await navigator.clipboard.writeText(offerWithIceUrl2());
+                                let data = offerDataCompressed2();
+                                await navigator.clipboard.writeText(data);
                             }}
                         >
                             Copy
                         </button>
                         <br/>
-                        <OfferWithIceUrlQR/>
+                        <OfferQR/>
                     </>)}
                 </Show>
-                <Show when={state.answer}>
-                    {(answer) => (<>
+                <Show when={answerDataCompressed()}>
+                    {(answerDataCompressed2) => (<>
                         Answer:
                         <button
                             class="btn"
                             onClick={async () => {
-                                await navigator.clipboard.writeText(JSON.stringify(answer().value));
+                                let data = answerDataCompressed2();
+                                await navigator.clipboard.writeText(data);
                             }}
                         >
                             Copy
@@ -330,8 +349,66 @@ const AutomergeWebRtcTest: Component = () => {
                         <AnswerQR/>
                     </>)}
                 </Show>
-                Scan Answer:<br/>
-                <AnswerScanner/>
+                <Show when={iceDataCompressed()}>
+                    {(iceDataCompressed2) => (<>
+                        Ice:
+                        <button
+                            class="btn"
+                            onClick={async () => {
+                                let data = iceDataCompressed2();
+                                await navigator.clipboard.writeText(data);
+                            }}
+                        >
+                            Copy
+                        </button>
+                        <br/>
+                        <IceQR/>
+                    </>)}
+                </Show>
+                Scan Offer:
+                <button
+                    class="btn"
+                    onClick={async () => {
+                        let data = await navigator.clipboard.readText();
+                        let offer = decompressOfferData(data);
+                        await peerConnection.setRemoteDescription(offer);
+                        let answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        setState("answer", new NoTrack(answer));
+                    }}
+                >
+                    Paste
+                </button>
+                <br/>
+                <OfferScanner/><br/>
+                Scan Answer:
+                <button
+                    class="btn"
+                    onClick={async () => {
+                        let data = await navigator.clipboard.readText();
+                        let answer = decompressAnswerData(data);
+                        await peerConnection.setRemoteDescription(answer);
+                    }}
+                >
+                    Paste
+                </button>
+                <br/>
+                <AnswerScanner/><br/>
+                Scan ICE:
+                <button
+                    class="btn"
+                    onClick={async () => {
+                        let data = await navigator.clipboard.readText();
+                        let ice = decompressIceData(data);
+                        for (let ice2 of ice) {
+                            await peerConnection.addIceCandidate(ice2);
+                        }
+                    }}
+                >
+                    Paste
+                </button>
+                <br/>
+                <IceScanner/><br/>
             </Show>
             <Show when={state.connectionEstablished}>
                 <For each={state.messages}>

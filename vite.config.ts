@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     unocssPlugin(),
     solidPlugin(),
-    mkcertPlugin(),
+    // mkcertPlugin(),
   ],
   server: {
     port: 3000,
