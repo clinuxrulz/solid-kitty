@@ -156,14 +156,17 @@ const AutomergeWebRtcTest: Component = () => {
             await qrScanner.start();
         });
         return (
-            <video
-                ref={setVideoEl}
-                width={800}
-                height={600}
-                style={{
-                    "border": "1px solid green",
-                }}
-            />
+            <div style="position: relative;">
+                <video
+                    ref={setVideoEl}
+                    style={{
+                        "border": "1px solid green",
+                        "width": "300px",
+                        "height": "300px",
+                    }}
+                    disablepictureinpicture
+                />
+            </div>
         );
     };
     let OfferScanner: Component = () => (
@@ -219,14 +222,17 @@ const AutomergeWebRtcTest: Component = () => {
             await qrScanner.start();
         });
         return (
-            <video
-                ref={setVideoEl}
-                width={800}
-                height={600}
-                style={{
-                    "border": "1px solid green",
-                }}
-            />
+            <div style="position: relative;">
+                <video
+                    ref={setVideoEl}
+                    style={{
+                        "border": "1px solid green",
+                        "width": "300px",
+                        "height": "300px",
+                    }}
+                    disablepictureinpicture
+                />
+            </div>
         );
     };
     let AnswerScanner: Component = () => (
@@ -282,14 +288,17 @@ const AutomergeWebRtcTest: Component = () => {
             await qrScanner.start();
         });
         return (
-            <video
-                ref={setVideoEl}
-                width={800}
-                height={600}
-                style={{
-                    "border": "1px solid green",
-                }}
-            />
+            <div style="position: relative;">
+                <video
+                    ref={setVideoEl}
+                    style={{
+                        "border": "1px solid green",
+                        "width": "300px",
+                        "height": "300px",
+                    }}
+                    disablepictureinpicture
+                />
+            </div>
         );
     };
     let IceScanner: Component = () => (
