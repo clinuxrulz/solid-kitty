@@ -1,9 +1,10 @@
-import { Component, createMemo, createResource, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import { Component, createComputed, createEffect, createMemo, createResource, createSignal, For, mapArray, Match, on, onCleanup, onMount, Show, Switch, untrack } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { NoTrack } from "../util";
 import { makeQrForText } from "./qr_gen";
 import QrScanner from "qr-scanner";
 import * as pako from "pako";
+import { createConnectionsUiForPeerJs } from "./ConnectionsUiForPeerJs";
 
 const AutomergeWebRtcTest: Component = () => {
     let [ state, setState, ] = createStore<{
@@ -316,6 +317,33 @@ const AutomergeWebRtcTest: Component = () => {
             </Match>
         </Switch>
     );
+    let connectionsUiForPeerJs = createConnectionsUiForPeerJs();
+    let hasPeerJsConnections = createMemo(() =>
+        connectionsUiForPeerJs.connections().length != 0
+    );
+    createEffect(on(
+        hasPeerJsConnections,
+        (hasPeerJsConnections) => {
+            if (hasPeerJsConnections) {
+                setState("connectionEstablished", true);
+            }
+        },
+    ));
+    createComputed(mapArray(
+        connectionsUiForPeerJs.connections,
+        (connection) => {
+            let onData = (x: any) => {
+                setState("messages", produce((x2) => x2.push(x)));
+            };
+            connection.on("data", onData);
+            onCleanup(() => connection.off("data", onData));
+        },
+    ));
+    let sendMessageViaPeerJs = (message: string) => untrack(() => {
+        for (let connection of connectionsUiForPeerJs.connections()) {
+            connection.send(message);
+        }
+    });
     return (
         <div
             style={{
@@ -325,6 +353,10 @@ const AutomergeWebRtcTest: Component = () => {
             }}
         >
             Automege WebRTC Test<br/>
+            Via PeerJs:<br/>
+            <connectionsUiForPeerJs.Render/>
+            <hr/>
+            Via QR Codes:<br/>
             <Show when={!state.connectionEstablished}>
                 <Show when={offerDataCompressed()}>
                     {(offerDataCompressed2) => (<>
@@ -431,7 +463,10 @@ const AutomergeWebRtcTest: Component = () => {
                     onChange={(e) => {
                         let text = e.currentTarget.value;
                         setState("messages", produce((x) => x.push(text)));
-                        msgDataChannel.send(text);
+                        if (msgDataChannel.readyState == "open") {
+                            msgDataChannel.send(text);
+                        }
+                        sendMessageViaPeerJs(text);
                         e.currentTarget.value = "";
                     }}
                 />
