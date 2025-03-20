@@ -56,6 +56,10 @@ export function createConnectionManagementUi(props: {}): {
         let inviteCode = makeInviteCode();
         let peerId = inviteCodeToPeerId(inviteCode);
         let peer = new Peer(peerId);
+        let invite: Invite = {
+            inviteCode,
+            peer,
+        };
         peer.on("open", () => {
             peer.on("connection", (conn) => {
                 conn.once("data", (peerNickname) => {
@@ -69,12 +73,16 @@ export function createConnectionManagementUi(props: {}): {
                         conn,
                     }))));
                     conn.send(state.nickname);
+                    setState(
+                        "pendingInvites",
+                        state.pendingInvites
+                            .filter((x) =>
+                                x.value != invite
+                            )
+                    );
                 });
             });
-            setState("pendingInvites", produce((x) => x.push(new NoTrack({
-                inviteCode,
-                peer,
-            }))));
+            setState("pendingInvites", produce((x) => x.push(new NoTrack(invite))));
             pushToast(() => (<>
                 Invite Code: {inviteCode}
                 <button
