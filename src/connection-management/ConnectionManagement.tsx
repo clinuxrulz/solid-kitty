@@ -1,31 +1,38 @@
 import { NoTrack } from "../util";
-import { Accessor, Component, createMemo, createSignal, For, Show } from "solid-js";
+import {
+    Accessor,
+    Component,
+    createMemo,
+    createSignal,
+    For,
+    Show,
+} from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { generateUsername } from "unique-username-generator";
 import Peer, { DataConnection } from "peerjs";
 import { inviteCodeToPeerId, makeInviteCode } from "./invite_code";
 
 export type Connection = {
-    nickname: string,
-    peer: Peer,
-    conn: DataConnection,
+    nickname: string;
+    peer: Peer;
+    conn: DataConnection;
 };
 
 export type Invite = {
-    inviteCode: string,
-    peer: Peer,
+    inviteCode: string;
+    peer: Peer;
 };
 
 export function createConnectionManagementUi(props: {}): {
-    connections: Accessor<Connection[]>,
-    Render: Component,
+    connections: Accessor<Connection[]>;
+    Render: Component;
 } {
-    let [ state, setState, ] = createStore<{
-        nickname: string,
-        connections: NoTrack<Connection>[],
-        pendingInvites: NoTrack<Invite>[],
-        toastStack: NoTrack<{ id: {}, Render: Component, }>[],
-        joinDialogInviteCode: string,
+    let [state, setState] = createStore<{
+        nickname: string;
+        connections: NoTrack<Connection>[];
+        pendingInvites: NoTrack<Invite>[];
+        toastStack: NoTrack<{ id: {}; Render: Component }>[];
+        joinDialogInviteCode: string;
     }>({
         nickname: generateUsername("_"),
         connections: [],
@@ -33,26 +40,25 @@ export function createConnectionManagementUi(props: {}): {
         toastStack: [],
         joinDialogInviteCode: "",
     });
-    let [ inviteDialogElement, setInviteDialogElement, ] = createSignal<HTMLDialogElement>();
+    let [inviteDialogElement, setInviteDialogElement] =
+        createSignal<HTMLDialogElement>();
     let connections = createMemo(() => state.connections.map((x) => x.value));
     let pushToast = (Render: Component) => {
         let id = {};
-        setState("toastStack", produce((x) => x.push(new NoTrack({ id, Render, }))));
-        let timerId = setTimeout(
-            () => {
-                setState(
-                    "toastStack",
-                    state.toastStack.filter(
-                        (x) => x.value.id !== id
-                    )
-                );
-                clearTimeout(timerId);
-            },
-            5000
+        setState(
+            "toastStack",
+            produce((x) => x.push(new NoTrack({ id, Render }))),
         );
+        let timerId = setTimeout(() => {
+            setState(
+                "toastStack",
+                state.toastStack.filter((x) => x.value.id !== id),
+            );
+            clearTimeout(timerId);
+        }, 5000);
     };
     let invite = () => {
-        let [ copied, setCopied, ] = createSignal(false);
+        let [copied, setCopied] = createSignal(false);
         let inviteCode = makeInviteCode();
         let peerId = inviteCodeToPeerId(inviteCode);
         let peer = new Peer(peerId);
@@ -66,43 +72,56 @@ export function createConnectionManagementUi(props: {}): {
                     if (typeof peerNickname != "string") {
                         return;
                     }
-                    setState("connections",
-                        produce((x) => x.push(new NoTrack({
-                        nickname: peerNickname,
-                        peer,
-                        conn,
-                    }))));
+                    setState(
+                        "connections",
+                        produce((x) =>
+                            x.push(
+                                new NoTrack({
+                                    nickname: peerNickname,
+                                    peer,
+                                    conn,
+                                }),
+                            ),
+                        ),
+                    );
                     conn.send(state.nickname);
                     setState(
                         "pendingInvites",
-                        state.pendingInvites
-                            .filter((x) =>
-                                x.value != invite
-                            )
+                        state.pendingInvites.filter((x) => x.value != invite),
                     );
                 });
                 conn.once("close", () => {
-                    setState("connections", state.connections.filter((connection) => connection.value.peer !== peer));
+                    setState(
+                        "connections",
+                        state.connections.filter(
+                            (connection) => connection.value.peer !== peer,
+                        ),
+                    );
                 });
             });
-            setState("pendingInvites", produce((x) => x.push(new NoTrack(invite))));
-            pushToast(() => (<>
-                Invite Code: {inviteCode}
-                <button
-                    class="btn"
-                    onClick={async () => {
-                        await navigator.clipboard.writeText(inviteCode);
-                        setCopied(true);
-                        let timerId = setTimeout(() => {
-                            clearTimeout(timerId);
-                            setCopied(false);
-                        }, 1000);
-                    }}
-                >
-                    Copy
-                </button>
-                <Show when={copied()}>Copied</Show>
-            </>));
+            setState(
+                "pendingInvites",
+                produce((x) => x.push(new NoTrack(invite))),
+            );
+            pushToast(() => (
+                <>
+                    Invite Code: {inviteCode}
+                    <button
+                        class="btn"
+                        onClick={async () => {
+                            await navigator.clipboard.writeText(inviteCode);
+                            setCopied(true);
+                            let timerId = setTimeout(() => {
+                                clearTimeout(timerId);
+                                setCopied(false);
+                            }, 1000);
+                        }}
+                    >
+                        Copy
+                    </button>
+                    <Show when={copied()}>Copied</Show>
+                </>
+            ));
         });
     };
     let openJoinDialog = () => {
@@ -122,16 +141,27 @@ export function createConnectionManagementUi(props: {}): {
                     if (typeof peerNickname != "string") {
                         return;
                     }
-                    setState("connections",
-                        produce((x) => x.push(new NoTrack({
-                        nickname: peerNickname,
-                        peer,
-                        conn,
-                    }))));
+                    setState(
+                        "connections",
+                        produce((x) =>
+                            x.push(
+                                new NoTrack({
+                                    nickname: peerNickname,
+                                    peer,
+                                    conn,
+                                }),
+                            ),
+                        ),
+                    );
                 });
                 conn.send(state.nickname);
                 conn.once("close", () => {
-                    setState("connections", state.connections.filter((connection) => connection.value.peer !== peer));
+                    setState(
+                        "connections",
+                        state.connections.filter(
+                            (connection) => connection.value.peer !== peer,
+                        ),
+                    );
                 });
             });
         });
@@ -141,25 +171,32 @@ export function createConnectionManagementUi(props: {}): {
     };
     let Render: Component = () => {
         return (
-            <div style={{
-                "width": "100%",
-                "height": "100%",
-                "display": "flex",
-                "flex-direction": "column",
-                "padding": "10px",
-                "position": "relative",
-            }}>
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    "flex-direction": "column",
+                    padding: "10px",
+                    position: "relative",
+                }}
+            >
                 <div>
                     <div class="text-xl pb-2">Connection Management</div>
                     <div class="pb-2">
                         <label>
-                            <div style="display: inline-block; padding-right: 5px;">Nickname:</div>
+                            <div style="display: inline-block; padding-right: 5px;">
+                                Nickname:
+                            </div>
                             <input
                                 type="text"
                                 class="input"
                                 value={state.nickname}
                                 onInput={(e) => {
-                                    setState("nickname", e.currentTarget.validationMessage);
+                                    setState(
+                                        "nickname",
+                                        e.currentTarget.validationMessage,
+                                    );
                                 }}
                             />
                         </label>
@@ -182,7 +219,7 @@ export function createConnectionManagementUi(props: {}): {
                 <div
                     style={{
                         "flex-grow": "1",
-                        "display": "flex",
+                        display: "flex",
                         "flex-direction": "row",
                     }}
                 >
@@ -196,16 +233,16 @@ export function createConnectionManagementUi(props: {}): {
                         <table class="table table-zebra">
                             <thead>
                                 <tr>
-                                    <th/>
+                                    <th />
                                     <th>Nickname</th>
-                                    <th/>
+                                    <th />
                                 </tr>
                             </thead>
                             <tbody>
                                 <For each={state.connections}>
                                     {(connection) => (
                                         <tr>
-                                            <td/>
+                                            <td />
                                             <td>{connection.value.nickname}</td>
                                             <td>
                                                 <button
@@ -233,46 +270,70 @@ export function createConnectionManagementUi(props: {}): {
                         <table class="table table-zebra">
                             <thead>
                                 <tr>
-                                    <th/>
+                                    <th />
                                     <th>Invite Code</th>
-                                    <th/>
+                                    <th />
                                 </tr>
                             </thead>
                             <tbody>
                                 <For each={state.pendingInvites}>
                                     {(pendingInvite) => {
-                                        let [ copied, setCopied, ] = createSignal(false);
+                                        let [copied, setCopied] =
+                                            createSignal(false);
                                         return (
                                             <tr>
-                                                <td/>
-                                                <td>{pendingInvite.value.inviteCode}</td>
+                                                <td />
                                                 <td>
-                                                <button
-                                                    class="btn btn-primary"
-                                                    onClick={async () => {
-                                                        await navigator.clipboard.writeText(pendingInvite.value.inviteCode);
-                                                        setCopied(true);
-                                                        let timerId = setTimeout(() => {
-                                                            clearTimeout(timerId);
-                                                            setCopied(false);
-                                                        }, 1000);
-                                                    }}
-                                                >
-                                                    Copy
-                                                </button>
-                                                <button
-                                                    class="btn btn-primary ml-1"
-                                                    onClick={() => {
-                                                        pendingInvite.value.peer.destroy();
-                                                        setState(
-                                                            "pendingInvites",
-                                                            state.pendingInvites.filter((x) => x.value !== pendingInvite.value),
-                                                        );
-                                                    }}
-                                                >
-                                                    Delete
-                                                </button>
-                                                <Show when={copied()}>Copied</Show>
+                                                    {
+                                                        pendingInvite.value
+                                                            .inviteCode
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        class="btn btn-primary"
+                                                        onClick={async () => {
+                                                            await navigator.clipboard.writeText(
+                                                                pendingInvite
+                                                                    .value
+                                                                    .inviteCode,
+                                                            );
+                                                            setCopied(true);
+                                                            let timerId =
+                                                                setTimeout(
+                                                                    () => {
+                                                                        clearTimeout(
+                                                                            timerId,
+                                                                        );
+                                                                        setCopied(
+                                                                            false,
+                                                                        );
+                                                                    },
+                                                                    1000,
+                                                                );
+                                                        }}
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                    <button
+                                                        class="btn btn-primary ml-1"
+                                                        onClick={() => {
+                                                            pendingInvite.value.peer.destroy();
+                                                            setState(
+                                                                "pendingInvites",
+                                                                state.pendingInvites.filter(
+                                                                    (x) =>
+                                                                        x.value !==
+                                                                        pendingInvite.value,
+                                                                ),
+                                                            );
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                    <Show when={copied()}>
+                                                        Copied
+                                                    </Show>
                                                 </td>
                                             </tr>
                                         );
@@ -287,7 +348,7 @@ export function createConnectionManagementUi(props: {}): {
                         <For each={state.toastStack}>
                             {(toast) => (
                                 <div class="alert alert-info">
-                                    <toast.value.Render/>
+                                    <toast.value.Render />
                                 </div>
                             )}
                         </For>
@@ -301,7 +362,10 @@ export function createConnectionManagementUi(props: {}): {
                             class="input ml-2"
                             value={state.joinDialogInviteCode}
                             onInput={(e) => {
-                                setState("joinDialogInviteCode", e.currentTarget.value);
+                                setState(
+                                    "joinDialogInviteCode",
+                                    e.currentTarget.value,
+                                );
                             }}
                             onChange={() => {
                                 join();

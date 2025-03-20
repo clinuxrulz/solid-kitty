@@ -70,7 +70,7 @@ const PixelEditor: Component = () => {
         currentColour: Colour;
         showColourPicker: boolean;
         //
-        strokeThickness: number,
+        strokeThickness: number;
         //
         isLoading: boolean;
         autoSaving: boolean;
@@ -1031,22 +1031,33 @@ const PixelEditor: Component = () => {
                             "grid-template-columns": "auto auto",
                         }}
                     >
-                        {Array(10).fill(undefined).map((_,idx) => idx+1).map((strokeThickness) => (
-                            <button
-                                class="btn"
-                                style={{
-                                    "font-size": "20pt",
-                                    padding: "5pt",
-                                    "background-color":
-                                        state.strokeThickness == strokeThickness ? "blue" : undefined,
-                                }}
-                                onClick={() => {
-                                    setState("strokeThickness", strokeThickness);
-                                }}
-                            >
-                                {strokeThickness.toString(16).toLocaleUpperCase()}
-                            </button>
-                        ))}
+                        {Array(10)
+                            .fill(undefined)
+                            .map((_, idx) => idx + 1)
+                            .map((strokeThickness) => (
+                                <button
+                                    class="btn"
+                                    style={{
+                                        "font-size": "20pt",
+                                        padding: "5pt",
+                                        "background-color":
+                                            state.strokeThickness ==
+                                            strokeThickness
+                                                ? "blue"
+                                                : undefined,
+                                    }}
+                                    onClick={() => {
+                                        setState(
+                                            "strokeThickness",
+                                            strokeThickness,
+                                        );
+                                    }}
+                                >
+                                    {strokeThickness
+                                        .toString(16)
+                                        .toLocaleUpperCase()}
+                                </button>
+                            ))}
                     </div>
                 </Show>
             </div>

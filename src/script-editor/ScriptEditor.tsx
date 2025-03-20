@@ -1,7 +1,7 @@
 import { Component, createSignal, onMount } from "solid-js";
 import type { editor } from "monaco-editor";
 
-import loader from '@monaco-editor/loader';
+import loader from "@monaco-editor/loader";
 
 let monaco = await loader.init();
 

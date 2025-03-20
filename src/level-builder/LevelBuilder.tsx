@@ -457,20 +457,18 @@ const LevelBuilder: Component = () => {
                 <a
                     role="tab"
                     classList={{
-                        "tab": true,
-                        "tab-active": state.selectedTab == "Texture Atlases"
+                        tab: true,
+                        "tab-active": state.selectedTab == "Texture Atlases",
                     }}
-                    onClick={() =>
-                        setState("selectedTab", "Texture Atlases")
-                    }
+                    onClick={() => setState("selectedTab", "Texture Atlases")}
                 >
                     Texture Atlases
                 </a>
                 <a
                     role="tab"
                     classList={{
-                        "tab": true,
-                        "tab-active": state.selectedTab == "Levels"
+                        tab: true,
+                        "tab-active": state.selectedTab == "Levels",
                     }}
                     onClick={() => setState("selectedTab", "Levels")}
                 >

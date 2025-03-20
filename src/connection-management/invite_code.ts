@@ -7,7 +7,7 @@ export function makeInviteCode(): string {
     let code = "";
     for (let i = 0; i < 6; ++i) {
         let x = Math.floor(Math.random() * s.length);
-        code += s.substring(x, x+1);
+        code += s.substring(x, x + 1);
     }
     return code;
 }

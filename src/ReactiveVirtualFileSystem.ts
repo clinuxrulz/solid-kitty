@@ -26,7 +26,7 @@ export class ReactiveVirtualFileSystem {
         string,
         {
             accessor: Accessor<AsyncResult<VfsFileOrFolder[]>>;
-            refetch: (options?: { skipBroadcast?: boolean, }) => void;
+            refetch: (options?: { skipBroadcast?: boolean }) => void;
             dispose: () => void;
             refCount: number;
         }
@@ -35,7 +35,7 @@ export class ReactiveVirtualFileSystem {
         string,
         {
             accessor: Accessor<AsyncResult<Blob>>;
-            refetch: (options?: { skipBroadcast?: boolean, }) => void;
+            refetch: (options?: { skipBroadcast?: boolean }) => void;
             dispose: () => void;
             refCount: number;
         }
@@ -149,7 +149,7 @@ export class ReactiveVirtualFileSystem {
                     }
                     return asyncSuccess(filesAndFolders2.value);
                 });
-                let refetch2 = (options?: { skipBroadcast?: boolean, }) => {
+                let refetch2 = (options?: { skipBroadcast?: boolean }) => {
                     refetch();
                     if (!(options?.skipBroadcast ?? false)) {
                         this.bc.postMessage({
@@ -247,7 +247,7 @@ export class ReactiveVirtualFileSystem {
                     }
                     return asyncSuccess(fileData2.value);
                 });
-                let refetch2 = (options?: { skipBroadcast?: boolean, }) => {
+                let refetch2 = (options?: { skipBroadcast?: boolean }) => {
                     refetch();
                     if (!(options?.skipBroadcast ?? false)) {
                         this.bc.postMessage({

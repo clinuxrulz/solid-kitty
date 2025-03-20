@@ -71,10 +71,16 @@ const App: Component = (props) => {
                     <button class="btn" onClick={() => navigate("/vfs-test")}>
                         Virtual File System Test
                     </button>
-                    <button class="btn" onClick={() => navigate("/automerge-webrtc-test")}>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/automerge-webrtc-test")}
+                    >
                         Automerge WebRTC Test
                     </button>
-                    <button class="btn" onClick={() => navigate("/connection-management")}>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/connection-management")}
+                    >
                         Connection Management
                     </button>
                 </div>

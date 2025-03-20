@@ -6,15 +6,13 @@ import { NoTrack } from "../util";
 const PEER_ID_PREFIX = "7ae48d46-10f2-kitty-";
 
 const InviteJoinUiForPeerJs: Component<{
-    onConnection: (params: {
-        connection: DataConnection,
-    }) => void,
+    onConnection: (params: { connection: DataConnection }) => void;
 }> = (props) => {
-    let [ state, setState, ] = createStore<{
+    let [state, setState] = createStore<{
         pendingInvites: NoTrack<{
-            inviteCode: string,
-            peer: Peer,
-        }>[],
+            inviteCode: string;
+            peer: Peer;
+        }>[];
     }>({
         pendingInvites: [],
     });
@@ -36,13 +34,22 @@ const InviteJoinUiForPeerJs: Component<{
                                 props.onConnection({
                                     connection: conn,
                                 });
-                                setState("pendingInvites", (x) => x.filter((x2) => x2.value.peer != peer));
+                                setState("pendingInvites", (x) =>
+                                    x.filter((x2) => x2.value.peer != peer),
+                                );
                             });
                         });
-                        setState("pendingInvites", produce((x) => x.push(new NoTrack({
-                            inviteCode,
-                            peer,
-                        }))));
+                        setState(
+                            "pendingInvites",
+                            produce((x) =>
+                                x.push(
+                                    new NoTrack({
+                                        inviteCode,
+                                        peer,
+                                    }),
+                                ),
+                            ),
+                        );
                     });
                 }}
             >
@@ -77,11 +84,14 @@ const InviteJoinUiForPeerJs: Component<{
             >
                 Join
             </button>
-            <br/>
+            <br />
             <For each={state.pendingInvites}>
-                {(invite) => (<>
-                    Invite: {invite.value.inviteCode}<br/>
-                </>)}
+                {(invite) => (
+                    <>
+                        Invite: {invite.value.inviteCode}
+                        <br />
+                    </>
+                )}
             </For>
         </div>
     );
@@ -94,7 +104,7 @@ function makeInviteCode(): string {
     let code = "";
     for (let i = 0; i < 6; ++i) {
         let x = Math.floor(Math.random() * s.length);
-        code += s.substring(x, x+1);
+        code += s.substring(x, x + 1);
     }
     return code;
 }

@@ -20,7 +20,9 @@ const VectorEditor = lazy(() => import("./vector-editor/VectorEditor"));
 const GravityTest = lazy(() => import("./gravity-test/GravityTest"));
 const ThreeBody = lazy(() => import("./three-body/ThreeBody"));
 const VfsTest = lazy(() => import("./level-builder/VirtualFileSystemTest"));
-const AutomergeWebRtcTest = lazy(() => import("./automerge-webrtc-test/AutomergeWebRtcTest"));
+const AutomergeWebRtcTest = lazy(
+    () => import("./automerge-webrtc-test/AutomergeWebRtcTest"),
+);
 
 const root = document.getElementById("root");
 
@@ -30,48 +32,53 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
     );
 }
 
-render(
-    () => {
-        let connectionManagementUi = createConnectionManagementUi({});
-        let connections = connectionManagementUi.connections.bind(connectionManagementUi);
-        createEffect(() => {
-            console.log(connections());
-        });
-        return (
-            <HashRouter>
-                <Route path="/" component={App} />
-                <Route path="/kitty-demo" component={KittyDemoApp} />
-                <Route path="/pixel-editor" component={PixelEditor} />
-                <Route path="/level-builder" component={LevelBuilder} />
-                <Route path="/script-editor" component={ScriptEditor} />
-                <Route
-                    path="/colour-picker"
-                    component={() => {
-                        return (
-                            <div
-                                style={{
-                                    width: "300px",
-                                    height: "300px",
-                                    display: "flex",
-                                    "flex-direction": "column",
-                                    "margin-left": "20px",
-                                    "margin-top": "20px",
-                                }}
-                            >
-                                <ColourPicker />
-                            </div>
-                        );
-                    }}
-                />
-                <Route path="/reactive-sim" component={ReactiveSimulator} />
-                <Route path="/vector-editor" component={VectorEditor} />
-                <Route path="/gravity-test" component={GravityTest} />
-                <Route path="/three-body" component={ThreeBody} />
-                <Route path="/vfs-test" component={VfsTest} />
-                <Route path="/automerge-webrtc-test" component={AutomergeWebRtcTest}/>
-                <Route path="/connection-management" component={connectionManagementUi.Render}/>
-            </HashRouter>
-        );
-    },
-    root!,
-);
+render(() => {
+    let connectionManagementUi = createConnectionManagementUi({});
+    let connections = connectionManagementUi.connections.bind(
+        connectionManagementUi,
+    );
+    createEffect(() => {
+        console.log(connections());
+    });
+    return (
+        <HashRouter>
+            <Route path="/" component={App} />
+            <Route path="/kitty-demo" component={KittyDemoApp} />
+            <Route path="/pixel-editor" component={PixelEditor} />
+            <Route path="/level-builder" component={LevelBuilder} />
+            <Route path="/script-editor" component={ScriptEditor} />
+            <Route
+                path="/colour-picker"
+                component={() => {
+                    return (
+                        <div
+                            style={{
+                                width: "300px",
+                                height: "300px",
+                                display: "flex",
+                                "flex-direction": "column",
+                                "margin-left": "20px",
+                                "margin-top": "20px",
+                            }}
+                        >
+                            <ColourPicker />
+                        </div>
+                    );
+                }}
+            />
+            <Route path="/reactive-sim" component={ReactiveSimulator} />
+            <Route path="/vector-editor" component={VectorEditor} />
+            <Route path="/gravity-test" component={GravityTest} />
+            <Route path="/three-body" component={ThreeBody} />
+            <Route path="/vfs-test" component={VfsTest} />
+            <Route
+                path="/automerge-webrtc-test"
+                component={AutomergeWebRtcTest}
+            />
+            <Route
+                path="/connection-management"
+                component={connectionManagementUi.Render}
+            />
+        </HashRouter>
+    );
+}, root!);

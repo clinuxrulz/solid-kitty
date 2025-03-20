@@ -4,28 +4,27 @@ import InviteJoinUiForPeerJs from "./InviteJoinUiForPeerJs";
 import { DataConnection } from "peerjs";
 
 export function createConnectionsUiForPeerJs(): {
-    connections: Accessor<DataConnection[]>,
-    Render: Component,
+    connections: Accessor<DataConnection[]>;
+    Render: Component;
 } {
-    let [ state, setState, ] = createStore<{
-        connections: DataConnection[],
+    let [state, setState] = createStore<{
+        connections: DataConnection[];
     }>({
         connections: [],
     });
     let Render: Component = () => {
-        return (<>
-            <InviteJoinUiForPeerJs
-                onConnection={(params) => {
-                    setState(
-                        "connections",
-                        (connections) => [
+        return (
+            <>
+                <InviteJoinUiForPeerJs
+                    onConnection={(params) => {
+                        setState("connections", (connections) => [
                             ...connections,
-                            params.connection
-                        ]
-                    );
-                }}
-            />
-        </>);
+                            params.connection,
+                        ]);
+                    }}
+                />
+            </>
+        );
     };
     return {
         connections: () => state.connections,

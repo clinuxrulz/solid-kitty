@@ -108,7 +108,10 @@ export class DrawPixelsMode implements Mode {
                                     strokeThickness,
                                     (x, y) => {
                                         let dummy = Vec2.create(x, y);
-                                        params.writePixel(dummy, params.currentColour());
+                                        params.writePixel(
+                                            dummy,
+                                            params.currentColour(),
+                                        );
                                         dummy.dispose();
                                     },
                                 );
@@ -122,17 +125,14 @@ export class DrawPixelsMode implements Mode {
                                     (x, y) => {
                                         let fromX = x - pt.x + lastPos2.x;
                                         let fromY = y - pt.y + lastPos2.y;
-                                        drawLine(
-                                            fromX,
-                                            fromY,
-                                            x,
-                                            y,
-                                            (x, y) => {
-                                                let dummy = Vec2.create(x, y);
-                                                params.writePixel(dummy, params.currentColour());
-                                                dummy.dispose();
-                                            },
-                                        );
+                                        drawLine(fromX, fromY, x, y, (x, y) => {
+                                            let dummy = Vec2.create(x, y);
+                                            params.writePixel(
+                                                dummy,
+                                                params.currentColour(),
+                                            );
+                                            dummy.dispose();
+                                        });
                                     },
                                 );
                                 lastPos = pt;
