@@ -81,6 +81,9 @@ export function createConnectionManagementUi(props: {}): {
                             )
                     );
                 });
+                conn.once("close", () => {
+                    setState("connections", state.connections.filter((connection) => connection.value.peer !== peer));
+                });
             });
             setState("pendingInvites", produce((x) => x.push(new NoTrack(invite))));
             pushToast(() => (<>
@@ -127,8 +130,14 @@ export function createConnectionManagementUi(props: {}): {
                     }))));
                 });
                 conn.send(state.nickname);
+                conn.once("close", () => {
+                    setState("connections", state.connections.filter((connection) => connection.value.peer !== peer));
+                });
             });
         });
+    };
+    let kick = (connection: Connection) => {
+        connection.peer.destroy();
     };
     let Render: Component = () => {
         return (
@@ -201,6 +210,9 @@ export function createConnectionManagementUi(props: {}): {
                                             <td>
                                                 <button
                                                     class="btn btn-primary"
+                                                    onClick={() => {
+                                                        kick(connection.value);
+                                                    }}
                                                 >
                                                     Kick
                                                 </button>
