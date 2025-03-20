@@ -74,6 +74,9 @@ const App: Component = (props) => {
                     <button class="btn" onClick={() => navigate("/automerge-webrtc-test")}>
                         Automerge WebRTC Test
                     </button>
+                    <button class="btn" onClick={() => navigate("/connection-management")}>
+                        Connection Management
+                    </button>
                 </div>
             </div>
         </div>

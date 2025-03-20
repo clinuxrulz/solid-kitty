@@ -453,34 +453,30 @@ const LevelBuilder: Component = () => {
                 overflow: "hidden",
             }}
         >
-            <ul class="nav-tabs">
-                <li class="nav-item">
-                    <button
-                        class={
-                            state.selectedTab == "Texture Atlases"
-                                ? "nav-link-selected"
-                                : "nav-link"
-                        }
-                        onClick={() =>
-                            setState("selectedTab", "Texture Atlases")
-                        }
-                    >
-                        Texture Atlases
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button
-                        class={
-                            state.selectedTab == "Levels"
-                                ? "nav-link-selected"
-                                : "nav-link"
-                        }
-                        onClick={() => setState("selectedTab", "Levels")}
-                    >
-                        Levels
-                    </button>
-                </li>
-            </ul>
+            <div role="tablist" class="tabs tabs-box">
+                <a
+                    role="tab"
+                    classList={{
+                        "tab": true,
+                        "tab-active": state.selectedTab == "Texture Atlases"
+                    }}
+                    onClick={() =>
+                        setState("selectedTab", "Texture Atlases")
+                    }
+                >
+                    Texture Atlases
+                </a>
+                <a
+                    role="tab"
+                    classList={{
+                        "tab": true,
+                        "tab-active": state.selectedTab == "Levels"
+                    }}
+                    onClick={() => setState("selectedTab", "Levels")}
+                >
+                    Levels
+                </a>
+            </div>
             <Switch>
                 <Match when={state.selectedTab == "Texture Atlases"}>
                     <textureAtlases.Render

@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite';
-import unocssPlugin from "unocss/vite";
+//import unocssPlugin from "unocss/vite";
+import tailwindcss from "@tailwindcss/vite";
 import solidPlugin from 'vite-plugin-solid';
+import wasmPlugin from "vite-plugin-wasm";
 import mkcertPlugin from "vite-plugin-mkcert";
 
 export default defineConfig({
   base: "",
   plugins: [
-    unocssPlugin(),
+    //unocssPlugin(),
+    tailwindcss(),
     solidPlugin(),
+    wasmPlugin(),
     // mkcertPlugin(),
   ],
   server: {
