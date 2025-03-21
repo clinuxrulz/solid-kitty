@@ -220,7 +220,7 @@ export class TextureAtlas {
                     clearTimeout(autoSaveTimerId);
                 }
                 setState("autoSaving", true);
-                autoSaveTimerId = setTimeout(async () => {
+                autoSaveTimerId = window.setTimeout(async () => {
                     try {
                         let textureAtlasFileId = params.textureAtlasFileId();
                         if (textureAtlasFileId == undefined) {

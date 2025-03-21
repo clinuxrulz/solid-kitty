@@ -142,7 +142,7 @@ export class Level {
                     clearTimeout(autoSaveTimerId);
                 }
                 setState("autoSaving", true);
-                autoSaveTimerId = setTimeout(async () => {
+                autoSaveTimerId = window.setTimeout(async () => {
                     try {
                         let levelFileId = params.levelFileId();
                         if (levelFileId == undefined) {

@@ -5,5 +5,8 @@ export async function makeQrForText(text: string): Promise<string> {
         text,
         size: 500,
     }).draw();
+    if (typeof dataUrl != "string") {
+        throw new Error("expected string data url from AwesomeQR.draw()");
+    }
     return dataUrl;
 }
