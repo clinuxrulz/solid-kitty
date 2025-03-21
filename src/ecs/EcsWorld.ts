@@ -122,6 +122,42 @@ export class EcsWorld {
         return this.entityMap.get(entityId)?.[0]?.() ?? [];
     }
 
+    setComponent(entityId: string, component: IsEcsComponent) {
+        this.setComponents(entityId, [component]);
+    }
+
+    setComponents(entityId: string, components: IsEcsComponent[]) {
+        let componentsSignal = this.entityMap.get(entityId);
+        if (componentsSignal == undefined) {
+            return;
+        }
+        componentsSignal[1]([
+            ...componentsSignal[0]().filter((x) => components.every((y) => y.type.typeName != x.type.typeName)),
+            ...components,
+        ]);
+    }
+
+    unsetComponent(entityId: string, componentType: IsEcsComponentType) {
+        let componentTypeName = componentType.typeName;
+        let componentsSignal = this.entityMap.get(entityId);
+        if (componentsSignal == undefined) {
+            return;
+        }
+        componentsSignal[1](
+            componentsSignal[0]().filter((x) => x.type.typeName != componentTypeName)
+        );
+    }
+
+    unsetComponents(entityId: string, componentTypes: IsEcsComponentType[]) {
+        let componentsSignal = this.entityMap.get(entityId);
+        if (componentsSignal == undefined) {
+            return;
+        }
+        componentsSignal[1](
+            componentsSignal[0]().filter((x) => componentTypes.every((y) => x.type.typeName != y.typeName))
+        );
+    }
+
     toJson(): any {
         let result: any = {};
         for (let entity of this.entities()) {
