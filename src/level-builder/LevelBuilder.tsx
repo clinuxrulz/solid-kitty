@@ -79,7 +79,7 @@ const LevelBuilder: Component<{
     }
     let imagesFolderId: Accessor<AsyncResult<string>> =
         createGetOrCreateRootFolderId({
-            vfs,
+            vfs: props.vfs,
             folderName: IMAGES_FOLDER_NAME,
         });
     let textureAtlasesFolderId: Accessor<AsyncResult<string>>;
@@ -93,7 +93,7 @@ const LevelBuilder: Component<{
             //
             return asyncSuccess(
                 createGetOrCreateRootFolderId({
-                    vfs,
+                    vfs: props.vfs,
                     folderName: TEXTURE_ALIASES_FOLDER_NAME,
                 }),
             );
@@ -121,7 +121,7 @@ const LevelBuilder: Component<{
             //
             return asyncSuccess(
                 createGetOrCreateRootFolderId({
-                    vfs,
+                    vfs: props.vfs,
                     folderName: LEVELS_FOLDER_NAME,
                 }),
             );
@@ -137,11 +137,6 @@ const LevelBuilder: Component<{
     let imageFiles: Accessor<AsyncResult<VfsFile[]>>;
     {
         let imageFiles_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let imagesFolderId2 = imagesFolderId();
             if (imagesFolderId2.type != "Success") {
                 return imagesFolderId2;
