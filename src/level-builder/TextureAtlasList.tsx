@@ -163,6 +163,11 @@ export class TextureAtlasList {
                 () => this.state.selectedTextureAtlasByFileId,
             );
             let removeTextureAtlasFile = async (textureAtlasFileId: string) => {
+                let textureAtlasesFolderId = params.textureAtlasesFolderId();
+                if (textureAtlasesFolderId.type != "Success") {
+                    return;
+                }
+                let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
                 let imagesFolderId = params.imagesFolderId();
                 if (imagesFolderId.type != "Success") {
                     return;
@@ -196,19 +201,23 @@ export class TextureAtlasList {
                 }
                 let imageFilename = textureAtlas.imageRef;
                 let filesAndFolders =
-                    await vfs2.vfs.getFilesAndFolders(imagesFolderId2);
+                    await mkAccessorToPromise(() => params.vfs.readFolder(imagesFolderId2));
                 if (filesAndFolders.type == "Err") {
                     return;
                 }
                 let filesAndFolders2 = filesAndFolders.value;
-                let imageFile = filesAndFolders2.find(
-                    (x) => x.type == "File" && x.name == imageFilename,
-                );
-                if (imageFile == undefined) {
+                let imageFileId: string | undefined = undefined;
+                for (let x of Object.entries(filesAndFolders2)) {
+                    if (x[1].type == "File" && x[0] == imageFilename) {
+                        imageFileId = (x[1] as VfsFile).docUrl;
+                        break;
+                    }
+                }
+                if (imageFileId == undefined) {
                     return;
                 }
-                await vfs2.delete(imageFile.id);
-                await vfs2.delete(textureAtlasFileId);
+                await params.vfs.removeFileOrFolder(imagesFolderId2, imageFilename);
+                await params.vfs.removeFileOrFolder(textureAtlasesFolderId2, textureAtlasFileId);
                 if (state.selectedTextureAtlasByFileId == textureAtlasFileId) {
                     setState("selectedTextureAtlasByFileId", undefined);
                 }
