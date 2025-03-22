@@ -15,7 +15,7 @@ import { registry } from "./components/registry";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
-import { uint8ArrayToBase64 } from "../util";
+import { mkAccessorToPromise, uint8ArrayToBase64 } from "../util";
 
 type State = {
     textureAtlasFiles: [string, VfsFile][];
@@ -169,13 +169,12 @@ export class TextureAtlasList {
                 }
                 let imagesFolderId2 = imagesFolderId.value;
                 let textureAtlasData =
-                    await vfs2.vfs.readFile(textureAtlasFileId);
+                    await mkAccessorToPromise(() => params.vfs.readFile(textureAtlasFileId));
                 if (textureAtlasData.type == "Err") {
                     return;
                 }
-                let textureAtlasData2 = await textureAtlasData.value.text();
-                let textureAtlasData3 = JSON.parse(textureAtlasData2);
-                let world = EcsWorld.fromJson(registry, textureAtlasData3);
+                let textureAtlasData2 = textureAtlasData.value.doc();
+                let world = EcsWorld.fromJson(registry, textureAtlasData2);
                 if (world.type == "Err") {
                     console.log(world.message);
                     return;
