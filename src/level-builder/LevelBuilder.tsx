@@ -35,6 +35,7 @@ import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "../AutomergeVirtualFileSystem";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { Doc } from "@automerge/automerge-repo";
+import { createAutomergeEcsSyncSystem } from "../ecs/systems/AutomergeEcsSyncSystem";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -237,11 +238,6 @@ const LevelBuilder: Component<{
             () => textureAtlasFiles().type,
         );
         let textureAtlases_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let imageFilenameFileMap2 = imageFilenameFileMap();
             if (imageFilenameFileMap2.type != "Success") {
                 return imageFilenameFileMap2;
@@ -260,15 +256,26 @@ const LevelBuilder: Component<{
             return asyncSuccess(
                 createMemo(
                     mapArray(textureAtlasFiles2, (textureAtlasFile) => {
-                        let textureAtlasData = vfs3.readFile(
-                            textureAtlasFile.id,
-                        );
+                        let textureAtlasData = props.vfs.readFile(textureAtlasFile[1].docUrl);
                         return createMemo(() => {
                             let textureAtlasData2 = textureAtlasData();
                             if (textureAtlasData2.type != "Success") {
                                 return textureAtlasData2;
                             }
                             let textureAtlasData3 = textureAtlasData2.value;
+                            let textureAtlasWorld = new EcsWorld();
+                            let syncSystem = createAutomergeEcsSyncSystem({
+                                registry,
+                                world: textureAtlasWorld,
+                                docHandle: textureAtlasData3,
+                            });
+                            if (syncSystem.type == "Err") {
+                                return asyncFailed(syncSystem.message);
+                            }
+                            let syncSystem2 = syncSystem.value;
+                            onCleanup(() => syncSystem2.dispose());
+                            // TODO: Upto here
+
                             let [textureAtlasData4] = createResource(() =>
                                 textureAtlasData3.text(),
                             );
