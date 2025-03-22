@@ -15,6 +15,7 @@ import { registry } from "./components/registry";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { uint8ArrayToBase64 } from "../util";
 
 type State = {
     textureAtlasFiles: [string, VfsFile][];
@@ -111,30 +112,39 @@ export class TextureAtlasList {
                         imageRef: imageFile.name,
                     }),
                 ]);
-                // TODO: Upto here
-                let textureAtlasJson = JSON.stringify(world.toJson());
-                await vfs2.createFile(
+                let imageData = new Uint8Array(await imageFile.arrayBuffer());
+                let r = await params.vfs.createFile(
                     imagesFolderId2,
                     imageFile.name,
-                    imageFile,
+                    {
+                        mimeType: imageFile.type,
+                        base64Data: uint8ArrayToBase64(imageData),
+                    },
                 );
-                let result = await vfs2.createFile(
-                    textureAtlasesFolderId2,
-                    textureAtlasName,
-                    new Blob([textureAtlasJson], { type: "application/json" }),
-                );
-                if (result.type == "Err") {
+                if (r.type == "Err") {
+                    console.log(r.message);
                     return;
                 }
-                let { fileId } = result.value;
+                let result = await params.vfs.createFile(
+                    textureAtlasesFolderId2,
+                    textureAtlasName,
+                    world.toJson(),
+                );
+                if (result.type == "Err") {
+                    console.log(result.message);
+                    return;
+                }
+                let fileId = result.value;
                 //
                 setState("textureAtlasFiles", (x) => [
                     ...x,
-                    {
-                        type: "File",
-                        id: fileId,
-                        name: textureAtlasName,
-                    },
+                    [
+                        textureAtlasName,
+                        {
+                            type: "File",
+                            docUrl: fileId,
+                        }
+                    ] as [string, VfsFile],
                 ]);
                 setState("selectedTextureAtlasByFileId", fileId);
             };

@@ -126,6 +126,34 @@ export class AutomergeVirtualFileSystem {
         return ok(folderContents.url);
     }
 
+    async createFile<T>(
+        parentFolderDocUrl: string,
+        filename: string,
+        data: T
+    ): Promise<Result<AutomergeUrl>> {
+        if (!isValidAutomergeUrl(parentFolderDocUrl)) {
+            return err("not a valid automerge url");
+        }
+        let parentFolderDoc =
+            await this.repo.find<VfsFolder>(parentFolderDocUrl);
+        let parentfolderContentsUrl = parentFolderDoc.doc().docUrl;
+        if (!isValidAutomergeUrl(parentfolderContentsUrl)) {
+            return err("not a valid automerge url");
+        }
+        let parentFolderContents = await this.repo.find<VfsFolderContents>(
+            parentfolderContentsUrl,
+        );
+        let fileDoc = this.repo.create<T>(data);
+        let fileDocUrl = fileDoc.url;
+        parentFolderContents.change((doc) => {
+            doc[filename] = {
+                type: "File",
+                docUrl: fileDocUrl,
+            };
+        });
+        return ok(fileDocUrl);
+    }
+
     async addFile(
         parentFolderDocUrl: string,
         filename: string,
