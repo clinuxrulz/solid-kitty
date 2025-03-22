@@ -224,54 +224,6 @@ export class TextureAtlas {
                 );
             }),
         );
-        let triggerAutoSave: () => void;
-        {
-            let isAutoSaving = false;
-            let autoSaveTimerId: number | undefined = undefined;
-            triggerAutoSave = () => {
-                if (isAutoSaving) {
-                    return;
-                }
-                isAutoSaving = true;
-                if (autoSaveTimerId != undefined) {
-                    clearTimeout(autoSaveTimerId);
-                }
-                setState("autoSaving", true);
-                autoSaveTimerId = window.setTimeout(async () => {
-                    try {
-                        let textureAtlasFileId = params.textureAtlasFileId();
-                        if (textureAtlasFileId == undefined) {
-                            return;
-                        }
-                        let vfs = params.vfs();
-                        if (vfs.type != "Success") {
-                            return;
-                        }
-                        let vfs2 = vfs.value;
-                        let textureAtlasData = JSON.stringify(
-                            state.world.toJson(),
-                        );
-                        let textureAtlasData2 = new Blob([textureAtlasData], {
-                            type: "application/json",
-                        });
-                        await vfs2.overwriteFile(
-                            textureAtlasFileId,
-                            textureAtlasData2,
-                        );
-                    } finally {
-                        isAutoSaving = false;
-                        setState("autoSaving", false);
-                    }
-                }, AUTO_SAVE_TIMEOUT);
-            };
-        }
-        {
-            let pushUndoUnit = undoManager.pushUndoUnit.bind(undoManager);
-            (undoManager as any).pushUndoUnit = (undoUnit: UndoUnit) => {
-                pushUndoUnit(undoUnit);
-                triggerAutoSave();
-            };
-        }
         let [svg, setSvg] = createSignal<SVGSVGElement>();
         let [screenSize, setScreenSize] = createSignal<Vec2>();
         createComputed(
@@ -619,15 +571,6 @@ export class TextureAtlas {
                                 </button>
                             )}
                         </Show>
-                        <button
-                            class="btn"
-                            style="font-size: 20pt;"
-                            onClick={() => {
-                                triggerAutoSave();
-                            }}
-                        >
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
                         <button
                             class="btn"
                             style="font-size: 20pt;"
