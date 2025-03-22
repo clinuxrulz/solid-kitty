@@ -382,7 +382,7 @@ const LevelBuilder: Component<{
                                                     let image3 = image2.value;
                                                     return asyncSuccess({
                                                         textureAtlasFilename:
-                                                            textureAtlasFile.name,
+                                                            textureAtlasFile[0],
                                                         textureAtlas:
                                                             textureAtlas2,
                                                         image: image3,
