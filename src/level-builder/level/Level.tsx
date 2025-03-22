@@ -33,6 +33,7 @@ import { levelComponentType, LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
 import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
+import { createAutomergeEcsSyncSystem } from "../../ecs/systems/AutomergeEcsSyncSystem";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -98,77 +99,35 @@ export class Level {
         });
         let undoManager = new UndoManager();
         createEffect(
-            on([params.vfs, params.levelFileId], () => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
+            on([params.levelFileId], () => {
                 let levelFileId = params.levelFileId();
                 if (levelFileId == undefined) {
                     setState("world", new EcsWorld());
                     return;
                 }
                 let levelFileId2 = levelFileId;
-                let levelData = vfs2.readFile(levelFileId2);
+                let levelData = params.vfs.readFile(levelFileId2);
                 createEffect(async () => {
                     let levelData2 = levelData();
                     if (levelData2.type != "Success") {
                         return;
                     }
                     let levelData3 = levelData2.value;
-                    let levelData4 = await levelData3.text();
-                    let world = EcsWorld.fromJson(
+                    let world = new EcsWorld();
+                    let syncSystem = createAutomergeEcsSyncSystem({
                         registry,
-                        JSON.parse(levelData4),
-                    );
-                    if (world.type == "Err") {
+                        world,
+                        docHandle: levelData3,
+                    });
+                    if (syncSystem.type == "Err") {
                         return;
                     }
-                    let world2 = world.value;
-                    setState("world", world2);
+                    let syncSystem2 = syncSystem.value;
+                    onCleanup(() => syncSystem2.dispose());
+                    setState("world", world);
                 });
             }),
         );
-        let triggerAutoSave: () => void;
-        {
-            let isAutoSaving = false;
-            let autoSaveTimerId: number | undefined = undefined;
-            triggerAutoSave = () => {
-                if (isAutoSaving) {
-                    return;
-                }
-                isAutoSaving = true;
-                if (autoSaveTimerId != undefined) {
-                    clearTimeout(autoSaveTimerId);
-                }
-                setState("autoSaving", true);
-                autoSaveTimerId = window.setTimeout(async () => {
-                    try {
-                        let levelFileId = params.levelFileId();
-                        if (levelFileId == undefined) {
-                            return;
-                        }
-                        let vfs = params.vfs();
-                        if (vfs.type != "Success") {
-                            return;
-                        }
-                        let vfs2 = vfs.value;
-                        let levelData = JSON.stringify(state.world.toJson());
-                        let textureAtlasData2 = new Blob([levelData], {
-                            type: "application/json",
-                        });
-                        await vfs2.overwriteFile(
-                            levelFileId,
-                            textureAtlasData2,
-                        );
-                    } finally {
-                        isAutoSaving = false;
-                        setState("autoSaving", false);
-                    }
-                }, AUTO_SAVE_TIMEOUT);
-            };
-        }
         let [svg, setSvg] = createSignal<SVGSVGElement>();
         let [screenSize, setScreenSize] = createSignal<Vec2>();
         createComputed(
@@ -643,16 +602,6 @@ export class Level {
                                 </button>
                             )}
                         </Show>
-                        <button
-                            class="btn"
-                            style="font-size: 20pt;"
-                            onClick={() => {
-                                console.log(state.world.toJson());
-                                triggerAutoSave();
-                            }}
-                        >
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
                         <button
                             class="btn"
                             style="font-size: 20pt;"
