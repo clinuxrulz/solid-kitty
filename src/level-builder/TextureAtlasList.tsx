@@ -152,7 +152,7 @@ export class TextureAtlasList {
             let selectTextureAtlasFile = (textureAtlasFileId: string) => {
                 if (
                     !this.state.textureAtlasFiles.some(
-                        (x) => x.id == textureAtlasFileId,
+                        (x) => x[1].docUrl == textureAtlasFileId,
                     )
                 ) {
                     return;
