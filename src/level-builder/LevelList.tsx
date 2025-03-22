@@ -65,11 +65,6 @@ export class LevelList {
         this.selectedLevelByFileId = () => state.seletedLevelByFileId;
         this.Render = (props) => {
             let addLevel = async () => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
                 let levelsFolderId = params.levelsFolderId();
                 if (levelsFolderId.type != "Success") {
                     return;
@@ -96,23 +91,21 @@ export class LevelList {
                 });
                 let world = new EcsWorld();
                 world.createEntity([level]);
-                let levelJson = JSON.stringify(world.toJson());
-                let result = await vfs2.createFile(
+                let result = await params.vfs.createFile(
                     levelsFolderId2,
                     levelFilename,
-                    new Blob([levelJson], { type: "application/json" }),
+                    world.toJson()
                 );
                 if (result.type == "Err") {
                     return;
                 }
-                let { fileId } = result.value;
+                let fileId = result.value;
                 setState("levelFiles", (x) => [
                     ...x,
-                    {
-                        id: fileId,
+                    [levelFilename, {
                         type: "File",
-                        name: levelFilename,
-                    },
+                        docUrl: fileId,
+                    }],
                 ]);
                 setState("seletedLevelByFileId", fileId);
             };
@@ -121,12 +114,15 @@ export class LevelList {
                 setState("seletedLevelByFileId", levelFileId);
             };
             let removeLevel = async (levelFileId: string) => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
+                let levelsFolderId = params.levelsFolderId();
+                if (levelsFolderId.type != "Success") {
                     return;
                 }
-                let vfs2 = vfs.value;
-                await vfs2.delete(levelFileId);
+                let levelsFolderId2 = levelsFolderId.value;
+                await params.vfs.removeFileOrFolder(
+                    levelsFolderId2,
+                    levelFileId
+                );
                 if (state.seletedLevelByFileId == levelFileId) {
                     setState("seletedLevelByFileId", undefined);
                 }
@@ -158,21 +154,21 @@ export class LevelList {
                                 <div
                                     role="button"
                                     class={
-                                        isSelected(levelFile.id)
+                                        isSelected(levelFile[1].docUrl)
                                             ? "list-item-selected"
                                             : "list-item"
                                     }
                                     onClick={() => {
-                                        selectLevel(levelFile.id);
+                                        selectLevel(levelFile[1].docUrl);
                                     }}
                                 >
-                                    {levelFile.name}
+                                    {levelFile[0]}
                                     <div class="list-item-button-container">
                                         <button
                                             class="list-item-button text-right"
                                             type="button"
                                             onClick={() => {
-                                                removeLevel(levelFile.id);
+                                                removeLevel(levelFile[1].docUrl);
                                             }}
                                         >
                                             <i class="fa-solid fa-trash"></i>
