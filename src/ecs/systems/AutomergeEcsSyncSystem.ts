@@ -2,7 +2,6 @@ import { DocHandle, DocHandleChangePayload } from "@automerge/automerge-repo";
 import { EcsWorld } from "../EcsWorld";
 import { EcsRegistry } from "../EcsRegistry";
 import { err, ok, Result } from "../../kitty-demo/Result";
-import { batch, createRoot } from "solid-js/types/server/reactive.js";
 import { Patch } from "@automerge/automerge";
 import {
     EcsComponent,
@@ -14,7 +13,7 @@ import {
     saveToJsonViaTypeSchema,
     TypeSchema,
 } from "../../TypeSchema";
-import { createComputed, createMemo, mapArray, on, onCleanup } from "solid-js";
+import { batch, createComputed, createMemo, createRoot, mapArray, on, onCleanup } from "solid-js";
 import { produce } from "solid-js/store";
 
 export function createAutomergeEcsSyncSystem(params: {
