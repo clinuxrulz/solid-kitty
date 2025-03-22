@@ -33,7 +33,9 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { frameComponentType, FrameState } from "./components/FrameComponent";
 import { opToArr } from "../kitty-demo/util";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFolderContents } from "../AutomergeVirtualFileSystem";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { Doc } from "@automerge/automerge-repo";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -45,36 +47,27 @@ const LEVELS_FOLDER_NAME = "levels";
 
 const LevelBuilder: Component<{
     vfs: AutomergeVirtualFileSystem,
-}> = () => {
+}> = (props) => {
     let [state, setState] = createStore<State>({
         selectedTab: "Texture Atlases",
     });
-    let vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
-    {
-        let [vfs_] = createResource(() => VirtualFileSystem.init());
-        vfs = createMemo(() => {
-            let vfs2 = vfs_();
-            if (vfs2 == undefined) {
-                return asyncPending();
-            }
-            if (vfs2.type == "Err") {
-                console.log(vfs2.message);
-                return asyncFailed(vfs2.message);
-            }
-            let vfs3 = vfs2.value;
-            let vfs4 = new ReactiveVirtualFileSystem({ vfs: vfs3 });
-            return asyncSuccess(vfs4);
-        });
-    }
-    let rootFolderFilesAndFolders: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+    let rootFolderFilesAndFolders: Accessor<AsyncResult<Doc<VfsFolderContents>>>;
     {
         let rootFolderFilesAndFolders_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
+            let rootFolderId = props.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs3 = vfs2.value;
-            return asyncSuccess(vfs3.getFilesAndFolders(vfs3.rootFolderId));
+            let rootFolderId2 = rootFolderId.value;
+            let folderContents = props.vfs.readFolder(rootFolderId2);
+            return asyncSuccess(createMemo(() => {
+                let folderContents2 = folderContents();
+                if (folderContents2.type != "Success") {
+                    return folderContents2;
+                }
+                let folderContents3 = folderContents2.value;
+                return asyncSuccess(makeDocumentProjection(folderContents3));
+            }));
         });
         rootFolderFilesAndFolders = createMemo(() => {
             let tmp = rootFolderFilesAndFolders_();

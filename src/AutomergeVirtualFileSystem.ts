@@ -25,7 +25,7 @@ type VfsFolder = {
     docUrl: AutomergeUrl;
 };
 
-type VfsFolderContents = {
+export type VfsFolderContents = {
     [name: string]: VfsFileOrFolder;
 };
 
@@ -58,7 +58,7 @@ export class AutomergeVirtualFileSystem {
         this.doc = createDocumentProjection(params.docHandle);
     }
 
-    get rootFolderId(): Accessor<AsyncResult<string>> {
+    get rootFolderId(): Accessor<AsyncResult<AutomergeUrl>> {
         return createMemo(() => {
             let docUrl = this.doc()?.root?.docUrl;
             if (docUrl == undefined) {
@@ -69,7 +69,7 @@ export class AutomergeVirtualFileSystem {
     }
 
     readFolder(
-        docUrl: string,
+        docUrl: AutomergeUrl,
     ): Accessor<AsyncResult<DocHandle<VfsFolderContents>>> {
         if (!isValidAutomergeUrl(docUrl)) {
             return () => asyncFailed("not a valid automerge url");
