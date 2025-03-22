@@ -5,9 +5,29 @@ import { render } from "solid-js/web";
 import { HashRouter, Route } from "@solidjs/router";
 import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { createEffect, lazy } from "solid-js";
+import {
+    Accessor,
+    Component,
+    createEffect,
+    createMemo,
+    createResource,
+    lazy,
+} from "solid-js";
 import App from "./App";
 import { createConnectionManagementUi } from "./connection-management/ConnectionManagement";
+import {
+    DocHandle,
+    isValidAutomergeUrl,
+    Repo,
+} from "@automerge/automerge-repo";
+import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
+import { BroadcastChannelNetworkAdapter } from "@automerge/automerge-repo-network-broadcastchannel";
+import {
+    AutomergeVirtualFileSystem,
+    AutomergeVirtualFileSystemState,
+} from "./AutomergeVirtualFileSystem";
+import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
+import { createStore } from "solid-js/store";
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 const LevelBuilder = lazy(() => import("./level-builder/LevelBuilder"));
@@ -33,6 +53,37 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => {
+    let urlParams = new URLSearchParams(window.location.search);
+    let lastDocUrl = window.localStorage.getItem("lastDocUrl");
+    let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
+
+    // TODO: Use this to start off with no doc
+    let [state, setState] = createStore<{
+        documentUrl: string | undefined;
+    }>({
+        documentUrl: initDocumentUrl ?? undefined,
+    });
+
+    let repo = new Repo({
+        storage: new IndexedDBStorageAdapter(),
+        network: [new BroadcastChannelNetworkAdapter()],
+    });
+
+    let automergeVirtualFileSystemDoc: Accessor<
+        DocHandle<AutomergeVirtualFileSystemState> | undefined
+    >;
+
+    if (initDocumentUrl == undefined || !isValidAutomergeUrl(initDocumentUrl)) {
+        let doc = repo.create(AutomergeVirtualFileSystem.makeEmptyState(repo));
+        window.localStorage.setItem("lastDocUrl", doc.url);
+        automergeVirtualFileSystemDoc = () => doc;
+    } else {
+        let [doc] = createResource(() =>
+            repo.find<AutomergeVirtualFileSystemState>(initDocumentUrl),
+        );
+        automergeVirtualFileSystemDoc = doc;
+    }
+
     let connectionManagementUi = createConnectionManagementUi({});
     let connections = connectionManagementUi.connections.bind(
         connectionManagementUi,
@@ -40,9 +91,24 @@ render(() => {
     createEffect(() => {
         console.log(connections());
     });
+    let App2: Component = () => (
+        <App
+            onShareVfs={() => {
+                let doc = automergeVirtualFileSystemDoc();
+                if (doc == undefined) {
+                    return;
+                }
+                const url = new URL(window.location.href);
+                url.searchParams.set("docUrl", doc.url);
+                let url2 = url.toString();
+                window.history.pushState(null, "", url2);
+                navigator.clipboard.writeText(url2);
+            }}
+        />
+    );
     return (
         <HashRouter>
-            <Route path="/" component={App} />
+            <Route path="/" component={App2} />
             <Route path="/kitty-demo" component={KittyDemoApp} />
             <Route path="/pixel-editor" component={PixelEditor} />
             <Route path="/level-builder" component={LevelBuilder} />

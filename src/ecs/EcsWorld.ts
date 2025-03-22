@@ -132,7 +132,9 @@ export class EcsWorld {
             return;
         }
         componentsSignal[1]([
-            ...componentsSignal[0]().filter((x) => components.every((y) => y.type.typeName != x.type.typeName)),
+            ...componentsSignal[0]().filter((x) =>
+                components.every((y) => y.type.typeName != x.type.typeName),
+            ),
             ...components,
         ]);
     }
@@ -144,7 +146,9 @@ export class EcsWorld {
             return;
         }
         componentsSignal[1](
-            componentsSignal[0]().filter((x) => x.type.typeName != componentTypeName)
+            componentsSignal[0]().filter(
+                (x) => x.type.typeName != componentTypeName,
+            ),
         );
     }
 
@@ -154,7 +158,9 @@ export class EcsWorld {
             return;
         }
         componentsSignal[1](
-            componentsSignal[0]().filter((x) => componentTypes.every((y) => x.type.typeName != y.typeName))
+            componentsSignal[0]().filter((x) =>
+                componentTypes.every((y) => x.type.typeName != y.typeName),
+            ),
         );
     }
 

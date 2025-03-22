@@ -1,10 +1,21 @@
 import { A, useNavigate } from "@solidjs/router";
 import { Component } from "solid-js";
 
-const App: Component = (props) => {
+const App: Component<{
+    onShareVfs: () => void;
+}> = (props) => {
     let navigate = useNavigate();
     return (
         <div style="flex-grow: 1; overflow: auto; ">
+            <button
+                class="btn btn-primary"
+                onClick={() => {
+                    props.onShareVfs();
+                }}
+            >
+                Share Virtual File System
+            </button>
+            <br />
             <b>Links:</b>
             <br />
             <div

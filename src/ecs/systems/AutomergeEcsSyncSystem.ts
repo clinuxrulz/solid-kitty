@@ -4,23 +4,28 @@ import { EcsRegistry } from "../EcsRegistry";
 import { err, ok, Result } from "../../kitty-demo/Result";
 import { batch, createRoot } from "solid-js/types/server/reactive.js";
 import { Patch } from "@automerge/automerge";
-import { EcsComponent, EcsComponentType, IsEcsComponent } from "../EcsComponent";
-import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../../TypeSchema";
+import {
+    EcsComponent,
+    EcsComponentType,
+    IsEcsComponent,
+} from "../EcsComponent";
+import {
+    loadFromJsonViaTypeSchema,
+    saveToJsonViaTypeSchema,
+    TypeSchema,
+} from "../../TypeSchema";
 import { createComputed, createMemo, mapArray, on, onCleanup } from "solid-js";
 import { produce } from "solid-js/store";
 
 export function createAutomergeEcsSyncSystem(params: {
-    registry: EcsRegistry,
-    world: EcsWorld,
-    docHandle: DocHandle<any>
+    registry: EcsRegistry;
+    world: EcsWorld;
+    docHandle: DocHandle<any>;
 }): Result<{
-    dispose: () => void,
+    dispose: () => void;
 }> {
     let transactionIsAutomerge = false;
-    let world = EcsWorld.fromJson(
-        params.registry,
-        params.docHandle,
-    );
+    let world = EcsWorld.fromJson(params.registry, params.docHandle);
     if (world.type == "Err") {
         return world;
     }
@@ -44,7 +49,11 @@ export function createAutomergeEcsSyncSystem(params: {
     params.docHandle.on("change", onPatch);
     params.docHandle.on("delete", onDelete);
     let dispose2 = createRoot((dispose) => {
-        syncWorldToAutomergeDoc(params.world, params.docHandle, () => transactionIsAutomerge);
+        syncWorldToAutomergeDoc(
+            params.world,
+            params.docHandle,
+            () => transactionIsAutomerge,
+        );
         return dispose;
     });
     let dispose = () => {
@@ -61,7 +70,7 @@ function doPatchWorld(
     docHandle: DocHandle<any>,
     registry: EcsRegistry,
     world: EcsWorld,
-    payload: DocHandleChangePayload<any>
+    payload: DocHandleChangePayload<any>,
 ) {
     let goDeeper = (patch: Patch) => {
         // could be deleting a entity or a component, go deeper
@@ -78,7 +87,9 @@ function doPatchWorld(
                 case "inc":
                 case "mark":
                 case "unmark":
-                    throw new Error(`Unsupported automerge patch: ${patch.action}`);
+                    throw new Error(
+                        `Unsupported automerge patch: ${patch.action}`,
+                    );
                 case "del": {
                     if (patch.path.length == 0) {
                         // deleting the world
@@ -93,7 +104,9 @@ function doPatchWorld(
                     if (patch.path.length == 0) {
                         // insert a whole new world
                         if (patch.values.length != 1) {
-                            throw new Error("Expected just one world when inserting a whole new world");
+                            throw new Error(
+                                "Expected just one world when inserting a whole new world",
+                            );
                         }
                         let value = patch.values[0];
                         let world2 = EcsWorld.fromJson(registry, value);
@@ -103,10 +116,7 @@ function doPatchWorld(
                         let world3 = world2.value;
                         for (let entity of world3.entities()) {
                             let components = world3.getComponents(entity);
-                            world.createEntityWithId(
-                                entity,
-                                components,
-                            );
+                            world.createEntityWithId(entity, components);
                         }
                     } else {
                         // go deeper
@@ -116,7 +126,9 @@ function doPatchWorld(
                 }
                 case "splice": {
                     if (patch.path.length == 0) {
-                        throw new Error("splice does not make sense at top world level");
+                        throw new Error(
+                            "splice does not make sense at top world level",
+                        );
                     } else {
                         // go deeper
                         goDeeper(patch);
@@ -133,10 +145,7 @@ function doPatchWorld(
                         let world3 = world2.value;
                         for (let entity of world3.entities()) {
                             let components = world3.getComponents(entity);
-                            world.createEntityWithId(
-                                entity,
-                                components,
-                            );
+                            world.createEntityWithId(entity, components);
                         }
                     } else {
                         // go deeper
@@ -163,7 +172,7 @@ function doPatchEntity(
     registry: EcsRegistry,
     world: EcsWorld,
     entityId: string,
-    patch: Patch
+    patch: Patch,
 ) {
     if (patch.path.length < 1) {
         throw new Error("unreachable");
@@ -173,7 +182,14 @@ function doPatchEntity(
         if (typeof componentTypeName != "string") {
             throw new Error("expected a string for a component type name");
         }
-        doPatchComponent(docHandle, registry, world, entityId, componentTypeName, patch);
+        doPatchComponent(
+            docHandle,
+            registry,
+            world,
+            entityId,
+            componentTypeName,
+            patch,
+        );
     };
     switch (patch.action) {
         case "conflict":
@@ -204,13 +220,20 @@ function doPatchEntity(
                 }
                 let obj2 = obj as object;
                 for (let componentTypeName of Object.keys(obj2)) {
-                    let componentType = registry.componentTypeMap.get(componentTypeName);
+                    let componentType =
+                        registry.componentTypeMap.get(componentTypeName);
                     if (componentType == undefined) {
-                        throw new Error(`component type ${componentTypeName} not found`);
+                        throw new Error(
+                            `component type ${componentTypeName} not found`,
+                        );
                     }
-                    let componentType2 = componentType as EcsComponentType<object>;
+                    let componentType2 =
+                        componentType as EcsComponentType<object>;
                     let val = (obj2 as any)[componentTypeName];
-                    let component = loadFromJsonViaTypeSchema<object>(componentType2.typeSchema, val);
+                    let component = loadFromJsonViaTypeSchema<object>(
+                        componentType2.typeSchema,
+                        val,
+                    );
                     if (component.type == "Err") {
                         throw new Error(component.message);
                     }
@@ -243,13 +266,20 @@ function doPatchEntity(
                 }
                 let obj2 = obj as object;
                 for (let componentTypeName of Object.keys(obj2)) {
-                    let componentType = registry.componentTypeMap.get(componentTypeName);
+                    let componentType =
+                        registry.componentTypeMap.get(componentTypeName);
                     if (componentType == undefined) {
-                        throw new Error(`component type ${componentTypeName} not found`);
+                        throw new Error(
+                            `component type ${componentTypeName} not found`,
+                        );
                     }
-                    let componentType2 = componentType as EcsComponentType<object>;
+                    let componentType2 =
+                        componentType as EcsComponentType<object>;
                     let val = (obj2 as any)[componentTypeName];
-                    let component = loadFromJsonViaTypeSchema<object>(componentType2.typeSchema, val);
+                    let component = loadFromJsonViaTypeSchema<object>(
+                        componentType2.typeSchema,
+                        val,
+                    );
                     if (component.type == "Err") {
                         throw new Error(component.message);
                     }
@@ -267,7 +297,14 @@ function doPatchEntity(
     }
 }
 
-function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, world: EcsWorld, entityId: string, componentTypeName: string, patch: Patch) {
+function doPatchComponent(
+    docHandle: DocHandle<any>,
+    registry: EcsRegistry,
+    world: EcsWorld,
+    entityId: string,
+    componentTypeName: string,
+    patch: Patch,
+) {
     if (patch.path.length < 2) {
         throw new Error("unreachable");
     }
@@ -285,7 +322,17 @@ function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, worl
         if (component == undefined) {
             throw new Error(`component of type ${componentTypeName} not found`);
         }
-        doPatchProperty(docHandle, registry, world, entityId, componentTypeName, componentType2.typeSchema, component, fieldName, patch);
+        doPatchProperty(
+            docHandle,
+            registry,
+            world,
+            entityId,
+            componentTypeName,
+            componentType2.typeSchema,
+            component,
+            fieldName,
+            patch,
+        );
     };
     switch (patch.action) {
         case "conflict":
@@ -296,9 +343,12 @@ function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, worl
         case "del": {
             if (patch.path.length == 2) {
                 // delete this component
-                let componentType = registry.componentTypeMap.get(componentTypeName);
+                let componentType =
+                    registry.componentTypeMap.get(componentTypeName);
                 if (componentType == undefined) {
-                    throw new Error(`component type ${componentTypeName} not found`);
+                    throw new Error(
+                        `component type ${componentTypeName} not found`,
+                    );
                 }
                 world.unsetComponent(entityId, componentType);
             } else {
@@ -311,18 +361,26 @@ function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, worl
             if (patch.path.length == 2) {
                 // insert this component
                 if (patch.values.length != 1) {
-                    throw new Error("can only be one component of a given type");
+                    throw new Error(
+                        "can only be one component of a given type",
+                    );
                 }
                 let obj = patch.values[0] as object;
                 if (typeof obj != "object") {
                     return;
                 }
-                let componentType = registry.componentTypeMap.get(componentTypeName);
+                let componentType =
+                    registry.componentTypeMap.get(componentTypeName);
                 if (componentType == undefined) {
-                    throw new Error(`component type ${componentTypeName} not found`);
+                    throw new Error(
+                        `component type ${componentTypeName} not found`,
+                    );
                 }
                 let componentType2 = componentType as EcsComponentType<object>;
-                let component = loadFromJsonViaTypeSchema<object>(componentType2.typeSchema, obj);
+                let component = loadFromJsonViaTypeSchema<object>(
+                    componentType2.typeSchema,
+                    obj,
+                );
                 if (component.type == "Err") {
                     throw new Error(component.message);
                 }
@@ -352,12 +410,18 @@ function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, worl
                 if (typeof obj != "object") {
                     return;
                 }
-                let componentType = registry.componentTypeMap.get(componentTypeName);
+                let componentType =
+                    registry.componentTypeMap.get(componentTypeName);
                 if (componentType == undefined) {
-                    throw new Error(`component type ${componentTypeName} not found`);
+                    throw new Error(
+                        `component type ${componentTypeName} not found`,
+                    );
                 }
                 let componentType2 = componentType as EcsComponentType<object>;
-                let component = loadFromJsonViaTypeSchema<object>(componentType2.typeSchema, obj);
+                let component = loadFromJsonViaTypeSchema<object>(
+                    componentType2.typeSchema,
+                    obj,
+                );
                 if (component.type == "Err") {
                     throw new Error(component.message);
                 }
@@ -372,30 +436,50 @@ function doPatchComponent(docHandle: DocHandle<any>, registry: EcsRegistry, worl
     }
 }
 
-function doPatchProperty(docHandle: DocHandle<any>, registry: EcsRegistry, world: EcsWorld, entityId: string, componentTypeName: string, typeSchema: TypeSchema<object>, component: EcsComponent<object>, fieldName: string, patch: Patch) {
+function doPatchProperty(
+    docHandle: DocHandle<any>,
+    registry: EcsRegistry,
+    world: EcsWorld,
+    entityId: string,
+    componentTypeName: string,
+    typeSchema: TypeSchema<object>,
+    component: EcsComponent<object>,
+    fieldName: string,
+    patch: Patch,
+) {
     if (patch.path.length < 3) {
         throw new Error("unreachable");
     }
     if (typeSchema.type != "Object") {
-        throw new Error("all components are meant to have an object based TypeSchema");
+        throw new Error(
+            "all components are meant to have an object based TypeSchema",
+        );
     }
     // shortcut (getting lazy)
-    let componentData = loadFromJsonViaTypeSchema<object>(typeSchema, (docHandle as any)[entityId][componentTypeName]);
+    let componentData = loadFromJsonViaTypeSchema<object>(
+        typeSchema,
+        (docHandle as any)[entityId][componentTypeName],
+    );
     if (componentData.type == "Err") {
         throw new Error(componentData.message);
     }
     let componentData2 = componentData.value;
-    component.setState(produce((x) => {
-        for (let key of Object.keys(componentData2)) {
-            (x as any)[key] = (componentData2 as any)[key];
-        }
-    }));
+    component.setState(
+        produce((x) => {
+            for (let key of Object.keys(componentData2)) {
+                (x as any)[key] = (componentData2 as any)[key];
+            }
+        }),
+    );
 }
 
-function syncWorldToAutomergeDoc(world: EcsWorld, docHandle: DocHandle<any>, isTransactionAutomerge: () => boolean) {
-    createComputed(mapArray(
-        world.entities,
-        (entity) => {
+function syncWorldToAutomergeDoc(
+    world: EcsWorld,
+    docHandle: DocHandle<any>,
+    isTransactionAutomerge: () => boolean,
+) {
+    createComputed(
+        mapArray(world.entities, (entity) => {
             if (!isTransactionAutomerge()) {
                 docHandle.change((doc) => {
                     doc[entity] = {};
@@ -408,41 +492,53 @@ function syncWorldToAutomergeDoc(world: EcsWorld, docHandle: DocHandle<any>, isT
                     });
                 }
             });
-            createComputed(mapArray(
-                createMemo(() => world.getComponents(entity)),
-                (component) => {
-                    let component2 = component as EcsComponent<object>;
-                    let componentTypeName = component.type.typeName;
-                    if (!isTransactionAutomerge()) {
-                        let componentJson = saveToJsonViaTypeSchema(component2.type.typeSchema, component2.state);
-                        docHandle.change((doc) => {
-                            doc[entity][componentTypeName] = componentJson;
-                        });
-                    }
-                    onCleanup(() => {
+            createComputed(
+                mapArray(
+                    createMemo(() => world.getComponents(entity)),
+                    (component) => {
+                        let component2 = component as EcsComponent<object>;
+                        let componentTypeName = component.type.typeName;
                         if (!isTransactionAutomerge()) {
+                            let componentJson = saveToJsonViaTypeSchema(
+                                component2.type.typeSchema,
+                                component2.state,
+                            );
                             docHandle.change((doc) => {
-                                delete doc[entity][componentTypeName];
+                                doc[entity][componentTypeName] = componentJson;
                             });
                         }
-                    });
-                    // shortcut (getting lazy)
-                    let componentJson = createMemo(() => saveToJsonViaTypeSchema(component2.type.typeSchema, component2.state));
-                    createComputed(on(
-                        componentJson,
-                        (componentJson) => {
+                        onCleanup(() => {
                             if (!isTransactionAutomerge()) {
                                 docHandle.change((doc) => {
-                                    let component = doc[entity][componentTypeName];
-                                    for (let key of Object.keys(componentJson)) {
-                                        component[key] = componentJson[key];
-                                    }
+                                    delete doc[entity][componentTypeName];
                                 });
                             }
-                        },
-                    ));
-                },
-            ));
-        },
-    ));
+                        });
+                        // shortcut (getting lazy)
+                        let componentJson = createMemo(() =>
+                            saveToJsonViaTypeSchema(
+                                component2.type.typeSchema,
+                                component2.state,
+                            ),
+                        );
+                        createComputed(
+                            on(componentJson, (componentJson) => {
+                                if (!isTransactionAutomerge()) {
+                                    docHandle.change((doc) => {
+                                        let component =
+                                            doc[entity][componentTypeName];
+                                        for (let key of Object.keys(
+                                            componentJson,
+                                        )) {
+                                            component[key] = componentJson[key];
+                                        }
+                                    });
+                                }
+                            }),
+                        );
+                    },
+                ),
+            );
+        }),
+    );
 }
