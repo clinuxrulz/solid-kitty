@@ -188,17 +188,12 @@ const LevelBuilder: Component<{
     >;
     {
         let textureAtlasFiles_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let textureAtlasesFolderId2 = textureAtlasesFolderId();
             if (textureAtlasesFolderId2.type != "Success") {
                 return textureAtlasesFolderId2;
             }
             let textureAtlasesFolderId3 = textureAtlasesFolderId2.value;
-            let filesAndFolders = vfs3.getFilesAndFolders(
+            let filesAndFolders = props.vfs.readFolder(
                 textureAtlasesFolderId3,
             );
             return asyncSuccess(
@@ -207,9 +202,14 @@ const LevelBuilder: Component<{
                     if (filesAndFolders2.type != "Success") {
                         return filesAndFolders2;
                     }
-                    let filesAndFolders3 = filesAndFolders2.value;
+                    let filesAndFolders3 = makeDocumentProjection(filesAndFolders2.value);
                     return asyncSuccess(
-                        filesAndFolders3.filter((x) => x.type == "File"),
+                        Object.entries(filesAndFolders3)
+                            .flatMap((x) =>
+                                x[1].type == "File" ?
+                                    [[x[0], x[1]] as [ string, VfsFile, ]] :
+                                    []
+                            )
                     );
                 }),
             );
