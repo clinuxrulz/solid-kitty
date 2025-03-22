@@ -163,11 +163,6 @@ export class TextureAtlasList {
                 () => this.state.selectedTextureAtlasByFileId,
             );
             let removeTextureAtlasFile = async (textureAtlasFileId: string) => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
                 let imagesFolderId = params.imagesFolderId();
                 if (imagesFolderId.type != "Success") {
                     return;
