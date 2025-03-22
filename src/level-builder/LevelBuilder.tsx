@@ -167,7 +167,7 @@ const LevelBuilder: Component<{
         });
     }
     let textureAtlases = new TextureAtlases({
-        vfs,
+        vfs: props.vfs,
         imagesFolderId,
         imageFiles,
         textureAtlasesFolderId,
@@ -222,7 +222,7 @@ const LevelBuilder: Component<{
             let imageFiles3 = imageFiles2.value;
             let result: Map<string, VfsFile> = new Map();
             for (let imageFile of imageFiles3) {
-                result.set(imageFile.name, imageFile);
+                result.set(imageFile[0], imageFile[1]);
             }
             return asyncSuccess(result);
         });
@@ -432,7 +432,7 @@ const LevelBuilder: Component<{
     }
     //
     let levels = new Levels({
-        vfs,
+        vfs: props.vfs,
         imagesFolderId,
         textureAtlasesFolderId,
         levelsFolderId,
