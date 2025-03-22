@@ -9,13 +9,13 @@ import {
     JSX,
     on,
 } from "solid-js";
-import { AsyncResult } from "../AsyncResult";
-import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
+import { AsyncResult, asyncSuccess } from "../AsyncResult";
 import { createStore } from "solid-js/store";
 import { levelComponentType } from "./components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 
 export class LevelList {
     readonly selectedLevelByFileId: Accessor<string | undefined>;
@@ -28,33 +28,35 @@ export class LevelList {
         levelsFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<{
-            levelFiles: VfsFile[];
+            levelFiles: [string,VfsFile][];
             seletedLevelByFileId: string | undefined;
         }>({
             levelFiles: [],
             seletedLevelByFileId: undefined,
         });
         createEffect(
-            on([params.vfs, params.levelsFolderId], async () => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
+            on([params.levelsFolderId], async () => {
                 let levelsFolderId = params.levelsFolderId();
                 if (levelsFolderId.type != "Success") {
                     return;
                 }
                 let levelsFolderId2 = levelsFolderId.value;
-                let filesAndFolders = vfs2.getFilesAndFolders(levelsFolderId2);
+                let filesAndFolders = params.vfs.readFolder(levelsFolderId2);
+                let filesAndFolders2 = createMemo(() => {
+                    let filesAndFolders3 = filesAndFolders();
+                    if (filesAndFolders3.type != "Success") {
+                        return filesAndFolders3;
+                    }
+                    return asyncSuccess(makeDocumentProjection(filesAndFolders3.value));
+                });
                 createEffect(() => {
-                    let filesAndFolders2 = filesAndFolders();
-                    if (filesAndFolders2.type != "Success") {
+                    let filesAndFolders3 = filesAndFolders2();
+                    if (filesAndFolders3.type != "Success") {
                         return;
                     }
-                    let filesAndFolders3 = filesAndFolders2.value;
-                    let levelFiles = filesAndFolders3.filter(
-                        (x) => x.type == "File",
+                    let filesAndFolders4 = filesAndFolders3.value;
+                    let levelFiles = Object.entries(filesAndFolders4).flatMap(
+                        (x) => x[1].type == "File" ? [[x[0], x[1]] as [string, VfsFile]] : [],
                     );
                     setState("levelFiles", levelFiles);
                 });
