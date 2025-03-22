@@ -57,13 +57,6 @@ render(() => {
     let lastDocUrl = window.localStorage.getItem("lastDocUrl");
     let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
 
-    // TODO: Use this to start off with no doc
-    let [state, setState] = createStore<{
-        documentUrl: string | undefined;
-    }>({
-        documentUrl: initDocumentUrl ?? undefined,
-    });
-
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
         network: [new BroadcastChannelNetworkAdapter()],
