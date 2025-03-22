@@ -492,21 +492,29 @@ const LevelBuilder: Component<{
 };
 
 function createGetOrCreateRootFolderId(params: {
-    vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+    vfs: AutomergeVirtualFileSystem;
     folderName: string;
 }): Accessor<AsyncResult<string>> {
-    let rootFilesAndFolders: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+    let rootFilesAndFolders: Accessor<AsyncResult<Doc<VfsFolderContents>>>;
     {
-        let rootFilesAndFolders_ = createMemo(() => {
-            let vfs = params.vfs();
-            if (vfs.type != "Success") {
-                return vfs;
+        let rootFolderFilesAndFolders_ = createMemo(() => {
+            let rootFolderId = params.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs2 = vfs.value;
-            return asyncSuccess(vfs2.getFilesAndFolders(vfs2.rootFolderId));
+            let rootFolderId2 = rootFolderId.value;
+            let folderContents = params.vfs.readFolder(rootFolderId2);
+            return asyncSuccess(createMemo(() => {
+                let folderContents2 = folderContents();
+                if (folderContents2.type != "Success") {
+                    return folderContents2;
+                }
+                let folderContents3 = folderContents2.value;
+                return asyncSuccess(makeDocumentProjection(folderContents3));
+            }));
         });
         rootFilesAndFolders = createMemo(() => {
-            let tmp = rootFilesAndFolders_();
+            let tmp = rootFolderFilesAndFolders_();
             if (tmp.type != "Success") {
                 return tmp;
             }
@@ -516,23 +524,22 @@ function createGetOrCreateRootFolderId(params: {
     let folderId: Accessor<AsyncResult<string>>;
     {
         let folderId_ = createMemo(() => {
-            let vfs = params.vfs();
-            if (vfs.type != "Success") {
-                return vfs;
+            let rootFolderId = params.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs2 = vfs.value;
+            let rootFolderId2 = rootFolderId.value;
             let rootFilesAndFolders2 = rootFilesAndFolders();
             if (rootFilesAndFolders2.type != "Success") {
                 return rootFilesAndFolders2;
             }
-            let result = rootFilesAndFolders2.value.find(
-                (x) => x.type == "Folder" && x.name == params.folderName,
-            );
+            let rootFilesAndFolders3 = rootFilesAndFolders2.value;
+            let result = rootFilesAndFolders3[params.folderName];
             if (result != undefined) {
-                return asyncSuccess(() => asyncSuccess(result.id));
+                return asyncSuccess(() => asyncSuccess(result.docUrl));
             }
             let [result2] = createResource(() =>
-                vfs2.createFolder(vfs2.rootFolderId, params.folderName),
+                params.vfs.createFolder(rootFolderId2, params.folderName)
             );
             return asyncSuccess(
                 createMemo(() => {
