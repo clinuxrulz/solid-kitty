@@ -15,12 +15,12 @@ import {
 } from "./AsyncResult";
 import { err, ok, Result } from "./kitty-demo/Result";
 
-type VfsFile = {
+export type VfsFile = {
     type: "File";
     docUrl: AutomergeUrl;
 };
 
-type VfsFolder = {
+export type VfsFolder = {
     type: "Folder";
     docUrl: AutomergeUrl;
 };
@@ -69,7 +69,7 @@ export class AutomergeVirtualFileSystem {
     }
 
     readFolder(
-        docUrl: AutomergeUrl,
+        docUrl: string,
     ): Accessor<AsyncResult<DocHandle<VfsFolderContents>>> {
         if (!isValidAutomergeUrl(docUrl)) {
             return () => asyncFailed("not a valid automerge url");

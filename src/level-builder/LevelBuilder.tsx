@@ -13,7 +13,6 @@ import { createStore } from "solid-js/store";
 import { TextureAtlases } from "./TextureAtlases";
 import { EcsWorld } from "../ecs/EcsWorld";
 import {
-    VfsFile,
     VfsFileOrFolder,
     VirtualFileSystem,
 } from "./VirtualFileSystem";
@@ -33,7 +32,7 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { frameComponentType, FrameState } from "./components/FrameComponent";
 import { opToArr } from "../kitty-demo/util";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem, VfsFolderContents } from "../AutomergeVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "../AutomergeVirtualFileSystem";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { Doc } from "@automerge/automerge-repo";
 
@@ -134,7 +133,7 @@ const LevelBuilder: Component<{
             return tmp.value();
         });
     }
-    let imageFiles: Accessor<AsyncResult<VfsFile[]>>;
+    let imageFiles: Accessor<AsyncResult<[string,VfsFile][]>>;
     {
         let imageFiles_ = createMemo(() => {
             let imagesFolderId2 = imagesFolderId();
@@ -142,15 +141,19 @@ const LevelBuilder: Component<{
                 return imagesFolderId2;
             }
             let imageFolderId3 = imagesFolderId2.value;
-            let result = vfs3.getFilesAndFolders(imageFolderId3);
+            let result = props.vfs.readFolder(imageFolderId3);
             return asyncSuccess(
                 createMemo(() => {
                     let result2 = result();
                     if (result2.type != "Success") {
                         return result2;
                     }
+                    let result3 = makeDocumentProjection(result2.value);
                     return asyncSuccess(
-                        result2.value.filter((x) => x.type == "File"),
+                        Object.entries(result3).flatMap(
+                            (x) => x[1].type == "File" ?
+                                [[x[0], x[1]] as [string, VfsFile]] : []
+                        ),
                     );
                 }),
             );
@@ -545,7 +548,7 @@ function createGetOrCreateRootFolderId(params: {
                     if (result3.type == "Err") {
                         return asyncFailed(result3.message);
                     }
-                    return asyncSuccess(result3.value.folderId);
+                    return asyncSuccess(result3.value);
                 }),
             );
         });
