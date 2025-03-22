@@ -14,9 +14,10 @@ import { textureAtlasComponentType } from "./components/TextureAtlasComponent";
 import { registry } from "./components/registry";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 
 type State = {
-    textureAtlasFiles: VfsFile[];
+    textureAtlasFiles: [string, VfsFile][];
     selectedTextureAtlasByFileId: string | undefined;
 };
 
@@ -40,18 +41,13 @@ export class TextureAtlasList {
         });
         //
         createEffect(
-            on([params.vfs, params.textureAtlasesFolderId], () => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
+            on([params.textureAtlasesFolderId], () => {
                 let textureAtlasesFolderId = params.textureAtlasesFolderId();
                 if (textureAtlasesFolderId.type != "Success") {
                     return textureAtlasesFolderId;
                 }
                 let textureAtlasesFolderId2 = textureAtlasesFolderId.value;
-                let filesAndFolders = vfs2.getFilesAndFolders(
+                let filesAndFolders = params.vfs.readFolder(
                     textureAtlasesFolderId2,
                 );
                 createEffect(
@@ -61,9 +57,13 @@ export class TextureAtlasList {
                             return;
                         }
                         let filesAndFolders3 = filesAndFolders2.value;
-                        let files = filesAndFolders3.filter(
-                            (x) => x.type == "File",
-                        );
+                        let filesAndFolders4 = makeDocumentProjection(filesAndFolders3);
+                        let files = Object.entries(filesAndFolders4)
+                            .flatMap((x) =>
+                                x[1].type == "File" ?
+                                    [[x[0], x[1]] as [string, VfsFile]] :
+                                    []
+                            );
                         setState("textureAtlasFiles", files);
                     }),
                 );
@@ -82,11 +82,6 @@ export class TextureAtlasList {
                 addTextureAtlasInput.value = "";
             };
             let onAddTextureAtlas = async (imageFile: File) => {
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
                 let imagesFolderId = params.imagesFolderId();
                 if (imagesFolderId.type != "Success") {
                     return;
@@ -116,6 +111,7 @@ export class TextureAtlasList {
                         imageRef: imageFile.name,
                     }),
                 ]);
+                // TODO: Upto here
                 let textureAtlasJson = JSON.stringify(world.toJson());
                 await vfs2.createFile(
                     imagesFolderId2,
