@@ -263,24 +263,24 @@ export class TextureAtlasList {
                                 <div
                                     role="button"
                                     class={
-                                        isSelectedV2(textureAtlasFile.id)
+                                        isSelectedV2(textureAtlasFile[1].docUrl)
                                             ? "list-item-selected"
                                             : "list-item"
                                     }
                                     onClick={() => {
                                         selectTextureAtlasFile(
-                                            textureAtlasFile.id,
+                                            textureAtlasFile[1].docUrl,
                                         );
                                     }}
                                 >
-                                    {textureAtlasFile.name}
+                                    {textureAtlasFile[0]}
                                     <div class="list-item-button-container">
                                         <button
                                             class="list-item-button text-right"
                                             type="button"
                                             onClick={() => {
                                                 removeTextureAtlasFile(
-                                                    textureAtlasFile.id,
+                                                    textureAtlasFile[1].docUrl,
                                                 );
                                             }}
                                         >
