@@ -32,6 +32,7 @@ import { InsertTileMode } from "./modes/InsertTileMode";
 import { levelComponentType, LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -42,7 +43,7 @@ export class Level {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelFileId: Accessor<string | undefined>;

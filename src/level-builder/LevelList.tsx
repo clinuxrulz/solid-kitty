@@ -15,6 +15,7 @@ import { createStore } from "solid-js/store";
 import { levelComponentType } from "./components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
 
 export class LevelList {
     readonly selectedLevelByFileId: Accessor<string | undefined>;
@@ -23,7 +24,7 @@ export class LevelList {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         levelsFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<{
