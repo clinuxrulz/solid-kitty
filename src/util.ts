@@ -43,3 +43,21 @@ export class NoTrack<A> {
         this.value = value;
     }
 }
+
+export function uint8ArrayToBase64(bytes: Uint8Array): string {
+    var binary = '';
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+export function base64ToUint8Array(base64: string): Uint8Array {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}

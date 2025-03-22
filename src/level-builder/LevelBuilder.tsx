@@ -36,6 +36,7 @@ import { AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "../Autom
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { Doc } from "@automerge/automerge-repo";
 import { createAutomergeEcsSyncSystem } from "../ecs/systems/AutomergeEcsSyncSystem";
+import { base64ToUint8Array } from "../util";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -320,16 +321,30 @@ const LevelBuilder: Component<{
                                             "Texture atlas referenced image not found.",
                                         );
                                     }
-                                    let imageData = props.vfs.readFile(imageFile.docUrl);
+                                    let imageData = props.vfs.readFile<{
+                                        mimeType: string,
+                                        base64Data: string,
+                                    }>(imageFile.docUrl);
+                                    let imageData2 = createMemo(() => {
+                                        let imageData3 = imageData();
+                                        if (imageData3.type != "Success") {
+                                            return imageData3;
+                                        }
+                                        return asyncSuccess(makeDocumentProjection(imageData3.value));
+                                    });
                                     return asyncSuccess(
                                         createMemo(() => {
-                                            let imageData2 = imageData();
-                                            if (imageData2.type != "Success") {
-                                                return imageData2;
+                                            let imageData3 = imageData2();
+                                            if (imageData3.type != "Success") {
+                                                return imageData3;
                                             }
-                                            let imageData3 = imageData2.value;
+                                            let imageData4 = imageData3.value;
+                                            let blob = new Blob(
+                                                [ base64ToUint8Array(imageData4.base64Data), ],
+                                                { "type": imageData4.mimeType, }
+                                            );
                                             let imageUrl =
-                                                URL.createObjectURL(imageData3);
+                                                URL.createObjectURL(blob);
                                             onCleanup(() =>
                                                 URL.revokeObjectURL(imageUrl),
                                             );
