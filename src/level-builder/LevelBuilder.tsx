@@ -33,6 +33,7 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { frameComponentType, FrameState } from "./components/FrameComponent";
 import { opToArr } from "../kitty-demo/util";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -42,7 +43,9 @@ const IMAGES_FOLDER_NAME = "images";
 const TEXTURE_ALIASES_FOLDER_NAME = "texture_aliases";
 const LEVELS_FOLDER_NAME = "levels";
 
-const LevelBuilder: Component = () => {
+const LevelBuilder: Component<{
+    vfs: AutomergeVirtualFileSystem,
+}> = () => {
     let [state, setState] = createStore<State>({
         selectedTab: "Texture Atlases",
     });

@@ -57,6 +57,11 @@ render(() => {
     let lastDocUrl = window.localStorage.getItem("lastDocUrl");
     let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
 
+    let connectionManagementUi = createConnectionManagementUi({});
+    let connections = connectionManagementUi.connections.bind(
+        connectionManagementUi,
+    );
+
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
         network: [new BroadcastChannelNetworkAdapter()],
@@ -77,13 +82,11 @@ render(() => {
         automergeVirtualFileSystemDoc = doc;
     }
 
-    let connectionManagementUi = createConnectionManagementUi({});
-    let connections = connectionManagementUi.connections.bind(
-        connectionManagementUi,
-    );
-    createEffect(() => {
-        console.log(connections());
+    let vfs = new AutomergeVirtualFileSystem({
+        repo,
+        docHandle: automergeVirtualFileSystemDoc,
     });
+
     let App2: Component = () => (
         <App
             onShareVfs={() => {
@@ -104,7 +107,7 @@ render(() => {
             <Route path="/" component={App2} />
             <Route path="/kitty-demo" component={KittyDemoApp} />
             <Route path="/pixel-editor" component={PixelEditor} />
-            <Route path="/level-builder" component={LevelBuilder} />
+            <Route path="/level-builder" component={() => <LevelBuilder vfs={vfs}/>} />
             <Route path="/script-editor" component={ScriptEditor} />
             <Route
                 path="/colour-picker"
