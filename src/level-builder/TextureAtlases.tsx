@@ -11,8 +11,8 @@ import {
 import { TextureAtlasList } from "./TextureAtlasList";
 import { TextureAtlas } from "./texture-atlas/TextureAtlas";
 import { AsyncResult } from "../AsyncResult";
-import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
 
 type State = {
     showTextureAtlasList: boolean;
@@ -29,9 +29,9 @@ export class TextureAtlases {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
-        imageFiles: Accessor<AsyncResult<VfsFile[]>>;
+        imageFiles: Accessor<AsyncResult<[string,VfsFile][]>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<State>({
