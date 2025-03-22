@@ -274,29 +274,11 @@ const LevelBuilder: Component<{
                             }
                             let syncSystem2 = syncSystem.value;
                             onCleanup(() => syncSystem2.dispose());
-                            // TODO: Upto here
-
-                            let [textureAtlasData4] = createResource(() =>
-                                textureAtlasData3.text(),
-                            );
                             return asyncSuccess(
                                 createMemo(() => {
-                                    let textureAtlasData5 = textureAtlasData4();
-                                    if (textureAtlasData5 == undefined) {
-                                        return asyncPending();
-                                    }
-                                    let textureAtlasData6 =
-                                        JSON.parse(textureAtlasData5);
-                                    let world = EcsWorld.fromJson(
-                                        registry,
-                                        textureAtlasData6,
-                                    );
-                                    if (world.type == "Err") {
-                                        return asyncFailed(world.message);
-                                    }
-                                    let world2 = world.value;
+                                    let world = textureAtlasWorld;
                                     let entities =
-                                        world2.entitiesWithComponentType(
+                                        world.entitiesWithComponentType(
                                             textureAtlasComponentType,
                                         );
                                     if (entities.length != 1) {
@@ -305,7 +287,7 @@ const LevelBuilder: Component<{
                                         );
                                     }
                                     let entity = entities[0];
-                                    let textureAtlas = world2.getComponent(
+                                    let textureAtlas = world.getComponent(
                                         entity,
                                         textureAtlasComponentType,
                                     )?.state;
@@ -315,13 +297,13 @@ const LevelBuilder: Component<{
                                         );
                                     }
                                     let frameEntities =
-                                        world2.entitiesWithComponentType(
+                                        world.entitiesWithComponentType(
                                             frameComponentType,
                                         );
                                     let frames = frameEntities.flatMap(
                                         (frameEntity) =>
                                             opToArr(
-                                                world2.getComponent(
+                                                world.getComponent(
                                                     frameEntity,
                                                     frameComponentType,
                                                 )?.state,
@@ -338,7 +320,7 @@ const LevelBuilder: Component<{
                                             "Texture atlas referenced image not found.",
                                         );
                                     }
-                                    let imageData = vfs3.readFile(imageFile.id);
+                                    let imageData = props.vfs.readFile(imageFile.docUrl);
                                     return asyncSuccess(
                                         createMemo(() => {
                                             let imageData2 = imageData();
