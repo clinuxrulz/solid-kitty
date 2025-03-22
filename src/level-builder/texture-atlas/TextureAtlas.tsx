@@ -24,11 +24,11 @@ import { EcsWorld } from "../../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
 import { RenderParams } from "./RenderParams";
 import { PickingSystem } from "./systems/PickingSystem";
-import { VfsFile, VirtualFileSystem } from "../VirtualFileSystem";
 import { asyncFailed, AsyncResult } from "../../AsyncResult";
 import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
 
 type State = {
     mousePos: Vec2 | undefined;
@@ -71,7 +71,7 @@ export class TextureAtlas {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasFileId: Accessor<string | undefined>;
     }) {

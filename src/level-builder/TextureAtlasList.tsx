@@ -9,11 +9,11 @@ import {
 } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { AsyncResult } from "../AsyncResult";
-import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { textureAtlasComponentType } from "./components/TextureAtlasComponent";
 import { registry } from "./components/registry";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
 
 type State = {
     textureAtlasFiles: VfsFile[];
@@ -29,9 +29,9 @@ export class TextureAtlasList {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
-        imageFiles: Accessor<AsyncResult<VfsFile[]>>;
+        imageFiles: Accessor<AsyncResult<[string,VfsFile][]>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
     }) {
         let [state, setState] = createStore<State>({
