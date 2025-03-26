@@ -119,6 +119,14 @@ render(() => {
                 window.history.pushState(null, "", url2);
                 navigator.clipboard.writeText(url2);
             }}
+            onDeleteVfs={() => {
+                window.localStorage.removeItem("lastDocUrl");
+                let request = indexedDB.deleteDatabase("automerge");
+                request.onsuccess = () => {
+                    window.location.search = "";
+                    window.location.reload();
+                };
+            }}
         />
     );
     return (

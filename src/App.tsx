@@ -3,6 +3,7 @@ import { Component } from "solid-js";
 
 const App: Component<{
     onShareVfs: () => void;
+    onDeleteVfs: () => void;
 }> = (props) => {
     let navigate = useNavigate();
     return (
@@ -16,6 +17,18 @@ const App: Component<{
                 Share Virtual File System
             </button>
             <br />
+            <button
+                class="btn btn-secondary"
+                onClick={() => {
+                    let deleteIt = window.confirm("Are you sure you wish to delete your virtual file system?");
+                    if (deleteIt) {
+                        props.onDeleteVfs();
+                    }
+                }}
+            >
+                Delete Virtual File System
+            </button>
+            <br/>
             <b>Links:</b>
             <br />
             <div
