@@ -6,6 +6,7 @@ import {
     LevelState,
 } from "../../components/LevelComponent";
 import { FrameState } from "../../components/FrameComponent";
+import { IEcsWorld } from "../../../ecs/IEcsWorld";
 
 export class RenderSystem {
     readonly Render: Component;
@@ -13,7 +14,7 @@ export class RenderSystem {
 
     constructor(params: {
         renderParams: RenderParams;
-        world: Accessor<EcsWorld>;
+        world: Accessor<IEcsWorld>;
         highlightedEntitiesSet: Accessor<Set<string>>;
         selectedEntitiesSet: Accessor<Set<string>>;
     }) {

@@ -1,6 +1,7 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { Result } from "../kitty-demo/Result";
-import { TypeSchema } from "../TypeSchema";
+import { ok, Result } from "../kitty-demo/Result";
+import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
+import { Accessor, createComputed, createMemo, on, untrack } from "solid-js";
 
 export interface IsEcsComponentType {
     readonly typeName: string;
@@ -25,6 +26,86 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
             type: this,
             state,
             setState,
+        });
+    }
+
+    createJsonProjection(json: Accessor<any>, setJson: (x: any) => void): Accessor<Result<EcsComponent<S>>> {
+        let state = createMemo(() => loadFromJsonViaTypeSchema(this.typeSchema, json()));
+        let state2_ = createMemo(
+            () => {
+                let s = state();
+                if (s.type == "Err") {
+                    return s;
+                }
+                let state3 = state as Accessor<{ type: "Ok", value: S }>;
+                return ok(state3);
+            },
+            undefined,
+            {
+                equals: (a, b) => {
+                    if (a.type == "Ok" && b.type == "Ok") {
+                        return a.value == b.value;
+                    } else {
+                        return false;
+                    }
+                },
+            },
+        );
+        let state2 = createMemo(() => {
+            let tmp = state2_();
+            if (tmp.type == "Err") {
+                return tmp;
+            }
+            return ok(createMemo(() => {
+                return tmp.value().value;
+            }));
+        });
+        let result_ = createMemo(() => {
+            let state3 = state2();
+            if (state3.type == "Err") {
+                return state3;
+            }
+            let state4 = state3.value;
+            return ok(createMemo(() => {
+                let [ state5, setState, ] = createStore(untrack(state4));
+                createComputed(on(
+                    state4,
+                    (state4) => setState(state4),
+                    { defer: true },
+                ));
+                let stateJson = createMemo(
+                    () => {
+                        let json = saveToJsonViaTypeSchema(this.typeSchema, state5);
+                        return {
+                            json,
+                            jsonString: JSON.stringify(json),
+                        };
+                    },
+                    undefined,
+                    {
+                        equals: (a, b) => a.jsonString == b.jsonString,
+                    }
+                );
+                createComputed(on(
+                    () => stateJson().json,
+                    (stateJson2) => {
+                        setJson(stateJson2);
+                    },
+                    { defer: true, }
+                ));
+                return new EcsComponent({
+                    type: this,
+                    state: state5,
+                    setState: setState,
+                });
+            }));
+        });
+        return createMemo(() => {
+            let tmp = result_();
+            if (tmp.type == "Err") {
+                return tmp;
+            }
+            return ok(tmp.value());
         });
     }
 }

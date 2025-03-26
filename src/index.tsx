@@ -8,10 +8,13 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import {
     Accessor,
     Component,
+    createComputed,
     createEffect,
     createMemo,
     createResource,
     lazy,
+    mapArray,
+    onCleanup,
 } from "solid-js";
 import App from "./App";
 import { createConnectionManagementUi } from "./connection-management/ConnectionManagement";
@@ -28,6 +31,7 @@ import {
 } from "./AutomergeVirtualFileSystem";
 import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
 import { createStore } from "solid-js/store";
+import { PeerJsAutomergeNetworkAdapter } from "./PeerJsAutomergeNetworkAdapter";
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 const LevelBuilder = lazy(() => import("./level-builder/LevelBuilder"));
@@ -57,17 +61,30 @@ render(() => {
     let lastDocUrl = window.localStorage.getItem("lastDocUrl");
     let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
 
-    // TODO: Use this to start off with no doc
-    let [state, setState] = createStore<{
-        documentUrl: string | undefined;
-    }>({
-        documentUrl: initDocumentUrl ?? undefined,
-    });
+    let connectionManagementUi = createConnectionManagementUi({});
+    let connections = connectionManagementUi.connections.bind(
+        connectionManagementUi,
+    );
 
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
-        network: [new BroadcastChannelNetworkAdapter()],
+        network: [/*new BroadcastChannelNetworkAdapter()*/],
     });
+    let networkAdapters = createMemo(mapArray(
+        connections,
+        (connection) => new PeerJsAutomergeNetworkAdapter({ connection: connection.conn, }),
+    ));
+    createComputed(mapArray(
+        networkAdapters,
+        (networkAdapter) => {
+            repo.networkSubsystem.addNetworkAdapter(networkAdapter);
+            onCleanup(() => {
+                // How to remove network adapter?
+                //automergeRepo.networkSubsystem.
+            });
+        },
+    ));
+
 
     let automergeVirtualFileSystemDoc: Accessor<
         DocHandle<AutomergeVirtualFileSystemState> | undefined
@@ -84,13 +101,11 @@ render(() => {
         automergeVirtualFileSystemDoc = doc;
     }
 
-    let connectionManagementUi = createConnectionManagementUi({});
-    let connections = connectionManagementUi.connections.bind(
-        connectionManagementUi,
-    );
-    createEffect(() => {
-        console.log(connections());
+    let vfs = new AutomergeVirtualFileSystem({
+        repo,
+        docHandle: automergeVirtualFileSystemDoc,
     });
+
     let App2: Component = () => (
         <App
             onShareVfs={() => {
@@ -111,7 +126,7 @@ render(() => {
             <Route path="/" component={App2} />
             <Route path="/kitty-demo" component={KittyDemoApp} />
             <Route path="/pixel-editor" component={PixelEditor} />
-            <Route path="/level-builder" component={LevelBuilder} />
+            <Route path="/level-builder" component={() => <LevelBuilder vfs={vfs}/>} />
             <Route path="/script-editor" component={ScriptEditor} />
             <Route
                 path="/colour-picker"

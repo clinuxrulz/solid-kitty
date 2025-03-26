@@ -13,7 +13,6 @@ import { createStore } from "solid-js/store";
 import { TextureAtlases } from "./TextureAtlases";
 import { EcsWorld } from "../ecs/EcsWorld";
 import {
-    VfsFile,
     VfsFileOrFolder,
     VirtualFileSystem,
 } from "./VirtualFileSystem";
@@ -33,6 +32,11 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { frameComponentType, FrameState } from "./components/FrameComponent";
 import { opToArr } from "../kitty-demo/util";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "../AutomergeVirtualFileSystem";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { Doc } from "@automerge/automerge-repo";
+import { base64ToUint8Array } from "../util";
+import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
 
 type State = {
     selectedTab: "Texture Atlases" | "Levels";
@@ -42,36 +46,29 @@ const IMAGES_FOLDER_NAME = "images";
 const TEXTURE_ALIASES_FOLDER_NAME = "texture_aliases";
 const LEVELS_FOLDER_NAME = "levels";
 
-const LevelBuilder: Component = () => {
+const LevelBuilder: Component<{
+    vfs: AutomergeVirtualFileSystem,
+}> = (props) => {
     let [state, setState] = createStore<State>({
         selectedTab: "Texture Atlases",
     });
-    let vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
-    {
-        let [vfs_] = createResource(() => VirtualFileSystem.init());
-        vfs = createMemo(() => {
-            let vfs2 = vfs_();
-            if (vfs2 == undefined) {
-                return asyncPending();
-            }
-            if (vfs2.type == "Err") {
-                console.log(vfs2.message);
-                return asyncFailed(vfs2.message);
-            }
-            let vfs3 = vfs2.value;
-            let vfs4 = new ReactiveVirtualFileSystem({ vfs: vfs3 });
-            return asyncSuccess(vfs4);
-        });
-    }
-    let rootFolderFilesAndFolders: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+    let rootFolderFilesAndFolders: Accessor<AsyncResult<Doc<VfsFolderContents>>>;
     {
         let rootFolderFilesAndFolders_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
+            let rootFolderId = props.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs3 = vfs2.value;
-            return asyncSuccess(vfs3.getFilesAndFolders(vfs3.rootFolderId));
+            let rootFolderId2 = rootFolderId.value;
+            let folderContents = props.vfs.readFolder(rootFolderId2);
+            return asyncSuccess(createMemo(() => {
+                let folderContents2 = folderContents();
+                if (folderContents2.type != "Success") {
+                    return folderContents2;
+                }
+                let folderContents3 = folderContents2.value;
+                return asyncSuccess(makeDocumentProjection(folderContents3));
+            }));
         });
         rootFolderFilesAndFolders = createMemo(() => {
             let tmp = rootFolderFilesAndFolders_();
@@ -83,7 +80,7 @@ const LevelBuilder: Component = () => {
     }
     let imagesFolderId: Accessor<AsyncResult<string>> =
         createGetOrCreateRootFolderId({
-            vfs,
+            vfs: props.vfs,
             folderName: IMAGES_FOLDER_NAME,
         });
     let textureAtlasesFolderId: Accessor<AsyncResult<string>>;
@@ -97,7 +94,7 @@ const LevelBuilder: Component = () => {
             //
             return asyncSuccess(
                 createGetOrCreateRootFolderId({
-                    vfs,
+                    vfs: props.vfs,
                     folderName: TEXTURE_ALIASES_FOLDER_NAME,
                 }),
             );
@@ -125,7 +122,7 @@ const LevelBuilder: Component = () => {
             //
             return asyncSuccess(
                 createGetOrCreateRootFolderId({
-                    vfs,
+                    vfs: props.vfs,
                     folderName: LEVELS_FOLDER_NAME,
                 }),
             );
@@ -138,28 +135,27 @@ const LevelBuilder: Component = () => {
             return tmp.value();
         });
     }
-    let imageFiles: Accessor<AsyncResult<VfsFile[]>>;
+    let imageFiles: Accessor<AsyncResult<[string,VfsFile][]>>;
     {
         let imageFiles_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let imagesFolderId2 = imagesFolderId();
             if (imagesFolderId2.type != "Success") {
                 return imagesFolderId2;
             }
             let imageFolderId3 = imagesFolderId2.value;
-            let result = vfs3.getFilesAndFolders(imageFolderId3);
+            let result = props.vfs.readFolder(imageFolderId3);
             return asyncSuccess(
                 createMemo(() => {
                     let result2 = result();
                     if (result2.type != "Success") {
                         return result2;
                     }
+                    let result3 = makeDocumentProjection(result2.value);
                     return asyncSuccess(
-                        result2.value.filter((x) => x.type == "File"),
+                        Object.entries(result3.contents).flatMap(
+                            (x) => x[1].type == "File" ?
+                                [[x[0], x[1]] as [string, VfsFile]] : []
+                        ),
                     );
                 }),
             );
@@ -173,7 +169,7 @@ const LevelBuilder: Component = () => {
         });
     }
     let textureAtlases = new TextureAtlases({
-        vfs,
+        vfs: props.vfs,
         imagesFolderId,
         imageFiles,
         textureAtlasesFolderId,
@@ -194,17 +190,12 @@ const LevelBuilder: Component = () => {
     >;
     {
         let textureAtlasFiles_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let textureAtlasesFolderId2 = textureAtlasesFolderId();
             if (textureAtlasesFolderId2.type != "Success") {
                 return textureAtlasesFolderId2;
             }
             let textureAtlasesFolderId3 = textureAtlasesFolderId2.value;
-            let filesAndFolders = vfs3.getFilesAndFolders(
+            let filesAndFolders = props.vfs.readFolder(
                 textureAtlasesFolderId3,
             );
             return asyncSuccess(
@@ -213,9 +204,14 @@ const LevelBuilder: Component = () => {
                     if (filesAndFolders2.type != "Success") {
                         return filesAndFolders2;
                     }
-                    let filesAndFolders3 = filesAndFolders2.value;
+                    let filesAndFolders3 = makeDocumentProjection(filesAndFolders2.value);
                     return asyncSuccess(
-                        filesAndFolders3.filter((x) => x.type == "File"),
+                        Object.entries(filesAndFolders3.contents)
+                            .flatMap((x) =>
+                                x[1].type == "File" ?
+                                    [[x[0], x[1]] as [ string, VfsFile, ]] :
+                                    []
+                            )
                     );
                 }),
             );
@@ -228,7 +224,7 @@ const LevelBuilder: Component = () => {
             let imageFiles3 = imageFiles2.value;
             let result: Map<string, VfsFile> = new Map();
             for (let imageFile of imageFiles3) {
-                result.set(imageFile.name, imageFile);
+                result.set(imageFile[0], imageFile[1]);
             }
             return asyncSuccess(result);
         });
@@ -243,11 +239,6 @@ const LevelBuilder: Component = () => {
             () => textureAtlasFiles().type,
         );
         let textureAtlases_ = createMemo(() => {
-            let vfs2 = vfs();
-            if (vfs2.type != "Success") {
-                return vfs2;
-            }
-            let vfs3 = vfs2.value;
             let imageFilenameFileMap2 = imageFilenameFileMap();
             if (imageFilenameFileMap2.type != "Success") {
                 return imageFilenameFileMap2;
@@ -266,36 +257,26 @@ const LevelBuilder: Component = () => {
             return asyncSuccess(
                 createMemo(
                     mapArray(textureAtlasFiles2, (textureAtlasFile) => {
-                        let textureAtlasData = vfs3.readFile(
-                            textureAtlasFile.id,
-                        );
+                        let textureAtlasData = props.vfs.readFile(textureAtlasFile[1].docUrl);
                         return createMemo(() => {
                             let textureAtlasData2 = textureAtlasData();
                             if (textureAtlasData2.type != "Success") {
                                 return textureAtlasData2;
                             }
                             let textureAtlasData3 = textureAtlasData2.value;
-                            let [textureAtlasData4] = createResource(() =>
-                                textureAtlasData3.text(),
+                            let r = EcsWorldAutomergeProjection.create(
+                                registry,
+                                textureAtlasData3,
                             );
+                            if (r.type == "Err") {
+                                return asyncFailed(r.message);
+                            }
+                            let textureAtlasWorld = r.value;
                             return asyncSuccess(
                                 createMemo(() => {
-                                    let textureAtlasData5 = textureAtlasData4();
-                                    if (textureAtlasData5 == undefined) {
-                                        return asyncPending();
-                                    }
-                                    let textureAtlasData6 =
-                                        JSON.parse(textureAtlasData5);
-                                    let world = EcsWorld.fromJson(
-                                        registry,
-                                        textureAtlasData6,
-                                    );
-                                    if (world.type == "Err") {
-                                        return asyncFailed(world.message);
-                                    }
-                                    let world2 = world.value;
+                                    let world = textureAtlasWorld;
                                     let entities =
-                                        world2.entitiesWithComponentType(
+                                        world.entitiesWithComponentType(
                                             textureAtlasComponentType,
                                         );
                                     if (entities.length != 1) {
@@ -304,7 +285,7 @@ const LevelBuilder: Component = () => {
                                         );
                                     }
                                     let entity = entities[0];
-                                    let textureAtlas = world2.getComponent(
+                                    let textureAtlas = world.getComponent(
                                         entity,
                                         textureAtlasComponentType,
                                     )?.state;
@@ -314,13 +295,13 @@ const LevelBuilder: Component = () => {
                                         );
                                     }
                                     let frameEntities =
-                                        world2.entitiesWithComponentType(
+                                        world.entitiesWithComponentType(
                                             frameComponentType,
                                         );
                                     let frames = frameEntities.flatMap(
                                         (frameEntity) =>
                                             opToArr(
-                                                world2.getComponent(
+                                                world.getComponent(
                                                     frameEntity,
                                                     frameComponentType,
                                                 )?.state,
@@ -337,16 +318,30 @@ const LevelBuilder: Component = () => {
                                             "Texture atlas referenced image not found.",
                                         );
                                     }
-                                    let imageData = vfs3.readFile(imageFile.id);
+                                    let imageData = props.vfs.readFile<{
+                                        mimeType: string,
+                                        base64Data: string,
+                                    }>(imageFile.docUrl);
+                                    let imageData2 = createMemo(() => {
+                                        let imageData3 = imageData();
+                                        if (imageData3.type != "Success") {
+                                            return imageData3;
+                                        }
+                                        return asyncSuccess(makeDocumentProjection(imageData3.value));
+                                    });
                                     return asyncSuccess(
                                         createMemo(() => {
-                                            let imageData2 = imageData();
-                                            if (imageData2.type != "Success") {
-                                                return imageData2;
+                                            let imageData3 = imageData2();
+                                            if (imageData3.type != "Success") {
+                                                return imageData3;
                                             }
-                                            let imageData3 = imageData2.value;
+                                            let imageData4 = imageData3.value;
+                                            let blob = new Blob(
+                                                [ base64ToUint8Array(imageData4.base64Data), ],
+                                                { "type": imageData4.mimeType, }
+                                            );
                                             let imageUrl =
-                                                URL.createObjectURL(imageData3);
+                                                URL.createObjectURL(blob);
                                             onCleanup(() =>
                                                 URL.revokeObjectURL(imageUrl),
                                             );
@@ -384,7 +379,7 @@ const LevelBuilder: Component = () => {
                                                     let image3 = image2.value;
                                                     return asyncSuccess({
                                                         textureAtlasFilename:
-                                                            textureAtlasFile.name,
+                                                            textureAtlasFile[0],
                                                         textureAtlas:
                                                             textureAtlas2,
                                                         image: image3,
@@ -438,7 +433,7 @@ const LevelBuilder: Component = () => {
     }
     //
     let levels = new Levels({
-        vfs,
+        vfs: props.vfs,
         imagesFolderId,
         textureAtlasesFolderId,
         levelsFolderId,
@@ -496,21 +491,29 @@ const LevelBuilder: Component = () => {
 };
 
 function createGetOrCreateRootFolderId(params: {
-    vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+    vfs: AutomergeVirtualFileSystem;
     folderName: string;
 }): Accessor<AsyncResult<string>> {
-    let rootFilesAndFolders: Accessor<AsyncResult<VfsFileOrFolder[]>>;
+    let rootFilesAndFolders: Accessor<AsyncResult<Doc<VfsFolderContents>>>;
     {
-        let rootFilesAndFolders_ = createMemo(() => {
-            let vfs = params.vfs();
-            if (vfs.type != "Success") {
-                return vfs;
+        let rootFolderFilesAndFolders_ = createMemo(() => {
+            let rootFolderId = params.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs2 = vfs.value;
-            return asyncSuccess(vfs2.getFilesAndFolders(vfs2.rootFolderId));
+            let rootFolderId2 = rootFolderId.value;
+            let folderContents = params.vfs.readFolder(rootFolderId2);
+            return asyncSuccess(createMemo(() => {
+                let folderContents2 = folderContents();
+                if (folderContents2.type != "Success") {
+                    return folderContents2;
+                }
+                let folderContents3 = folderContents2.value;
+                return asyncSuccess(makeDocumentProjection(folderContents3));
+            }));
         });
         rootFilesAndFolders = createMemo(() => {
-            let tmp = rootFilesAndFolders_();
+            let tmp = rootFolderFilesAndFolders_();
             if (tmp.type != "Success") {
                 return tmp;
             }
@@ -520,23 +523,22 @@ function createGetOrCreateRootFolderId(params: {
     let folderId: Accessor<AsyncResult<string>>;
     {
         let folderId_ = createMemo(() => {
-            let vfs = params.vfs();
-            if (vfs.type != "Success") {
-                return vfs;
+            let rootFolderId = params.vfs.rootFolderId();
+            if (rootFolderId.type != "Success") {
+                return rootFolderId;
             }
-            let vfs2 = vfs.value;
+            let rootFolderId2 = rootFolderId.value;
             let rootFilesAndFolders2 = rootFilesAndFolders();
             if (rootFilesAndFolders2.type != "Success") {
                 return rootFilesAndFolders2;
             }
-            let result = rootFilesAndFolders2.value.find(
-                (x) => x.type == "Folder" && x.name == params.folderName,
-            );
+            let rootFilesAndFolders3 = rootFilesAndFolders2.value;
+            let result = rootFilesAndFolders3.contents[params.folderName];
             if (result != undefined) {
-                return asyncSuccess(() => asyncSuccess(result.id));
+                return asyncSuccess(() => asyncSuccess(result.docUrl));
             }
             let [result2] = createResource(() =>
-                vfs2.createFolder(vfs2.rootFolderId, params.folderName),
+                params.vfs.createFolder(rootFolderId2, params.folderName)
             );
             return asyncSuccess(
                 createMemo(() => {
@@ -547,7 +549,7 @@ function createGetOrCreateRootFolderId(params: {
                     if (result3.type == "Err") {
                         return asyncFailed(result3.message);
                     }
-                    return asyncSuccess(result3.value.folderId);
+                    return asyncSuccess(result3.value);
                 }),
             );
         });

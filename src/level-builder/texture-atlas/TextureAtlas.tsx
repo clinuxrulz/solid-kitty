@@ -24,11 +24,16 @@ import { EcsWorld } from "../../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
 import { RenderParams } from "./RenderParams";
 import { PickingSystem } from "./systems/PickingSystem";
-import { VfsFile, VirtualFileSystem } from "../VirtualFileSystem";
-import { asyncFailed, AsyncResult } from "../../AsyncResult";
+import { asyncFailed, AsyncResult, asyncSuccess } from "../../AsyncResult";
 import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { ok } from "../../kitty-demo/Result";
+import { base64ToUint8Array } from "../../util";
+import { IEcsWorld } from "../../ecs/IEcsWorld";
+import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
 
 type State = {
     mousePos: Vec2 | undefined;
@@ -48,7 +53,7 @@ type State = {
     mkMode: (() => Mode) | undefined;
     //
     autoSaving: boolean;
-    world: EcsWorld;
+    world: IEcsWorld;
 };
 
 const AUTO_SAVE_TIMEOUT = 2000;
@@ -71,7 +76,7 @@ export class TextureAtlas {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasFileId: Accessor<string | undefined>;
     }) {
@@ -98,7 +103,7 @@ export class TextureAtlas {
             imageUrlDispose()();
         });
         createComputed(
-            on([params.vfs, params.textureAtlasFileId], async () => {
+            on([params.textureAtlasFileId], async () => {
                 let textureAtlasFileId = params.textureAtlasFileId();
                 if (textureAtlasFileId == undefined) {
                     batch(() => {
@@ -108,18 +113,13 @@ export class TextureAtlas {
                     });
                     return;
                 }
-                let vfs = params.vfs();
-                if (vfs.type != "Success") {
-                    return;
-                }
-                let vfs2 = vfs.value;
                 let imagesFolderId = params.imagesFolderId();
                 if (imagesFolderId.type != "Success") {
                     return;
                 }
                 let imagesFolderId2 = imagesFolderId.value;
                 let textureAtlasFileId2 = textureAtlasFileId;
-                let textureAtlasData = vfs2.readFileAsText(textureAtlasFileId2);
+                let textureAtlasData = params.vfs.readFile(textureAtlasFileId2);
                 createEffect(
                     on(textureAtlasData, () => {
                         let textureAtlasData2 = textureAtlasData();
@@ -127,22 +127,22 @@ export class TextureAtlas {
                             return;
                         }
                         let textureAtlasData3 = textureAtlasData2.value;
-                        let world = EcsWorld.fromJson(
+                        let r = EcsWorldAutomergeProjection.create(
                             registry,
-                            JSON.parse(textureAtlasData3),
+                            textureAtlasData3,
                         );
-                        if (world.type == "Err") {
+                        if (r.type == "Err") {
                             return;
                         }
-                        let world2 = world.value;
-                        let entities = world2.entitiesWithComponentType(
+                        let world = r.value;
+                        let entities = world.entitiesWithComponentType(
                             textureAtlasComponentType,
                         );
                         if (entities.length != 1) {
                             return;
                         }
                         let entity = entities[0];
-                        let textureAtlas = world2.getComponent(
+                        let textureAtlas = world.getComponent(
                             entity,
                             textureAtlasComponentType,
                         )?.state;
@@ -151,32 +151,52 @@ export class TextureAtlas {
                         }
                         let imageFilename = textureAtlas.imageRef;
                         let filesAndFolders =
-                            vfs2.getFilesAndFolders(imagesFolderId2);
+                            params.vfs.readFolder(imagesFolderId2);
+                        let filesAndFolders2 = createMemo(() => {
+                            let filesAndFolders3 = filesAndFolders();
+                            if (filesAndFolders3.type != "Success") {
+                                return filesAndFolders3;
+                            }
+                            return asyncSuccess(makeDocumentProjection(filesAndFolders3.value));
+                        });
                         createEffect(
                             on(filesAndFolders, () => {
-                                let filesAndFolders2 = filesAndFolders();
-                                if (filesAndFolders2.type != "Success") {
+                                let filesAndFolders3 = filesAndFolders2();
+                                if (filesAndFolders3.type != "Success") {
                                     return;
                                 }
-                                let filesAndFolders3 = filesAndFolders2.value;
-                                let imageFile = filesAndFolders3.find(
-                                    (x) =>
-                                        x.type == "File" &&
-                                        x.name == imageFilename,
-                                );
-                                if (imageFile == undefined) {
+                                let filesAndFolders4 = filesAndFolders3.value;
+                                let imageFileId: string | undefined = undefined;
+                                for (let x of Object.entries(filesAndFolders4.contents)) {
+                                    if (x[0] == imageFilename && x[1].type == "File") {
+                                        imageFileId = x[1].docUrl;
+                                        break;
+                                    }
+                                }
+                                if (imageFileId == undefined) {
                                     return;
                                 }
-                                let imageData = vfs2.readFile(imageFile.id);
+                                let imageData = params.vfs.readFile<{ mimeType: string, base64Data: string, }>(imageFileId);
+                                let imageData2 = createMemo(() => {
+                                    let imageData3 = imageData();
+                                    if (imageData3.type != "Success") {
+                                        return imageData3;
+                                    }
+                                    return asyncSuccess(makeDocumentProjection(imageData3.value));
+                                });
                                 createEffect(
-                                    on(imageData, () => {
-                                        let imageData2 = imageData();
-                                        if (imageData2.type != "Success") {
+                                    on(imageData2, () => {
+                                        let imageData3 = imageData2();
+                                        if (imageData3.type != "Success") {
                                             return;
                                         }
-                                        let imageData3 = imageData2.value;
+                                        let imageData4 = imageData3.value;
+                                        let blob = new Blob(
+                                            [ base64ToUint8Array(imageData4.base64Data), ],
+                                            { type: imageData4.mimeType, },
+                                        );
                                         let imageUrl =
-                                            URL.createObjectURL(imageData3);
+                                            URL.createObjectURL(blob);
                                         imageUrlDispose()();
                                         setImageUrlDispose(() => () => {
                                             URL.revokeObjectURL(imageUrl);
@@ -198,7 +218,7 @@ export class TextureAtlas {
                                                 );
                                             });
                                         };
-                                        setState("world", world2);
+                                        setState("world", world);
                                     }),
                                 );
                             }),
@@ -207,54 +227,6 @@ export class TextureAtlas {
                 );
             }),
         );
-        let triggerAutoSave: () => void;
-        {
-            let isAutoSaving = false;
-            let autoSaveTimerId: number | undefined = undefined;
-            triggerAutoSave = () => {
-                if (isAutoSaving) {
-                    return;
-                }
-                isAutoSaving = true;
-                if (autoSaveTimerId != undefined) {
-                    clearTimeout(autoSaveTimerId);
-                }
-                setState("autoSaving", true);
-                autoSaveTimerId = window.setTimeout(async () => {
-                    try {
-                        let textureAtlasFileId = params.textureAtlasFileId();
-                        if (textureAtlasFileId == undefined) {
-                            return;
-                        }
-                        let vfs = params.vfs();
-                        if (vfs.type != "Success") {
-                            return;
-                        }
-                        let vfs2 = vfs.value;
-                        let textureAtlasData = JSON.stringify(
-                            state.world.toJson(),
-                        );
-                        let textureAtlasData2 = new Blob([textureAtlasData], {
-                            type: "application/json",
-                        });
-                        await vfs2.overwriteFile(
-                            textureAtlasFileId,
-                            textureAtlasData2,
-                        );
-                    } finally {
-                        isAutoSaving = false;
-                        setState("autoSaving", false);
-                    }
-                }, AUTO_SAVE_TIMEOUT);
-            };
-        }
-        {
-            let pushUndoUnit = undoManager.pushUndoUnit.bind(undoManager);
-            (undoManager as any).pushUndoUnit = (undoUnit: UndoUnit) => {
-                pushUndoUnit(undoUnit);
-                triggerAutoSave();
-            };
-        }
         let [svg, setSvg] = createSignal<SVGSVGElement>();
         let [screenSize, setScreenSize] = createSignal<Vec2>();
         createComputed(
@@ -602,15 +574,6 @@ export class TextureAtlas {
                                 </button>
                             )}
                         </Show>
-                        <button
-                            class="btn"
-                            style="font-size: 20pt;"
-                            onClick={() => {
-                                triggerAutoSave();
-                            }}
-                        >
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
                         <button
                             class="btn"
                             style="font-size: 20pt;"

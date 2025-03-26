@@ -8,6 +8,7 @@ import { AsyncResult } from "../../AsyncResult";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
 import { LevelState } from "../components/LevelComponent";
+import { IEcsWorld } from "../../ecs/IEcsWorld";
 
 export type ModeParams = {
     undoManager: UndoManager;
@@ -15,7 +16,7 @@ export type ModeParams = {
     screenSize: Accessor<Vec2 | undefined>;
     screenPtToWorldPt(screenPt: Vec2): Vec2 | undefined;
     worldPtToScreenPt(worldPt: Vec2): Vec2 | undefined;
-    world: Accessor<EcsWorld>;
+    world: Accessor<IEcsWorld>;
     tileWidth: Accessor<number>;
     tileHeight: Accessor<number>;
     level: Accessor<LevelState | undefined>;

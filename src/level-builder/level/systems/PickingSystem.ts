@@ -7,6 +7,7 @@ import {
 } from "../../components/FrameComponent";
 import { makeRefCountedMakeReactiveObject } from "../../../util";
 import { opToArr } from "../../../kitty-demo/util";
+import { IEcsWorld } from "../../../ecs/IEcsWorld";
 
 const SNAP_DIST = 10;
 const SNAP_DIST_SQUARED = SNAP_DIST * SNAP_DIST;
@@ -18,7 +19,7 @@ export class PickingSystem {
         mousePos: Accessor<Vec2 | undefined>;
         screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined;
         worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined;
-        world: Accessor<EcsWorld>;
+        world: Accessor<IEcsWorld>;
     }) {
         this.mkEntityUnderMouse = () => () => undefined;
     }

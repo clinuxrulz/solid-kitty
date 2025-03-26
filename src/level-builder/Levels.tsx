@@ -9,12 +9,12 @@ import {
     Show,
 } from "solid-js";
 import { AsyncResult } from "../AsyncResult";
-import { VfsFile, VirtualFileSystem } from "./VirtualFileSystem";
 import { LevelList } from "./LevelList";
 import { Level } from "./level/Level";
 import { TextureAtlasState } from "./components/TextureAtlasComponent";
 import { FrameState } from "./components/FrameComponent";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
+import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
 
 type State = {
     showLevelList: boolean;
@@ -26,7 +26,7 @@ export class Levels {
     }>;
 
     constructor(params: {
-        vfs: Accessor<AsyncResult<ReactiveVirtualFileSystem>>;
+        vfs: AutomergeVirtualFileSystem;
         imagesFolderId: Accessor<AsyncResult<string>>;
         textureAtlasesFolderId: Accessor<AsyncResult<string>>;
         levelsFolderId: Accessor<AsyncResult<string>>;

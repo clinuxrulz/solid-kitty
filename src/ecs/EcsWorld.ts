@@ -15,8 +15,9 @@ import {
     loadFromJsonViaTypeSchema,
     saveToJsonViaTypeSchema,
 } from "../TypeSchema";
+import { IEcsWorld } from "./IEcsWorld";
 
-export class EcsWorld {
+export class EcsWorld implements IEcsWorld {
     private entityMap: ReactiveMap<string, Signal<IsEcsComponent[]>>;
     private componentTypeEntitiesMap: ReactiveMap<string, ReactiveSet<string>>;
     private componentTypeEntitiesMap_: Map<string, () => string[]> = new Map();

@@ -15,18 +15,20 @@ import {
 } from "./AsyncResult";
 import { err, ok, Result } from "./kitty-demo/Result";
 
-type VfsFile = {
+export type VfsFile = {
     type: "File";
     docUrl: AutomergeUrl;
 };
 
-type VfsFolder = {
+export type VfsFolder = {
     type: "Folder";
     docUrl: AutomergeUrl;
 };
 
-type VfsFolderContents = {
-    [name: string]: VfsFileOrFolder;
+export type VfsFolderContents = {
+    contents: {
+        [name: string]: VfsFileOrFolder;
+    };
 };
 
 type VfsFileOrFolder = VfsFile | VfsFolder;
@@ -42,7 +44,9 @@ export class AutomergeVirtualFileSystem {
     private doc: Accessor<Store<AutomergeVirtualFileSystemState> | undefined>;
 
     static makeEmptyState(repo: Repo): AutomergeVirtualFileSystemState {
-        let doc = repo.create<VfsFolderContents>({});
+        let doc = repo.create<VfsFolderContents>({
+            contents: {},
+        });
         return {
             root: { docUrl: doc.url },
         };
@@ -58,7 +62,7 @@ export class AutomergeVirtualFileSystem {
         this.doc = createDocumentProjection(params.docHandle);
     }
 
-    get rootFolderId(): Accessor<AsyncResult<string>> {
+    get rootFolderId(): Accessor<AsyncResult<AutomergeUrl>> {
         return createMemo(() => {
             let docUrl = this.doc()?.root?.docUrl;
             if (docUrl == undefined) {
@@ -107,23 +111,41 @@ export class AutomergeVirtualFileSystem {
         if (!isValidAutomergeUrl(parentFolderDocUrl)) {
             return err("not a valid automerge url");
         }
-        let parentFolderDoc =
-            await this.repo.find<VfsFolder>(parentFolderDocUrl);
-        let parentfolderContentsUrl = parentFolderDoc.doc().docUrl;
-        if (!isValidAutomergeUrl(parentfolderContentsUrl)) {
-            return err("not a valid automerge url");
-        }
-        let folderContents = this.repo.create<VfsFolderContents>({});
         let parentFolderContents = await this.repo.find<VfsFolderContents>(
-            parentfolderContentsUrl,
+            parentFolderDocUrl,
         );
+        let folderContents = this.repo.create<VfsFolderContents>({
+            contents: {},
+        });
         parentFolderContents.change((doc) => {
-            doc[folderName] = {
+            doc.contents[folderName] = {
                 type: "Folder",
                 docUrl: folderContents.url,
             };
         });
         return ok(folderContents.url);
+    }
+
+    async createFile<T>(
+        parentFolderDocUrl: string,
+        filename: string,
+        data: T
+    ): Promise<Result<AutomergeUrl>> {
+        if (!isValidAutomergeUrl(parentFolderDocUrl)) {
+            return err("not a valid automerge url");
+        }
+        let parentFolderContents = await this.repo.find<VfsFolderContents>(
+            parentFolderDocUrl,
+        );
+        let fileDoc = this.repo.create<T>(data);
+        let fileDocUrl = fileDoc.url;
+        parentFolderContents.change((doc) => {
+            doc.contents[filename] = {
+                type: "File",
+                docUrl: fileDocUrl,
+            };
+        });
+        return ok(fileDocUrl);
     }
 
     async addFile(
@@ -144,7 +166,7 @@ export class AutomergeVirtualFileSystem {
             parentfolderContentsUrl,
         );
         parentFolderContents.change((doc) => {
-            doc[filename] = {
+            doc.contents[filename] = {
                 type: "File",
                 docUrl: fileDocUrl,
             };
@@ -168,12 +190,12 @@ export class AutomergeVirtualFileSystem {
         let parentFolderContents = await this.repo.find<VfsFolderContents>(
             parentfolderContentsUrl,
         );
-        let fileOrFolderBefore = parentFolderContents.doc()[fileOrFolderName];
+        let fileOrFolderBefore = parentFolderContents.doc().contents[fileOrFolderName];
         if (fileOrFolderBefore == undefined) {
             return ok(undefined);
         }
         parentFolderContents.change((doc) => {
-            delete doc[fileOrFolderName];
+            delete doc.contents[fileOrFolderName];
         });
         return ok(fileOrFolderBefore.docUrl);
     }
