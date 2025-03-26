@@ -108,6 +108,7 @@ export class InsertTileMode implements Mode {
                                                                     () =>
                                                                         DISPLAY_TILE_SIZE /
                                                                         frame
+                                                                            .frame
                                                                             .size
                                                                             .x,
                                                                 );
@@ -116,6 +117,7 @@ export class InsertTileMode implements Mode {
                                                                     () =>
                                                                         DISPLAY_TILE_SIZE /
                                                                         frame
+                                                                            .frame
                                                                             .size
                                                                             .y,
                                                                 );
@@ -166,15 +168,15 @@ export class InsertTileMode implements Mode {
                                                                                     textureAtlasRef:
                                                                                         textureAtlas.textureAtlasFilename,
                                                                                     frameRef:
-                                                                                        frame.name,
+                                                                                        frame.frameId,
                                                                                 },
                                                                             ),
                                                                         );
                                                                     }}
                                                                     style={{
                                                                         "background-image": `url(${imageUrl})`,
-                                                                        "background-position-x": `${-frame.pos.x * scaleX()}px`,
-                                                                        "background-position-y": `${-frame.pos.y * scaleY()}px`,
+                                                                        "background-position-x": `${-frame.frame.pos.x * scaleX()}px`,
+                                                                        "background-position-y": `${-frame.frame.pos.y * scaleY()}px`,
                                                                         "background-size": `${backgroundWidth()}px ${backgroundHeight()}px`,
                                                                         "background-color":
                                                                             highlightIt()

@@ -26,7 +26,7 @@ export interface RenderParams {
                 textureAtlasFilename: string;
                 textureAtlas: TextureAtlasState;
                 image: HTMLImageElement;
-                frames: FrameState[];
+                frames: { frameId: string, frame: FrameState, }[];
             }[]
         >
     >;

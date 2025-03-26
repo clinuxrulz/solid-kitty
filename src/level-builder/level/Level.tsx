@@ -55,7 +55,7 @@ export class Level {
                     textureAtlasFilename: string;
                     textureAtlas: TextureAtlasState;
                     image: HTMLImageElement;
-                    frames: FrameState[];
+                    frames: { frameId: string, frame: FrameState, }[];
                 }[]
             >
         >;
@@ -188,7 +188,7 @@ export class Level {
                 for (let frame of frames) {
                     result.set(frame.shortId, {
                         textureAtlasRef,
-                        frameRef: frame.frameName,
+                        frameRef: frame.frameId,
                     });
                 }
             }
@@ -215,7 +215,7 @@ export class Level {
             for (let { textureAtlasRef, frames } of level2.tileToShortIdTable) {
                 for (let frame of frames) {
                     result.set(
-                        textureAtlasRef + frameToTileIndexSep + frame.frameName,
+                        textureAtlasRef + frameToTileIndexSep + frame.frameId,
                         frame.shortId,
                     );
                 }
@@ -252,7 +252,7 @@ export class Level {
                         textureAtlasRef: params.textureAtlasRef,
                         frames: [
                             {
-                                frameName: params.frameRef,
+                                frameId: params.frameRef,
                                 shortId: newIndex,
                             },
                         ],
@@ -262,7 +262,7 @@ export class Level {
                 levelComponent2.setState("tileToShortIdTable", idx1, "frames", [
                     ...levelComponent2.state.tileToShortIdTable[idx1].frames,
                     {
-                        frameName: params.frameRef,
+                        frameId: params.frameRef,
                         shortId: newIndex,
                     },
                 ]);

@@ -184,7 +184,7 @@ const LevelBuilder: Component<{
                 textureAtlasFilename: string;
                 textureAtlas: TextureAtlasState;
                 image: HTMLImageElement;
-                frames: FrameState[];
+                frames: { frameId: string, frame: FrameState, }[];
             }[]
         >
     >;
@@ -305,7 +305,10 @@ const LevelBuilder: Component<{
                                                     frameEntity,
                                                     frameComponentType,
                                                 )?.state,
-                                            ),
+                                            ).map((frame) => ({
+                                                frameId: frameEntity,
+                                                frame,
+                                            })),
                                     );
                                     let textureAtlas2 = textureAtlas;
                                     let imageFilename = textureAtlas2.imageRef;
@@ -401,7 +404,7 @@ const LevelBuilder: Component<{
                 textureAtlasFilename: string;
                 textureAtlas: TextureAtlasState;
                 image: HTMLImageElement;
-                frames: FrameState[];
+                frames: { frameId: string, frame: FrameState, }[];
             }[] = [];
             let tmp = textureAtlases_();
             if (tmp.type != "Success") {

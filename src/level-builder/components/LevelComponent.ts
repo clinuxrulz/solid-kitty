@@ -4,7 +4,7 @@ export type LevelState = {
     tileToShortIdTable: {
         textureAtlasRef: string;
         frames: {
-            frameName: string;
+            frameId: string;
             shortId: number;
         }[];
     }[];
@@ -29,7 +29,7 @@ export const levelComponentType: EcsComponentType<LevelState> =
                                 element: {
                                     type: "Object",
                                     properties: {
-                                        frameName: "String",
+                                        frameId: "String",
                                         shortId: "Number",
                                     },
                                 },

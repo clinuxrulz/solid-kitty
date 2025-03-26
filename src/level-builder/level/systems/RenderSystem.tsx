@@ -66,9 +66,9 @@ export class RenderSystem {
                         >();
                         result.set(textureAtlasRef, tmp);
                     }
-                    tmp.set(frame.name, {
+                    tmp.set(frame.frameId, {
                         image,
-                        frame,
+                        frame: frame.frame,
                     });
                 }
             }
