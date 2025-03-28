@@ -28,7 +28,7 @@ import { asyncFailed, AsyncResult, asyncSuccess } from "../../AsyncResult";
 import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { ok } from "../../kitty-demo/Result";
 import { base64ToUint8Array } from "../../util";
@@ -77,7 +77,8 @@ export class TextureAtlas {
 
     constructor(params: {
         vfs: AutomergeVirtualFileSystem;
-        imagesFolderId: Accessor<AsyncResult<string>>;
+        imagesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+        textureAtlasesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
         textureAtlasFileId: Accessor<string | undefined>;
     }) {
         let undoManager = new UndoManager();
@@ -113,13 +114,18 @@ export class TextureAtlas {
                     });
                     return;
                 }
-                let imagesFolderId = params.imagesFolderId();
-                if (imagesFolderId.type != "Success") {
+                let imagesFolder = params.imagesFolder();
+                if (imagesFolder.type != "Success") {
                     return;
                 }
-                let imagesFolderId2 = imagesFolderId.value;
+                let textureAtlasesFolder = params.textureAtlasesFolder();
+                if (textureAtlasesFolder.type != "Success") {
+                    return;
+                }
+                let textureAtlasesFolder2 = textureAtlasesFolder.value;
+                let imagesFolder2 = imagesFolder.value;
                 let textureAtlasFileId2 = textureAtlasFileId;
-                let textureAtlasData = params.vfs.readFile(textureAtlasFileId2);
+                let textureAtlasData = textureAtlasesFolder2.openFileById(textureAtlasFileId2);
                 createEffect(
                     on(textureAtlasData, () => {
                         let textureAtlasData2 = textureAtlasData();
@@ -129,7 +135,7 @@ export class TextureAtlas {
                         let textureAtlasData3 = textureAtlasData2.value;
                         let r = EcsWorldAutomergeProjection.create(
                             registry,
-                            textureAtlasData3,
+                            textureAtlasData3.docHandle,
                         );
                         if (r.type == "Err") {
                             return;
@@ -150,50 +156,30 @@ export class TextureAtlas {
                             return;
                         }
                         let imageFilename = textureAtlas.imageRef;
-                        let filesAndFolders =
-                            params.vfs.readFolder(imagesFolderId2);
-                        let filesAndFolders2 = createMemo(() => {
-                            let filesAndFolders3 = filesAndFolders();
-                            if (filesAndFolders3.type != "Success") {
-                                return filesAndFolders3;
-                            }
-                            return asyncSuccess(makeDocumentProjection(filesAndFolders3.value));
-                        });
+                        let filesAndFolders = createMemo(() => imagesFolder2.contents());
                         createEffect(
                             on(filesAndFolders, () => {
-                                let filesAndFolders3 = filesAndFolders2();
-                                if (filesAndFolders3.type != "Success") {
-                                    return;
-                                }
-                                let filesAndFolders4 = filesAndFolders3.value;
                                 let imageFileId: string | undefined = undefined;
-                                for (let x of Object.entries(filesAndFolders4.contents)) {
-                                    if (x[0] == imageFilename && x[1].type == "File") {
-                                        imageFileId = x[1].docUrl;
+                                for (let x of filesAndFolders()) {
+                                    if (x.name == imageFilename && x.type == "File") {
+                                        imageFileId = x.id;
                                         break;
                                     }
                                 }
                                 if (imageFileId == undefined) {
                                     return;
                                 }
-                                let imageData = params.vfs.readFile<{ mimeType: string, base64Data: string, }>(imageFileId);
-                                let imageData2 = createMemo(() => {
-                                    let imageData3 = imageData();
-                                    if (imageData3.type != "Success") {
-                                        return imageData3;
-                                    }
-                                    return asyncSuccess(makeDocumentProjection(imageData3.value));
-                                });
+                                let imageData = imagesFolder2.openFileById<{ mimeType: string, data: Uint8Array, }>(imageFileId);
                                 createEffect(
-                                    on(imageData2, () => {
-                                        let imageData3 = imageData2();
-                                        if (imageData3.type != "Success") {
-                                            return;
+                                    on(imageData, () => {
+                                        let imageData2 = imageData();
+                                        if (imageData2.type != "Success") {
+                                            return imageData2;
                                         }
-                                        let imageData4 = imageData3.value;
+                                        let imageData3 = imageData2.value;
                                         let blob = new Blob(
-                                            [ base64ToUint8Array(imageData4.base64Data), ],
-                                            { type: imageData4.mimeType, },
+                                            [ imageData3.doc.data, ],
+                                            { type: imageData3.doc.mimeType, },
                                         );
                                         let imageUrl =
                                             URL.createObjectURL(blob);

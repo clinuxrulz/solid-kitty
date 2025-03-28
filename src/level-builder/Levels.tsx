@@ -14,7 +14,7 @@ import { Level } from "./level/Level";
 import { TextureAtlasState } from "./components/TextureAtlasComponent";
 import { FrameState } from "./components/FrameComponent";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
 
 type State = {
     showLevelList: boolean;
@@ -27,13 +27,13 @@ export class Levels {
 
     constructor(params: {
         vfs: AutomergeVirtualFileSystem;
-        imagesFolderId: Accessor<AsyncResult<string>>;
-        textureAtlasesFolderId: Accessor<AsyncResult<string>>;
-        levelsFolderId: Accessor<AsyncResult<string>>;
+        imagesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+        textureAtlasesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+        levelsFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
         textureAtlasWithImageAndFramesList: Accessor<
             AsyncResult<
                 {
-                    textureAtlasFilename: string;
+                    textureAtlasFilename: Accessor<string>;
                     textureAtlas: TextureAtlasState;
                     image: HTMLImageElement;
                     frames: { frameId: string, frame: FrameState, }[];
@@ -46,12 +46,12 @@ export class Levels {
         });
         let levelList = new LevelList({
             vfs: params.vfs,
-            levelsFolderId: params.levelsFolderId,
+            levelsFolder: params.levelsFolder,
         });
         let level = new Level({
             vfs: params.vfs,
-            imagesFolderId: params.imagesFolderId,
-            textureAtlasesFolderId: params.textureAtlasesFolderId,
+            imagesFolder: params.imagesFolder,
+            textureAtlasesFolder: params.textureAtlasesFolder,
             levelFileId: levelList.selectedLevelByFileId,
             textureAtlasWithImageAndFramesList:
                 params.textureAtlasWithImageAndFramesList,

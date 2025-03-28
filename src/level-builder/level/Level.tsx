@@ -32,7 +32,7 @@ import { InsertTileMode } from "./modes/InsertTileMode";
 import { levelComponentType, LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
-import { AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
 import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
 
@@ -46,13 +46,13 @@ export class Level {
 
     constructor(params: {
         vfs: AutomergeVirtualFileSystem;
-        imagesFolderId: Accessor<AsyncResult<string>>;
-        textureAtlasesFolderId: Accessor<AsyncResult<string>>;
+        imagesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+        textureAtlasesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
         levelFileId: Accessor<string | undefined>;
         textureAtlasWithImageAndFramesList: Accessor<
             AsyncResult<
                 {
-                    textureAtlasFilename: string;
+                    textureAtlasFilename: Accessor<string>;
                     textureAtlas: TextureAtlasState;
                     image: HTMLImageElement;
                     frames: { frameId: string, frame: FrameState, }[];

@@ -166,7 +166,7 @@ export class InsertTileMode implements Mode {
                                                                             new NoTrack(
                                                                                 {
                                                                                     textureAtlasRef:
-                                                                                        textureAtlas.textureAtlasFilename,
+                                                                                        textureAtlas.textureAtlasFilename(),
                                                                                     frameRef:
                                                                                         frame.frameId,
                                                                                 },

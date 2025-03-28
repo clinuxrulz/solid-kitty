@@ -52,7 +52,7 @@ export class RenderSystem {
                 >
             >();
             for (let x of textureAtlases.value) {
-                let textureAtlasRef = x.textureAtlasFilename;
+                let textureAtlasRef = x.textureAtlasFilename();
                 let image = x.image;
                 for (let frame of x.frames) {
                     let tmp = result.get(textureAtlasRef);

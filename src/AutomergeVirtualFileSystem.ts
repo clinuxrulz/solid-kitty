@@ -890,7 +890,7 @@ export class AutomergeVfsFolder {
                 docUrl: newFileUrl,
             };
         });
-        let name2 = createMemo(() => this.doc.contents[newFileId].name);
+        let name2 = createMemo(() => this.doc.contents[newFileId]?.name ?? name);
         return ok(new AutomergeVfsFile(
             this.repo,
             newFileId,
@@ -923,7 +923,7 @@ export class AutomergeVfsFolder {
                 docUrl: newFolderUrl,
             };
         });
-        let name2 = createMemo(() => this.doc.contents[newFolderId].name);
+        let name2 = createMemo(() => this.doc.contents[newFolderId]?.name ?? name);
         return ok(new AutomergeVfsFolder(
             this.repo,
             newFolderId,

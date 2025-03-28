@@ -30,7 +30,7 @@ export type ModeParams = {
     textureAtlases: Accessor<
         AsyncResult<
             {
-                textureAtlasFilename: string;
+                textureAtlasFilename: Accessor<string>;
                 textureAtlas: TextureAtlasState;
                 image: HTMLImageElement;
                 frames: { frameId: string, frame: FrameState, }[];
