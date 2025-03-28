@@ -119,6 +119,13 @@ export async function createAutomergeFileSystem(repo: Repo, docUrl?: string): Pr
                     refCount: 1,
                     dispose,
                 };
+                let r = accessCache[path];
+                onCleanup(() => {
+                    r.refCount--;
+                    if (r.refCount == 0) {
+                        r.dispose();
+                    }
+                });
                 return accessCache[path].fileOrFolder;
             }
             let tailIdx = path.lastIndexOf("/");
@@ -179,6 +186,13 @@ export async function createAutomergeFileSystem(repo: Repo, docUrl?: string): Pr
                     refCount: 1,
                     dispose,
                 };
+                let r = accessCache[path];
+                onCleanup(() => {
+                    r.refCount--;
+                    if (r.refCount == 0) {
+                        r.dispose();
+                    }
+                });
                 return accessCache[path].fileOrFolder;
             } else {
                 throw new Error("Unreachable");
