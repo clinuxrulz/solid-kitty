@@ -129,13 +129,6 @@ export class TextureAtlasList {
                 }
                 let fileId = result.value.id;
                 //
-                setState("textureAtlasFiles", (x) => [
-                    ...x,
-                    [
-                        textureAtlasName,
-                        fileId,
-                    ] as [string, string],
-                ]);
                 setState("selectedTextureAtlasByFileId", fileId);
             };
             //
