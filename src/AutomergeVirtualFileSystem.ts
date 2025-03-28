@@ -646,6 +646,9 @@ export class AutomergeVfsFolder {
     openFolderById(id: string): Accessor<AsyncResult<AutomergeVfsFolder>> {
         let folderInfo = createMemo(() => {
             let fileOrFolder = this.doc.contents[id];
+            if (fileOrFolder == undefined) {
+                return asyncFailed("Folder does not exist");
+            }
             if (fileOrFolder.type != "Folder") {
                 return asyncFailed("Expexcted a folder, but got a file");
             }
@@ -737,6 +740,9 @@ export class AutomergeVfsFolder {
     openFileById<A>(id: string): Accessor<AsyncResult<AutomergeVfsFile<A>>> {
         let folderInfo = createMemo(() => {
             let fileOrFolder = this.doc.contents[id];
+            if (fileOrFolder == undefined) {
+                return asyncFailed("File does not exist");
+            }
             if (fileOrFolder.type != "File") {
                 return asyncFailed("Expexcted a folder, but got a file");
             }
