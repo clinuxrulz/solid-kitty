@@ -45,7 +45,12 @@ export type TypeSchema<A> = undefined extends A
                               fn1: (a: unknown) => A;
                               fn2: (a: A) => unknown;
                               typeSchema: TypeSchema<unknown>;
-                          };
+                          }
+                        | {
+                            type: "WithDefault",
+                            default_: A,
+                            typeSchema: TypeSchema<A>,
+                        };
 
 export function makeInvariantTypeSchema<A, B>(
     fn1: (a: B) => A,
@@ -179,8 +184,9 @@ export function loadFromJsonViaTypeSchema<A>(
         case "Object": {
             let res: any = {};
             for (let key of Object.keys(typeSchema.properties)) {
+                let fieldTypeSchema = (typeSchema as any).properties[key];
                 if (!Object.hasOwn(x, key)) {
-                    return err(`Missing field ${key} on object.`);
+                    res[key] = makeDefaultViaTypeSchema(fieldTypeSchema);
                 }
                 let value = loadFromJsonViaTypeSchema(
                     (typeSchema as any).properties[key],
@@ -206,6 +212,69 @@ export function loadFromJsonViaTypeSchema<A>(
                 return value;
             }
             return ok(fn1(value.value));
+        }
+        case "WithDefault": {
+            let typeSchema2 = typeSchema.typeSchema;
+            let r: Result<A>;
+            try {
+                r = loadFromJsonViaTypeSchema(typeSchema2, x);
+            } catch (e) {
+                r = err("" + e);
+            }
+            if (r.type == "Err") {
+                return ok(typeSchema.default_);
+            }
+            return ok(r.value);
+        }
+    }
+}
+
+export function makeDefaultViaTypeSchema<A>(
+    typeSchema: TypeSchema<A>,
+): A {
+    if (typeSchema == "Boolean") {
+        return false as A;
+    } else if (typeSchema == "Number") {
+        return 0.0 as A;
+    } else if (typeSchema == "String") {
+        return "" as A;
+    }
+    switch (typeSchema.type) {
+        case "MaybeUndefined": {
+            return undefined as A;
+        }
+        case "MaybeNull": {
+            return null as A;
+        }
+        case "Union": {
+            let type = Object.keys(typeSchema.parts)[0];
+            return {
+                type,
+                value: makeDefaultViaTypeSchema((typeSchema.parts as any)[type])
+            } as A;
+        }
+        case "Array": {
+            return [] as A;
+        }
+        case "Object": {
+            let res: any = {};
+            for (let key of Object.keys(typeSchema.properties)) {
+                let fieldTypeSchema = (typeSchema as any).properties[key];
+                res[key] = makeDefaultViaTypeSchema(fieldTypeSchema);
+            }
+            return res as A;;
+        }
+        case "Recursive": {
+            let typeSchema2 = typeSchema.typeSchema();
+            return makeDefaultViaTypeSchema(typeSchema2);
+        }
+        case "Invariant": {
+            let fn1 = typeSchema.fn1;
+            let value = makeDefaultViaTypeSchema(typeSchema.typeSchema);
+            return fn1(value as any);
+        }
+        case "WithDefault": {
+            return typeSchema.default_;
         }
     }
 }
@@ -268,6 +337,9 @@ export function saveToJsonViaTypeSchema<A>(
             let fn2 = typeSchema.fn2;
             let x2 = fn2(x);
             return saveToJsonViaTypeSchema(typeSchema.typeSchema, x2);
+        }
+        case "WithDefault": {
+            return saveToJsonViaTypeSchema(typeSchema.typeSchema, x);
         }
     }
 }

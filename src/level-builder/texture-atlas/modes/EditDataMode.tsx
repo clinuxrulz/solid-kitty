@@ -1,9 +1,10 @@
-import { Component, onMount, untrack } from "solid-js";
+import { batch, Component, onMount, untrack } from "solid-js";
 import { EcsComponent } from "../../../ecs/EcsComponent";
 import { FrameState } from "../../components/FrameComponent";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
+import { Vec2 } from "../../../Vec2";
 
 export class EditDataMode implements Mode {
     overlayHtmlUI: Component;
@@ -16,8 +17,12 @@ export class EditDataMode implements Mode {
         let frameComponent = params.frameComponent;
         let [state, setState] = createStore<{
             name: string;
+            numCellsWide: number,
+            numCellsHigh: number,
         }>({
             name: untrack(() => frameComponent.state.name),
+            numCellsWide: untrack(() => frameComponent.state.numCells.x),
+            numCellsHigh: untrack(() => frameComponent.state.numCells.y),
         });
         this.overlayHtmlUI = () => (
             <div
@@ -51,7 +56,7 @@ export class EditDataMode implements Mode {
                                 <td>
                                     <input
                                         type="text"
-                                        style="color: black;"
+                                        class="input"
                                         value={state.name}
                                         onInput={(e) => {
                                             setState(
@@ -62,6 +67,48 @@ export class EditDataMode implements Mode {
                                     />
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="padding-right: 10px; white-space: nowrap;">
+                                    <b># Cells Wide:</b>
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        class="input"
+                                        min="1"
+                                        step="1"
+                                        value={state.numCellsWide}
+                                        onInput={(e => {
+                                            let value = Number.parseInt(e.currentTarget.value);
+                                            if (!Number.isFinite(value)) {
+                                                return;
+                                            }
+                                            setState("numCellsWide", value);
+                                        })}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-right: 10px; white-space: nowrap;">
+                                    <b># Cells High:</b>
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        class="input"
+                                        min="1"
+                                        step="1"
+                                        value={state.numCellsHigh}
+                                        onInput={(e => {
+                                            let value = Number.parseInt(e.currentTarget.value);
+                                            if (!Number.isFinite(value)) {
+                                                return;
+                                            }
+                                            setState("numCellsHigh", value);
+                                        })}
+                                    />
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                     <br />
@@ -69,8 +116,13 @@ export class EditDataMode implements Mode {
                         <button
                             class="btn"
                             onClick={() => {
-                                debugger;
-                                frameComponent.setState("name", state.name);
+                                batch(() => {
+                                    frameComponent.setState("name", state.name);
+                                    frameComponent.setState("numCells", Vec2.create(
+                                        state.numCellsWide,
+                                        state.numCellsHigh,
+                                    ));
+                                });
                                 modeParams.onDone();
                             }}
                         >

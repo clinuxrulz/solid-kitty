@@ -180,12 +180,12 @@ const RenderCell: Component<{
                         frame2().image;
                     let scaleX = createMemo(
                         () =>
-                            props.renderParams.tileWidth() /
+                            props.renderParams.tileWidth() * frame3().numCells.x /
                             frame3().size.x,
                     );
                     let scaleY = createMemo(
                         () =>
-                            props.renderParams.tileHeight() /
+                            props.renderParams.tileHeight() * frame3().numCells.y /
                             frame3().size.y,
                     );
                     let backgroundWidth =

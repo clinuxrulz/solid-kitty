@@ -76,6 +76,7 @@ export class MakeFrameMode implements Mode {
                     name: "TODO",
                     pos: untrack(() => wipFrame2().pos),
                     size: untrack(() => wipFrame2().size),
+                    numCells: Vec2.create(1,1),
                 });
                 let world = modeParams.world();
                 let entityId = untrack(() =>
