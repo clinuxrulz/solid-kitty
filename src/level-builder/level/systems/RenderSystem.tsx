@@ -83,117 +83,17 @@ export class RenderSystem {
                             let posY = i * tileHeight();
                             return (
                                 <Index each={row()}>
-                                    {(cell, j) => {
-                                        let frame = createMemo(() => {
-                                            let tmp =
-                                                params.renderParams.tileIndexToFrameMap();
-                                            if (tmp == undefined) {
-                                                return undefined;
-                                            }
-                                            let tmp2 = tmp.get(cell());
-                                            if (tmp2 == undefined) {
-                                                return undefined;
-                                            }
-                                            let frameRef = tmp2.frameRef;
-                                            let textureAtlasRef =
-                                                tmp2.textureAtlasRef;
-                                            let imageFrameLookupMap2 =
-                                                imageFrameLookupMap();
-                                            if (
-                                                imageFrameLookupMap2 ==
-                                                undefined
-                                            ) {
-                                                return undefined;
-                                            }
-                                            let tmp3 = imageFrameLookupMap2
-                                                .get(textureAtlasRef)
-                                                ?.get(frameRef);
-                                            return tmp3;
-                                        });
-                                        let posX = j * tileWidth();
-                                        return (
-                                            <>
-                                                <rect
-                                                    x={posX}
-                                                    y={posY}
-                                                    width={tileWidth()}
-                                                    height={tileHeight()}
-                                                    stroke="black"
-                                                    stroke-width={2}
-                                                    fill="none"
-                                                />
-                                                <text
-                                                    x={posX + 0.5 * tileWidth()}
-                                                    y={
-                                                        posY +
-                                                        0.5 * tileHeight()
-                                                    }
-                                                    text-anchor="middle"
-                                                    dominant-baseline="middle"
-                                                >
-                                                    {cell()}
-                                                </text>
-                                                <Show when={frame()}>
-                                                    {(frame2) => {
-                                                        let frame3 = () =>
-                                                            frame2().frame;
-                                                        let image = () =>
-                                                            frame2().image;
-                                                        let scaleX = createMemo(
-                                                            () =>
-                                                                params.renderParams.tileWidth() /
-                                                                frame3().size.x,
-                                                        );
-                                                        let scaleY = createMemo(
-                                                            () =>
-                                                                params.renderParams.tileHeight() /
-                                                                frame3().size.y,
-                                                        );
-                                                        let backgroundWidth =
-                                                            createMemo(
-                                                                () =>
-                                                                    image()
-                                                                        .width *
-                                                                    scaleX(),
-                                                            );
-                                                        let backgroundHeight =
-                                                            createMemo(
-                                                                () =>
-                                                                    image()
-                                                                        .height *
-                                                                    scaleY(),
-                                                            );
-                                                        let imageUrl = () =>
-                                                            image().src;
-                                                        return (
-                                                            <image
-                                                                x={
-                                                                    posX -
-                                                                    frame3().pos
-                                                                        .x *
-                                                                        scaleX()
-                                                                }
-                                                                y={
-                                                                    posY -
-                                                                    frame3().pos
-                                                                        .y *
-                                                                        scaleY()
-                                                                }
-                                                                width={backgroundWidth()}
-                                                                height={backgroundHeight()}
-                                                                style={{
-                                                                    "image-rendering":
-                                                                        "pixelated",
-                                                                }}
-                                                                href={imageUrl()}
-                                                                attr:clip-path={`inset(${frame3().pos.y * scaleY()}px ${(image().width - frame3().pos.x - frame3().size.x) * scaleX()}px ${(image().height - frame3().pos.y - frame3().size.y) * scaleY()}px ${frame3().pos.x * scaleX()}px)`}
-                                                            />
-                                                        );
-                                                    }}
-                                                </Show>
-                                            </>
-                                        );
-                                    }}
+                                    {(cell, j) => (
+                                        <RenderCell
+                                            renderParams={params.renderParams}
+                                            cell={cell()}
+                                            imageFrameLookupMap={imageFrameLookupMap()}
+                                            j={j}
+                                            posY={posY}
+                                            tileWidth={tileWidth()}
+                                            tileHeight={tileHeight()}
+                                        />
+                                    )}
                                 </Index>
                             );
                         }}
@@ -204,3 +104,140 @@ export class RenderSystem {
         this.RenderOverlay = () => undefined;
     }
 }
+
+const RenderCell: Component<{
+    renderParams: RenderParams,
+    cell: number,
+    imageFrameLookupMap: Map<string, Map<string, {
+        image: HTMLImageElement;
+        frame: FrameState;
+    }>> | undefined
+    j: number,
+    posY: number,
+    tileWidth: number,
+    tileHeight: number,
+}> = (props) => {
+    let cell = () => props.cell;
+    let imageFrameLookupMap = () => props.imageFrameLookupMap;
+    let j = props.j;
+    let posY = props.posY;
+    let tileWidth = () => props.tileWidth;
+    let tileHeight = () => props.tileHeight;
+    let frame = createMemo(() => {
+        let tmp =
+            props.renderParams.tileIndexToFrameMap();
+        if (tmp == undefined) {
+            return undefined;
+        }
+        let tmp2 = tmp.get(cell());
+        if (tmp2 == undefined) {
+            return undefined;
+        }
+        let frameRef = tmp2.frameRef;
+        let textureAtlasRef =
+            tmp2.textureAtlasRef;
+        let imageFrameLookupMap2 =
+            imageFrameLookupMap();
+        if (
+            imageFrameLookupMap2 ==
+            undefined
+        ) {
+            return undefined;
+        }
+        let tmp3 = imageFrameLookupMap2
+            .get(textureAtlasRef)
+            ?.get(frameRef);
+        return tmp3;
+    });
+    let posX = j * tileWidth();
+    return (
+        <>
+            <rect
+                x={posX}
+                y={posY}
+                width={tileWidth()}
+                height={tileHeight()}
+                stroke="black"
+                stroke-width={2}
+                fill="none"
+            />
+            <text
+                x={posX + 0.5 * tileWidth()}
+                y={
+                    posY +
+                    0.5 * tileHeight()
+                }
+                text-anchor="middle"
+                dominant-baseline="middle"
+            >
+                {cell()}
+            </text>
+            <Show when={frame()}>
+                {(frame2) => {
+                    let frame3 = () =>
+                        frame2().frame;
+                    let image = () =>
+                        frame2().image;
+                    let scaleX = createMemo(
+                        () =>
+                            props.renderParams.tileWidth() /
+                            frame3().size.x,
+                    );
+                    let scaleY = createMemo(
+                        () =>
+                            props.renderParams.tileHeight() /
+                            frame3().size.y,
+                    );
+                    let backgroundWidth =
+                        createMemo(
+                            () =>
+                                image()
+                                    .width *
+                                scaleX(),
+                        );
+                    let backgroundHeight =
+                        createMemo(
+                            () =>
+                                image()
+                                    .height *
+                                scaleY(),
+                        );
+                    let imageUrl = () =>
+                        image().src;
+                    return (
+                        <image
+                            x={
+                                posX -
+                                frame3().pos
+                                    .x *
+                                    scaleX()
+                            }
+                            y={
+                                posY -
+                                frame3().pos
+                                    .y *
+                                    scaleY()
+                            }
+                            width={backgroundWidth()}
+                            height={backgroundHeight()}
+                            style={{
+                                "image-rendering":
+                                    "pixelated",
+                            }}
+                            href={imageUrl()}
+                            attr:clip-path={
+                                `inset(` +
+                                    `${frame3().pos.y * scaleY()}px ` +
+                                    `${(image().width - frame3().pos.x - frame3().size.x) * scaleX()}px ` +
+                                    `${(image().height - frame3().pos.y - frame3().size.y) * scaleY()}px ` +
+                                    `${frame3().pos.x * scaleX()}px` +
+                                `)`
+                            }
+                            preserveAspectRatio="none"
+                        />
+                    );
+                }}
+            </Show>
+        </>
+    );
+};
