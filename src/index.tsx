@@ -12,9 +12,11 @@ import {
     createEffect,
     createMemo,
     createResource,
+    createSignal,
     lazy,
     mapArray,
     onCleanup,
+    untrack,
 } from "solid-js";
 import App from "./App";
 import { createConnectionManagementUi } from "./connection-management/ConnectionManagement";
@@ -61,15 +63,48 @@ render(() => {
     let lastDocUrl = window.localStorage.getItem("lastDocUrl");
     let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
 
-    let connectionManagementUi = createConnectionManagementUi({});
-    let connections = connectionManagementUi.connections.bind(
-        connectionManagementUi,
-    );
-
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
         network: [/*new BroadcastChannelNetworkAdapter()*/],
     });
+    let automergeVirtualFileSystemDoc: Accessor<
+        DocHandle<AutomergeVirtualFileSystemState> | undefined
+    >;
+    if (initDocumentUrl == undefined || !isValidAutomergeUrl(initDocumentUrl)) {
+        let doc = repo.create(AutomergeVirtualFileSystem.makeEmptyState(repo));
+        window.localStorage.setItem("lastDocUrl", doc.url);
+        automergeVirtualFileSystemDoc = () => doc;
+    } else {
+        let [doc] = createResource(() =>
+            repo.find<AutomergeVirtualFileSystemState>(initDocumentUrl),
+        );
+        automergeVirtualFileSystemDoc = doc;
+    }
+
+    let vfsDoc = createMemo(() => {
+        let [ doc, setDoc, ] = createSignal(automergeVirtualFileSystemDoc());
+        return { doc, setDoc };
+    });
+    let vfsDoc2 = createMemo(() => vfsDoc().doc());
+    let setVfsDoc = (doc: DocHandle<AutomergeVirtualFileSystemState>) => { untrack(() => vfsDoc().setDoc(doc)); };
+
+    let connectionManagementDocUrl = createMemo(() =>
+        automergeVirtualFileSystemDoc()?.url
+    );
+    let connectionManagementUi = createConnectionManagementUi({
+        documentUrl: connectionManagementDocUrl,
+        setDocumentUrl: async (docUrl) => {
+            if (!isValidAutomergeUrl(docUrl)) {
+                return;
+            }
+            let doc = await repo.find<AutomergeVirtualFileSystemState>(docUrl);
+            setVfsDoc(doc);
+        },
+    });
+    let connections = connectionManagementUi.connections.bind(
+        connectionManagementUi,
+    );
+
     let networkAdapters = createMemo(mapArray(
         connections,
         (connection) => new PeerJsAutomergeNetworkAdapter({ connection: connection.conn, }),
@@ -85,25 +120,9 @@ render(() => {
         },
     ));
 
-
-    let automergeVirtualFileSystemDoc: Accessor<
-        DocHandle<AutomergeVirtualFileSystemState> | undefined
-    >;
-
-    if (initDocumentUrl == undefined || !isValidAutomergeUrl(initDocumentUrl)) {
-        let doc = repo.create(AutomergeVirtualFileSystem.makeEmptyState(repo));
-        window.localStorage.setItem("lastDocUrl", doc.url);
-        automergeVirtualFileSystemDoc = () => doc;
-    } else {
-        let [doc] = createResource(() =>
-            repo.find<AutomergeVirtualFileSystemState>(initDocumentUrl),
-        );
-        automergeVirtualFileSystemDoc = doc;
-    }
-
     let vfs = new AutomergeVirtualFileSystem({
         repo,
-        docHandle: automergeVirtualFileSystemDoc,
+        docHandle: vfsDoc2,
     });
 
     let App2: Component = () => (

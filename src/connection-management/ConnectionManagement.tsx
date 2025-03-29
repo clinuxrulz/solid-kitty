@@ -23,7 +23,10 @@ export type Invite = {
     peer: Peer;
 };
 
-export function createConnectionManagementUi(props: {}): {
+export function createConnectionManagementUi(props: {
+    documentUrl: Accessor<string | undefined>,
+    setDocumentUrl: (docUrl: string) => void,
+}): {
     connections: Accessor<Connection[]>;
     Render: Component;
 } {
@@ -84,7 +87,10 @@ export function createConnectionManagementUi(props: {}): {
                             ),
                         ),
                     );
-                    conn.send(state.nickname);
+                    conn.send({
+                        nickname: state.nickname,
+                        documentUrl: props.documentUrl() ?? null
+                    });
                     setState(
                         "pendingInvites",
                         state.pendingInvites.filter((x) => x.value != invite),
@@ -137,10 +143,16 @@ export function createConnectionManagementUi(props: {}): {
         peer.on("open", () => {
             let conn = peer.connect(peerId);
             conn.on("open", () => {
-                conn.once("data", (peerNickname) => {
+                conn.once("data", (data: any) => {
+                    let peerNickname = data.nickname;
+                    let documentUrl = data.documentUrl;
                     if (typeof peerNickname != "string") {
                         return;
                     }
+                    if (typeof documentUrl != "string") {
+                        return;
+                    }
+                    props.setDocumentUrl(documentUrl);
                     setState(
                         "connections",
                         produce((x) =>
