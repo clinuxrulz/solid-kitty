@@ -65,6 +65,17 @@ export function makeInvariantTypeSchema<A, B>(
     } as unknown as TypeSchema<A>;
 }
 
+export function makeWithDefaultTypeSchema<A>(
+    default_: A,
+    typeSchema: TypeSchema<A>,
+): TypeSchema<A> {
+    return {
+        type: "WithDefault",
+        default_,
+        typeSchema,
+    } as unknown as TypeSchema<A>;
+}
+
 export const vec2TypeSchema: TypeSchema<Vec2> = makeInvariantTypeSchema(
     (a: { x: number; y: number }) => Vec2.create(a.x, a.y),
     (a: Vec2) => ({ x: a.x, y: a.y }),
@@ -342,4 +353,139 @@ export function saveToJsonViaTypeSchema<A>(
             return saveToJsonViaTypeSchema(typeSchema.typeSchema, x);
         }
     }
+}
+
+export function equalsViaTypeSchema<A>(typeSchema: TypeSchema<A>, a: A, b: A): boolean {
+    // the lazy way for now
+    return saveToJsonViaTypeSchema(typeSchema, a) == saveToJsonViaTypeSchema(typeSchema, b);
+}
+
+const objProjectionMap = new WeakMap();
+const arrProjectionMap = new WeakMap();
+
+export function createJsonProjectionViaTypeSchema<A>(typeSchema: TypeSchema<A>, json: any, changeJson: (json: any) => void): Result<A> {
+    if (typeof typeSchema != "object") {
+        return err("Only projections of objects are supported");
+    }
+    if (typeSchema.type != "Object") {
+        return err("Only projections of objects are supported");
+    }
+    if (objProjectionMap.has(json)) {
+        return ok(objProjectionMap.get(json) as A);
+    }
+    let target2 = makeDefaultViaTypeSchema(typeSchema);
+    let projection = new Proxy(
+        target2,
+        {
+            get(_target, p, _receiver) {
+                let fieldTypeSchema = (typeSchema.properties as any)[p] as (TypeSchema<any> | undefined);
+                if (fieldTypeSchema == undefined) {
+                    return (target2 as any)[p]
+                }
+                if ((fieldTypeSchema as any).type == "Object") {
+                    let r = createJsonProjectionViaTypeSchema(
+                        fieldTypeSchema as any,
+                        json[p],
+                        (json) => changeJson(json[p]),
+                    );
+                    if (r.type == "Ok") {
+                        return r.value;
+                    }
+                }
+                if ((fieldTypeSchema  as any).type == "Array") {
+                    let r = createJsonArrayProjectionViaTypeSchema(
+                        fieldTypeSchema  as any,
+                        json[p],
+                        (json) => changeJson(json[p]),
+                    );
+                    if (r.type == "Ok") {
+                        return r.value;
+                    }
+                }
+                let x = loadFromJsonViaTypeSchema<any>(fieldTypeSchema, json[p]);
+                if (x.type == "Err") {
+                    return (target2 as any)[p];
+                }
+                let x2 = x.value;
+                let last = (target2 as any)[p];
+                if (equalsViaTypeSchema(fieldTypeSchema, last, x2)) {
+                    return last;
+                }
+                (target2 as any)[p] = x2;
+                return (target2 as any)[p];
+            },
+            set(target, p, newValue, receiver) {
+                (target2 as any)[p] = newValue;
+                let fieldTypeSchema = (typeSchema.properties as any)[p] as (TypeSchema<any> | undefined);
+                if (fieldTypeSchema == undefined) {
+                    return true;
+                }
+                let x = saveToJsonViaTypeSchema(fieldTypeSchema, newValue);
+                changeJson((json2: any) => json2[p] = x);
+                return true;
+            }
+        },
+    ) as A;
+    objProjectionMap.set(json, projection);
+    return ok(projection);
+}
+
+function createJsonArrayProjectionViaTypeSchema<A>(typeSchema: TypeSchema<A>, json: any, changeJson: (json: any) => void): Result<A> {
+    if (typeof typeSchema != "object") {
+        return err("expected an array type schema");
+    }
+    if (typeSchema.type != "Array") {
+        return err("expected an array type schema");
+    }
+    if (arrProjectionMap.has(json)) {
+        return ok(arrProjectionMap.get(json)! as A)
+    }
+    let target2 = makeDefaultViaTypeSchema(typeSchema);
+    let elemTypeSchema = typeSchema.element;
+    let projection = new Proxy(
+        target2,
+        {
+            get(_target, p, _receiver) {
+                if ((elemTypeSchema as any).type == "Object") {
+                    let r = createJsonProjectionViaTypeSchema(
+                        elemTypeSchema as any,
+                        json[p],
+                        (json) => changeJson(json[p]),
+                    );
+                    if (r.type == "Ok") {
+                        return r.value;
+                    }
+                }
+                if ((elemTypeSchema as any).type == "Array") {
+                    let r = createJsonArrayProjectionViaTypeSchema(
+                        elemTypeSchema as any,
+                        json[p],
+                        (json) => changeJson(json[p]),
+                    );
+                    if (r.type == "Ok") {
+                        return r.value;
+                    }
+                }
+                let x = loadFromJsonViaTypeSchema<any>(elemTypeSchema as any, json[p]);
+                if (x.type == "Err") {
+                    return (target2 as any)[p];
+                }
+                let x2 = x.value;
+                let last = (target2 as any)[p];
+                if (equalsViaTypeSchema(elemTypeSchema as any, last, x2)) {
+                    return last;
+                }
+                (target2 as any)[p] = x2;
+                return (target2 as any)[p];
+            },
+            set(target, p, newValue, receiver) {
+                (target2 as any)[p] = newValue;
+                let x = saveToJsonViaTypeSchema(elemTypeSchema as any, newValue);
+                changeJson((json2: any) => json2[p] = x);
+                return true;
+            }
+        },
+    ) as A;
+    arrProjectionMap.set(json, projection);
+    return ok(projection);
 }
