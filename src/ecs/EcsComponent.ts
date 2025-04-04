@@ -1,6 +1,6 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { ok, Result } from "../kitty-demo/Result";
-import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
+import { err, ok, Result } from "../kitty-demo/Result";
+import { createJsonProjectionViaTypeSchemaV2, loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
 import { Accessor, createComputed, createMemo, on, untrack } from "solid-js";
 
 export interface IsEcsComponentType {
@@ -27,6 +27,24 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
             state,
             setState,
         });
+    }
+
+    createJsonProjectionV2(json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Accessor<Result<EcsComponent<S>>> {
+        let projection = createJsonProjectionViaTypeSchemaV2(
+            this.typeSchema,
+            json,
+            changeJson,
+        );
+        if (projection.type == "Err") {
+            return () => err(projection.message);
+        }
+        let projection2 = projection.value;
+        let [ state, setState, ] = untrack(() => createStore(projection2));
+        return () => ok(new EcsComponent({
+            type: this,
+            state,
+            setState,
+        }));
     }
 
     createJsonProjection(json: Accessor<any>, setJson: (x: any) => void): Accessor<Result<EcsComponent<S>>> {

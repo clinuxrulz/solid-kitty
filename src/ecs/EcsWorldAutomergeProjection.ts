@@ -192,7 +192,7 @@ function doPatchWorldV2(
                     let componentType2 = componentType as EcsComponentType<object>;
                     let component = componentType2.createJsonProjection(
                         createMemo(() => doc[entity][componentTypeName]),
-                        (x: any) => docHandle.change((doc2) => doc2[entity][componentTypeName] = x),
+                        (json: any) => docHandle.change((doc2) => doc2[entity][componentTypeName] = json),
                     );
                     return ok(component);
                 },
