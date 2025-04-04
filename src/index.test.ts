@@ -1,7 +1,3 @@
-/**
- * @vitest-environment node
- */
-
 import { describe, expect, test } from "vitest";
 import { levelComponentType, LevelState } from './level-builder/components/LevelComponent';
 import { createJsonProjectionViaTypeSchema, createJsonProjectionViaTypeSchemaV2, saveToJsonViaTypeSchema, TypeSchema, vec2TypeSchema } from './TypeSchema';
