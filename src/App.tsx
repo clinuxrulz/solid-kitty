@@ -107,6 +107,12 @@ const App: Component<{
                     >
                         Connection Management
                     </button>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/debug-projection")}
+                    >
+                        Debug Projection
+                    </button>
                 </div>
             </div>
         </div>

@@ -49,6 +49,9 @@ const VfsTest = lazy(() => import("./level-builder/VirtualFileSystemTest"));
 const AutomergeWebRtcTest = lazy(
     () => import("./automerge-webrtc-test/AutomergeWebRtcTest"),
 );
+const DebugProjection = lazy(
+    () => import("./DebugProjection"),
+);
 
 const root = document.getElementById("root");
 
@@ -186,6 +189,10 @@ render(() => {
             <Route
                 path="/connection-management"
                 component={connectionManagementUi.Render}
+            />
+            <Route
+                path="/debug-projection"
+                component={DebugProjection}
             />
         </HashRouter>
     );
