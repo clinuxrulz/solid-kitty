@@ -366,10 +366,7 @@ const objProjectionMap = new WeakMap();
 const arrProjectionMap = new WeakMap();
 
 export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Result<A> {
-    if (typeof typeSchema != "object") {
-        return err("Only projections of objects are supported");
-    }
-    if (typeSchema.type != "Object") {
+    if (typeof typeSchema != "object" || typeSchema.type != "Object") {
         return err("Only projections of objects are supported");
     }
     let result: any = {};
@@ -379,11 +376,26 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
             get() {
                 if (typeof fieldTypeSchema == "object") {
                     if ((fieldTypeSchema as any).type == "Object") {
-                        return createJsonProjectionViaTypeSchemaV2(
+                        let r = createJsonProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
                             createMemo(() => json()[fieldName]),
                             (callback) => changeJson((json2) => callback(json2[fieldName])),
                         );
+                        if (r.type == "Err") {
+                            throw new Error("Unreachable");
+                        }
+                        return r.value;
+                    }
+                    if ((fieldTypeSchema as any).type == "Array") {
+                        let r = createJsonArrayProjectionViaTypeSchemaV2(
+                            fieldTypeSchema2 as any,
+                            createMemo(() => json()[fieldName]),
+                            (callback) => changeJson((json2) => callback(json2[fieldName])),
+                        );
+                        if (r.type == "Err") {
+                            throw new Error("Unreachable");
+                        }
+                        return r.value;
                     }
                 }
                 let r = loadFromJsonViaTypeSchema<any>(fieldTypeSchema2, json()[fieldName]);
@@ -399,6 +411,65 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
             },
         });
     }
+    return ok(result as A);
+}
+
+function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Result<A> {
+    if (typeof typeSchema != "object" || typeSchema.type != "Array") {
+        return err("Expected an array for projection");
+    }
+    let elementTypeSchema = typeSchema.element;
+    let dummy: any[] = [];
+    let result = new Proxy(
+        dummy,
+        {
+            get(target, p, receiver) {
+                if (p == "length") {
+                    return json().length;
+                }
+                if (typeof p == "string" && !Number.isNaN(Number.parseInt(p))) {
+                    if (typeof elementTypeSchema == "object") {
+                        if (elementTypeSchema.type == "Object") {
+                            let r = createJsonProjectionViaTypeSchemaV2(
+                                elementTypeSchema as any,
+                                createMemo(() => json()[p]),
+                                (callback) => changeJson((json2) => callback(json2[p])),
+                            );
+                            if (r.type == "Err") {
+                                throw new Error("Unreachable");
+                            }
+                            return r.value;
+                        }
+                        if (elementTypeSchema.type == "Array") {
+                            let r = createJsonArrayProjectionViaTypeSchemaV2(
+                                elementTypeSchema as any,
+                                createMemo(() => json()[p]),
+                                (callback) => changeJson((json2) => callback(json2[p])),
+                            );
+                            if (r.type == "Err") {
+                                throw new Error("Unreachable");
+                            }
+                            return r.value;
+                        }
+                    }
+                    let r = loadFromJsonViaTypeSchema(elementTypeSchema, json()[p]);
+                    if (r.type == "Err") {
+                        return makeDefaultViaTypeSchema(elementTypeSchema);
+                    }
+                    return r.value;
+                }
+                return Reflect.get(dummy, p, dummy);
+            },
+            set(target, p, newValue, receiver) {
+                if (typeof p == "string" && !Number.isNaN(Number.parseInt(p))) {
+                    changeJson((json2) => {
+                        json2[p] = saveToJsonViaTypeSchema(elementTypeSchema as any, newValue);
+                    });
+                }
+                return Reflect.set(dummy, p, newValue, dummy);
+            },
+        },
+    );
     return ok(result as A);
 }
 

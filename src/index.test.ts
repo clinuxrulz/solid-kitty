@@ -81,11 +81,32 @@ describe("TypeSchema json projection for automerge", () => {
                 x: 10.0,
                 y: 15.0,
             },
+            targets: [
+                {
+                    x: 1,
+                    y: 3,
+                },
+                {
+                    x: 2,
+                    y: 2,
+                },
+                {
+                    x: 3,
+                    y: 1,
+                },
+            ],
+            secretCodes: [
+                [ 1, 3, 3, 7, ],
+                [ 3, 1, 3, 3, 7, ],
+                [ 4, 0, ],
+            ],
         };
         type State = {
             firstName: string,
             lastName: string,
             location: Vec2,
+            targets: Vec2[],
+            secretCodes: number[][],
         };
         let objTypeSchema: TypeSchema<State> = {
             type: "Object",
@@ -93,6 +114,17 @@ describe("TypeSchema json projection for automerge", () => {
                 firstName: "String",
                 lastName: "String",
                 location: vec2TypeSchema,
+                targets: {
+                    type: "Array",
+                    element: vec2TypeSchema,
+                },
+                secretCodes: {
+                    type: "Array",
+                    element: {
+                        type: "Array",
+                        element: "Number",
+                    },
+                },
             },
         };
         let projection = createJsonProjectionViaTypeSchemaV2<State>(objTypeSchema, () => json, (callback) => callback(json));
@@ -104,9 +136,15 @@ describe("TypeSchema json projection for automerge", () => {
         let [ state, setState ] = createStore(projection2);
         setState("firstName", "Apple");
         setState("location", Vec2.create(1, 2));
+        setState("targets", 1, Vec2.create(7, 7));
+        setState("secretCodes", 2, 1, 2);
         expect(json.firstName).toBe("Apple");
         expect(json.lastName).toBe("Smith");
         expect(json.location.x).toBe(1);
         expect(json.location.y).toBe(2);
+        expect(json.targets[1].x).toBe(7);
+        expect(json.targets[1].y).toBe(7);
+        expect(json.secretCodes[2][0]).toBe(4);
+        expect(json.secretCodes[2][1]).toBe(2);
     });
 });
