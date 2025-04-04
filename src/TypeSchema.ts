@@ -1,6 +1,7 @@
-import { createComputed, on } from "solid-js";
+import { Accessor, createComputed, createMemo, on } from "solid-js";
 import { err, ok, Result } from "./kitty-demo/Result";
 import { Vec2 } from "./Vec2";
+import { SetStoreFunction, Store } from "solid-js/store";
 
 export type TypeSchema<A> = undefined extends A
     ? {
@@ -363,6 +364,43 @@ export function equalsViaTypeSchema<A>(typeSchema: TypeSchema<A>, a: A, b: A): b
 
 const objProjectionMap = new WeakMap();
 const arrProjectionMap = new WeakMap();
+
+export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Result<A> {
+    if (typeof typeSchema != "object") {
+        return err("Only projections of objects are supported");
+    }
+    if (typeSchema.type != "Object") {
+        return err("Only projections of objects are supported");
+    }
+    let result: any = {};
+    for (let [fieldName, fieldTypeSchema] of Object.entries(typeSchema.properties)) {
+        let fieldTypeSchema2 = fieldTypeSchema as TypeSchema<any>;
+        Object.defineProperty(result, fieldName, {
+            get() {
+                if (typeof fieldTypeSchema == "object") {
+                    if ((fieldTypeSchema as any).type == "Object") {
+                        return createJsonProjectionViaTypeSchemaV2(
+                            fieldTypeSchema2 as any,
+                            createMemo(() => json()[fieldName]),
+                            (callback) => changeJson((json2) => callback(json2[fieldName])),
+                        );
+                    }
+                }
+                let r = loadFromJsonViaTypeSchema<any>(fieldTypeSchema2, json()[fieldName]);
+                if (r.type == "Err") {
+                    return makeDefaultViaTypeSchema(fieldTypeSchema2);
+                }
+                return r.value;
+            },
+            set(v) {
+                changeJson((json2) => {
+                    json2[fieldName] = saveToJsonViaTypeSchema(fieldTypeSchema2, v);
+                });
+            },
+        });
+    }
+    return ok(result as A);
+}
 
 export function createJsonProjectionViaTypeSchema<A>(typeSchema: TypeSchema<A>, json: any, changeJson: (callback: (json: any) => void) => void): Result<A> {
     if (typeof typeSchema != "object") {

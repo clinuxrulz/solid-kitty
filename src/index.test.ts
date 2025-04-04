@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from "vitest";
 import { levelComponentType, LevelState } from './level-builder/components/LevelComponent';
-import { createJsonProjectionViaTypeSchema, saveToJsonViaTypeSchema } from './TypeSchema';
+import { createJsonProjectionViaTypeSchema, createJsonProjectionViaTypeSchemaV2, saveToJsonViaTypeSchema, TypeSchema, vec2TypeSchema } from './TypeSchema';
 import { createRoot } from "solid-js";
 import { createStore } from 'solid-js/store';
+import { Vec2 } from "./Vec2";
 
 describe("TypeSchema json projection for automerge", () => {
     test("Sample projection 1", () => {
@@ -67,5 +68,45 @@ describe("TypeSchema json projection for automerge", () => {
             expect(json2).toStrictEqual(json);
             dispose();
         });
+    });
+
+    test("TypeSchema json projection v2", () => {
+        let json = {
+            firstName: "John",
+            lastName: "Smith",
+            /**
+             * This is a non-json object (Vec2) in the surrounding state
+             */
+            location: {
+                x: 10.0,
+                y: 15.0,
+            },
+        };
+        type State = {
+            firstName: string,
+            lastName: string,
+            location: Vec2,
+        };
+        let objTypeSchema: TypeSchema<State> = {
+            type: "Object",
+            properties: {
+                firstName: "String",
+                lastName: "String",
+                location: vec2TypeSchema,
+            },
+        };
+        let projection = createJsonProjectionViaTypeSchemaV2<State>(objTypeSchema, () => json, (callback) => callback(json));
+        expect(projection.type == "Ok");
+        if (projection.type != "Ok") {
+            return;
+        }
+        let projection2 = projection.value;
+        let [ state, setState ] = createStore(projection2);
+        setState("firstName", "Apple");
+        setState("location", Vec2.create(1, 2));
+        expect(json.firstName).toBe("Apple");
+        expect(json.lastName).toBe("Smith");
+        expect(json.location.x).toBe(1);
+        expect(json.location.y).toBe(2);
     });
 });
