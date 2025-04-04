@@ -875,7 +875,7 @@ export class AutomergeVfsFolder {
         ));
     }
 
-    createFile<A>(name: string, initData: A): Result<AutomergeVfsFile<A>> {
+    createFile<A>(name: string, initData: A): Result<{ id: string, }> {
         {
             let existingId = this.nameToIdMap.get(name);
             if (existingId != undefined) {
@@ -896,17 +896,12 @@ export class AutomergeVfsFolder {
                 docUrl: newFileUrl,
             };
         });
-        let name2 = createMemo(() => this.doc.contents[newFileId]?.name ?? name);
-        return ok(new AutomergeVfsFile(
-            this.repo,
-            newFileId,
-            name2,
-            this,
-            newFileDocHandle,
-        ));
+        return ok({
+            id: newFileId,
+        });
     }
 
-    createFolder(name: string): Result<AutomergeVfsFolder> {
+    createFolder(name: string): Result<{ id: string, }> {
         {
             let existingId = this.nameToIdMap.get(name);
             if (existingId != undefined) {
@@ -929,14 +924,7 @@ export class AutomergeVfsFolder {
                 docUrl: newFolderUrl,
             };
         });
-        let name2 = createMemo(() => this.doc.contents[newFolderId]?.name ?? name);
-        return ok(new AutomergeVfsFolder(
-            this.repo,
-            newFolderId,
-            name2,
-            this,
-            newFolderDocHandle,
-        ));
+        return ok({ id: newFolderId, });
     }
 
     delete(): Result<{}> {

@@ -531,19 +531,27 @@ function createGetOrCreateRootFolder(params: {
             if (result != undefined) {
                 return asyncSuccess(rootFolder3.openFolderById(result.id));
             }
-            let [result2] = createResource(() =>
+            let [result2] = createResource(async () =>
                 rootFolder3.createFolder(params.folderName)
             );
+            let result_ = createMemo(() => {
+                let result3 = result2();
+                if (result3 == undefined) {
+                    return asyncPending();
+                }
+                if (result3.type == "Err") {
+                    return asyncFailed(result3.message);
+                }
+                let id = result3.value.id;
+                return asyncSuccess(rootFolder3.openFolderById(id));
+            });
             return asyncSuccess(
                 createMemo(() => {
-                    let result3 = result2();
-                    if (result3 == undefined) {
-                        return asyncPending();
+                    let tmp = result_();
+                    if (tmp.type != "Success") {
+                        return tmp;
                     }
-                    if (result3.type == "Err") {
-                        return asyncFailed(result3.message);
-                    }
-                    return asyncSuccess(result3.value);
+                    return tmp.value();
                 }),
             );
         });
