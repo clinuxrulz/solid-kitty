@@ -73,7 +73,6 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
         });
         for (let component of components) {
             let component2 = component as EcsComponent<object>;
-
             let componentTypeName = component2.type.typeName;
             let component3 = component2.type.createJsonProjectionV2(
                 () => this.doc[entityId][componentTypeName],
