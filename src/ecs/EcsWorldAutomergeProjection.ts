@@ -153,4 +153,8 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
             }
         });
     }
+
+    debugInfo(): string {
+        return JSON.stringify(this.doc);
+    }
 }

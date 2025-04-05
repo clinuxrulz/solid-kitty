@@ -674,6 +674,7 @@ export class TextureAtlas {
                                 <br />
                             </Show>
                             <Instructions />
+                            {this.state.world.debugInfo?.() ?? ""}
                         </div>
                     </div>
                 </div>

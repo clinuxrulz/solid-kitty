@@ -369,12 +369,12 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
     if (typeof typeSchema != "object" || typeSchema.type != "Object") {
         return err("Only projections of objects are supported");
     }
-    {
+    /*{
         let json2 = untrack(json);
         if (objProjectionMap.has(json2)) {
             return ok(objProjectionMap.get(json2)!);
         }
-    }
+    }*/
     let result: any = {};
     for (let [fieldName, fieldTypeSchema] of Object.entries(typeSchema.properties)) {
         let fieldTypeSchema2 = fieldTypeSchema as TypeSchema<any>;
@@ -384,7 +384,7 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                     if ((fieldTypeSchema as any).type == "Object") {
                         let r = createJsonProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            () => json()[fieldName],
+                            () => json()?.[fieldName],
                             (callback) => changeJson((json2) => callback(json2[fieldName])),
                         );
                         if (r.type == "Err") {
@@ -395,7 +395,7 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                     if ((fieldTypeSchema as any).type == "Array") {
                         let r = createJsonArrayProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            () => json()[fieldName],
+                            () => json()?.[fieldName],
                             (callback) => changeJson((json2) => {
                                 callback(json2[fieldName])
                             }),
@@ -421,10 +421,11 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
             },
         });
     }
+    /*
     {
         let json2 = untrack(json);
         objProjectionMap.set(json2, result);
-    }
+    }*/
     return ok(result as A);
 }
 
@@ -432,12 +433,13 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
     if (typeof typeSchema != "object" || typeSchema.type != "Array") {
         return err("Expected an array for projection");
     }
+    /*
     {
         let json2 = untrack(json);
         if (arrProjectionMap.has(json2)) {
             return ok(arrProjectionMap.get(json2)!);
         }
-    }
+    }*/
     let elementTypeSchema = typeSchema.element;
     let dummy: any = [];
     let result = new Proxy(
@@ -453,9 +455,9 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                         if (elementTypeSchema.type == "Object") {
                             let r = createJsonProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                () => json()[p],
+                                () => json()?.[idx],
                                 (callback) => changeJson((json2) => {
-                                    callback(json2[p]);
+                                    callback(json2[idx]);
                                 }),
                             );
                             if (r.type == "Err") {
@@ -466,7 +468,7 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                         if (elementTypeSchema.type == "Array") {
                             let r = createJsonArrayProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                () => json()[p],
+                                () => json()?.[idx],
                                 (callback) => changeJson((json2) => {
                                     callback(json2[p]);
                                 }),
@@ -497,10 +499,11 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
             },
         },
     );
+    /*
     {
         let json2 = untrack(json);
         arrProjectionMap.set(json2, result);
-    }
+    }*/
     return ok(result as A);
 }
 
