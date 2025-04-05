@@ -12,6 +12,7 @@ import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { EcsWorld } from "./ecs/EcsWorld";
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { frameComponentType } from "./level-builder/components/FrameComponent";
+import { registry } from "./level-builder/components/registry";
 
 const DebugProjection: Component = () => {
     return (
@@ -152,9 +153,13 @@ function runTest2() {
     let repo = new Repo();
     let docHandle = repo.create(new EcsWorld().toJson());
     createRoot((dispose) => {
-        let doc = makeDocumentProjection(docHandle);
-        let world1 = new EcsWorldAutomergeProjection(new EcsWorld(), docHandle, doc);
-        let world2 = new EcsWorldAutomergeProjection(new EcsWorld(), docHandle, doc);
+        let world1_ = EcsWorldAutomergeProjection.create(registry, docHandle);
+        let world2_ = EcsWorldAutomergeProjection.create(registry, docHandle);
+        if (world1_.type == "Err" || world2_.type == "Err") {
+            return;
+        }
+        let world1 = world1_.value;
+        let world2 = world2_.value;
         createComputed(on(
             () => world2.entities(),
             (entities) => console.log(entities),
