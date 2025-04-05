@@ -77,7 +77,7 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
             let componentTypeName = component2.type.typeName;
             let component3 = component2.type.createJsonProjectionV2(
                 createMemo(() => this.doc[entityId][componentTypeName]),
-                (json: any) => this.docHandle.change((doc2) => doc2[entityId][componentTypeName] = json),
+                (callback: (json: any) => void) => this.docHandle.change((doc2) => callback(doc2[entityId][componentTypeName])),
             );
             if (component3.type == "Err") {
                 throw new Error("Unreachable");
