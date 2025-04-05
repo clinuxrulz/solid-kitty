@@ -1,4 +1,4 @@
-import { Component, createRoot } from "solid-js";
+import { Component, createRoot, on } from "solid-js";
 import { Vec2 } from "./Vec2";
 import {
     createJsonProjectionViaTypeSchemaV2,
@@ -105,6 +105,27 @@ function runTest() {
         setState("firstName", "Apple");
         setState("location", Vec2.create(1, 2));
         setState("targets", 1, Vec2.create(7, 7));
+        createComputed(on(
+            () => state.secretCodes,
+            () => {
+                console.log("A");
+            },
+            { defer: true, }
+        ));
+        createComputed(on(
+            () => state.secretCodes[2],
+            () => {
+                console.log("B");
+            },
+            { defer: true, }
+        ));
+        createComputed(on(
+            () => state.secretCodes[2][1],
+            () => {
+                console.log("C");
+            },
+            { defer: true, }
+        ));
         setState("secretCodes", 2, 1, 2);
         expect(x).toBe(2);
         //
