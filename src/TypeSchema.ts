@@ -440,15 +440,6 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
     }
     let elementTypeSchema = typeSchema.element;
     let dummy: any = [];
-    createComputed(on(
-        json,
-        (json2) => {
-            let r = loadFromJsonViaTypeSchema(typeSchema, json2);
-            if (r.type == "Ok") {
-                dummy = r.value as any;
-            }
-        },
-    ));
     let result = new Proxy(
         dummy,
         {
