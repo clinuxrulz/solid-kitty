@@ -85,57 +85,6 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
             let component4 = component3.value;
             component2.state = component4.state;
             component2.setState = component4.setState;
-            /*
-
-            let key = entityId + "_" + component.type.typeName;
-            let dispose = createRoot((dispose) => {
-                let componentJson = createMemo(() =>
-                    saveToJsonViaTypeSchema(
-                        component2.type.typeSchema,
-                        component2.state,
-                    )
-                );
-                createComputed(on(
-                    componentJson,
-                    (componentJson2) => {
-                        this.docHandle.change((doc) => {
-                            doc[entityId][component2.type.typeName] = componentJson2;
-                        });
-                    },
-                    { defer: true, },
-                ));
-                let docCompState = createMemo(
-                    () => {
-                        try {
-                            let json = this.doc[entityId][component2.type.typeName];
-                            let jsonString = JSON.stringify(json);
-                            let r = loadFromJsonViaTypeSchema<object>(component2.type.typeSchema, json);
-                            if (r.type == "Err") {
-                                return undefined;
-                            }
-                            return { state: r.value, jsonString, };
-                        } catch {
-                            return undefined;
-                        }
-                    },
-                    undefined,
-                    {
-                        equals: (a, b) => a?.jsonString == b?.jsonString
-                    }
-                );
-                createComputed(on(
-                    docCompState,
-                    (state) => {
-                        if (state == undefined) {
-                            return;
-                        }
-                        component2.setState(state.state);
-                    },
-                    { defer: true, }
-                ));
-                return dispose;
-            });
-            this.keepAliveMap.set(key, dispose);*/
         }
     }
 
