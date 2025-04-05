@@ -384,7 +384,7 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                     if ((fieldTypeSchema as any).type == "Object") {
                         let r = createJsonProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            createMemo(() => json()[fieldName]),
+                            () => json()[fieldName],
                             (callback) => changeJson((json2) => callback(json2[fieldName])),
                         );
                         if (r.type == "Err") {
@@ -395,7 +395,7 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                     if ((fieldTypeSchema as any).type == "Array") {
                         let r = createJsonArrayProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            createMemo(() => json()[fieldName]),
+                            () => json()[fieldName],
                             (callback) => changeJson((json2) => {
                                 callback(json2[fieldName])
                             }),
@@ -453,7 +453,7 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                         if (elementTypeSchema.type == "Object") {
                             let r = createJsonProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                createMemo(() => json()[p]),
+                                () => json()[p],
                                 (callback) => changeJson((json2) => {
                                     callback(json2[p]);
                                 }),
@@ -466,7 +466,7 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                         if (elementTypeSchema.type == "Array") {
                             let r = createJsonArrayProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                createMemo(() => json()[p]),
+                                () => json()[p],
                                 (callback) => changeJson((json2) => {
                                     callback(json2[p]);
                                 }),
