@@ -376,7 +376,6 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
         }
     }
     let result: any = {};
-    let lastValues: any = {};
     for (let [fieldName, fieldTypeSchema] of Object.entries(typeSchema.properties)) {
         let fieldTypeSchema2 = fieldTypeSchema as TypeSchema<any>;
         Object.defineProperty(result, fieldName, {
@@ -410,12 +409,6 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                 let r = loadFromJsonViaTypeSchema<any>(fieldTypeSchema2, json()[fieldName]);
                 if (r.type == "Err") {
                     return makeDefaultViaTypeSchema(fieldTypeSchema2);
-                }
-                let lastValue = lastValues[fieldName];
-                if (lastValue != undefined) {
-                    if (equalsViaTypeSchema(fieldTypeSchema2, lastValue, r.value)) {
-                        return lastValue;
-                    }
                 }
                 return r.value;
             },
@@ -456,7 +449,6 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
             }
         },
     ));
-    let lastValues: any[] = [];
     let result = new Proxy(
         dummy,
         {
@@ -497,12 +489,6 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                     let r = loadFromJsonViaTypeSchema(elementTypeSchema, json()[p]);
                     if (r.type == "Err") {
                         return makeDefaultViaTypeSchema(elementTypeSchema);
-                    }
-                    let lastValue = lastValues[Number.parseInt(p)];
-                    if (lastValue != undefined) {
-                        if (equalsViaTypeSchema(elementTypeSchema as any, lastValue, r.value)) {
-                            return lastValue;
-                        }
                     }
                     return r.value;
                 }
