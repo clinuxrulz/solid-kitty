@@ -25,9 +25,15 @@ export default defineConfig({
     conditions: ['development', 'browser'],
   },
   test: {
-    environment: 'jsdom',
-    globals: true,
-    
-    setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
+     environment: 'jsdom',
+     deps: {
+       optimizer: {
+         web: {
+           enabled: true,
+           include: ['solid-js', 'solid-js/web', 'solid-js/store'],
+         },
+       },
+       // inline: [/solid-js/],  // this still works but is deprecated
+     },
   },
 });
