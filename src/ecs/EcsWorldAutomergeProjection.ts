@@ -73,6 +73,20 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
         });
         for (let component of components) {
             let component2 = component as EcsComponent<object>;
+
+            let componentTypeName = component2.type.typeName;
+            let component3 = component2.type.createJsonProjectionV2(
+                createMemo(() => this.doc[entityId][componentTypeName]),
+                (json: any) => this.docHandle.change((doc2) => doc2[entityId][componentTypeName] = json),
+            );
+            if (component3.type == "Err") {
+                throw new Error("Unreachable");
+            }
+            let component4 = component3.value;
+            component2.state = component4.state;
+            component2.setState = component4.setState;
+            /*
+
             let key = entityId + "_" + component.type.typeName;
             let dispose = createRoot((dispose) => {
                 let componentJson = createMemo(() =>
@@ -121,7 +135,7 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
                 ));
                 return dispose;
             });
-            this.keepAliveMap.set(key, dispose);
+            this.keepAliveMap.set(key, dispose);*/
         }
     }
 
@@ -190,11 +204,11 @@ function doPatchWorldV2(
                         return err(`Component type ${componentTypeName} not found`);
                     }
                     let componentType2 = componentType as EcsComponentType<object>;
-                    let component = componentType2.createJsonProjection(
+                    let component = componentType2.createJsonProjectionV2(
                         createMemo(() => doc[entity][componentTypeName]),
-                        (json: any) => docHandle.change((doc2) => doc2[entity][componentTypeName] = json),
+                        (callback: (json: any) => void) => docHandle.change((doc2) => callback(doc2[entity][componentTypeName])),
                     );
-                    return ok(component);
+                    return component;
                 },
             ));
             let components = createMemo(() => {
@@ -203,11 +217,8 @@ function doPatchWorldV2(
                         if (tmp2.type == "Err") {
                             return [];
                         }
-                        let tmp3 = tmp2.value();
-                        if (tmp3.type == "Err") {
-                            return [];
-                        }
-                        return [tmp3.value];
+                        let tmp3 = tmp2.value;
+                        return [tmp3];
                     });
             });
             let lastComponents = untrack(components);
