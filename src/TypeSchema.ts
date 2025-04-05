@@ -380,6 +380,9 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
         let fieldTypeSchema2 = fieldTypeSchema as TypeSchema<any>;
         Object.defineProperty(result, fieldName, {
             get() {
+                // witness
+                json()?.[fieldName];
+                //
                 if (typeof fieldTypeSchema == "object") {
                     if ((fieldTypeSchema as any).type == "Object") {
                         let r = createJsonProjectionViaTypeSchemaV2(
@@ -449,6 +452,9 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                 }
                 if (typeof p == "string" && !Number.isNaN(Number.parseInt(p))) {
                     let idx = Number.parseInt(p);
+                    // witness
+                    json()[idx];
+                    //
                     if (typeof elementTypeSchema == "object") {
                         if (elementTypeSchema.type == "Object") {
                             let r = createJsonProjectionViaTypeSchemaV2(
