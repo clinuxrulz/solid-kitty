@@ -94,7 +94,7 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
         if (component == undefined) {
             return undefined;
         }
-        componentType.createJsonProjectionV2(
+        let r = componentType.createJsonProjectionV2(
             () => this.doc?.[entityId]?.[componentType.typeName],
             (callback) => {
                 this.docHandle.change((doc) => {
@@ -106,6 +106,10 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
                 });
             },
         );
+        if (r.type == "Err") {
+            throw new Error("Unreachable");
+        }
+        return r.value;
     }
 
     getComponents(entityId: string): IsEcsComponent[] {
