@@ -95,7 +95,7 @@ function runTest1() {
         let json = makeDocumentProjection(docHandle);
         let projection = createJsonProjectionViaTypeSchemaV2<State>(
             objTypeSchema,
-            () => json,
+            json,
             (callback) => docHandle.change((json2) => callback(json2)),
         );
         expect(projection.type == "Ok");

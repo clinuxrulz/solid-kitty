@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { levelComponentType, LevelState } from './level-builder/components/LevelComponent';
 import { createJsonProjectionViaTypeSchema, createJsonProjectionViaTypeSchemaV2, saveToJsonViaTypeSchema, TypeSchema, vec2TypeSchema } from './TypeSchema';
-import { createComputed, createRoot, createSignal } from "solid-js";
+import { createComputed, createRoot, createSignal, on } from "solid-js";
 import { createStore } from 'solid-js/store';
 import { Vec2 } from "./Vec2";
+import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { Repo } from "@automerge/automerge-repo";
 
 describe("TypeSchema json projection for automerge", () => {
     test("Sample projection 1", () => {
@@ -67,7 +69,34 @@ describe("TypeSchema json projection for automerge", () => {
     });
 
     test("TypeSchema json projection v2", () => {
-        let json = {
+        type State = {
+            firstName: string,
+            lastName: string,
+            location: Vec2,
+            targets: Vec2[],
+            secretCodes: number[][],
+        };
+        let objTypeSchema: TypeSchema<State> = {
+            type: "Object",
+            properties: {
+                firstName: "String",
+                lastName: "String",
+                location: vec2TypeSchema,
+                targets: {
+                    type: "Array",
+                    element: vec2TypeSchema,
+                },
+                secretCodes: {
+                    type: "Array",
+                    element: {
+                        type: "Array",
+                        element: "Number",
+                    },
+                },
+            },
+        };
+        let repo = new Repo();
+        let docHandle = repo.create({
             firstName: "John",
             lastName: "Smith",
             /**
@@ -96,41 +125,20 @@ describe("TypeSchema json projection for automerge", () => {
                 [ 3, 1, 3, 3, 7, ],
                 [ 4, 0, ],
             ],
-        };
-        type State = {
-            firstName: string,
-            lastName: string,
-            location: Vec2,
-            targets: Vec2[],
-            secretCodes: number[][],
-        };
-        let objTypeSchema: TypeSchema<State> = {
-            type: "Object",
-            properties: {
-                firstName: "String",
-                lastName: "String",
-                location: vec2TypeSchema,
-                targets: {
-                    type: "Array",
-                    element: vec2TypeSchema,
-                },
-                secretCodes: {
-                    type: "Array",
-                    element: {
-                        type: "Array",
-                        element: "Number",
-                    },
-                },
-            },
-        };
+        });
         createRoot((dispose) => {
-            let projection = createJsonProjectionViaTypeSchemaV2<State>(objTypeSchema, () => json, (callback) => callback(json));
+            let json = makeDocumentProjection(docHandle);
+            let projection = createJsonProjectionViaTypeSchemaV2<State>(
+                objTypeSchema,
+                json,
+                (callback) => docHandle.change((json2) => callback(json2)),
+            );
             expect(projection.type == "Ok");
             if (projection.type != "Ok") {
                 return;
             }
             let projection2 = projection.value;
-            let [ state, setState ] = createStore(projection2);
+            let [state, setState] = createStore(projection2);
             let x: number | undefined = undefined;
             createComputed(() => {
                 x = state.secretCodes[2][1];
@@ -139,17 +147,40 @@ describe("TypeSchema json projection for automerge", () => {
             setState("firstName", "Apple");
             setState("location", Vec2.create(1, 2));
             setState("targets", 1, Vec2.create(7, 7));
+            createComputed(on(
+                () => state.secretCodes,
+                () => {
+                    console.log("A");
+                },
+                { defer: true, }
+            ));
+            createComputed(on(
+                () => state.secretCodes[2],
+                () => {
+                    console.log("B");
+                },
+                { defer: true, }
+            ));
+            createComputed(on(
+                () => state.secretCodes[2][1],
+                () => {
+                    console.log("C");
+                },
+                { defer: true, }
+            ));
             setState("secretCodes", 2, 1, 2);
             expect(x).toBe(2);
+            //
+            expect(json.firstName).toBe("Apple");
+            expect(json.lastName).toBe("Smith");
+            expect(json.location.x).toBe(1);
+            expect(json.location.y).toBe(2);
+            expect(json.targets[1].x).toBe(7);
+            expect(json.targets[1].y).toBe(7);
+            expect(json.secretCodes[2][0]).toBe(4);
+            expect(json.secretCodes[2][1]).toBe(2);
+            //
             dispose();
         });
-        expect(json.firstName).toBe("Apple");
-        expect(json.lastName).toBe("Smith");
-        expect(json.location.x).toBe(1);
-        expect(json.location.y).toBe(2);
-        expect(json.targets[1].x).toBe(7);
-        expect(json.targets[1].y).toBe(7);
-        expect(json.secretCodes[2][0]).toBe(4);
-        expect(json.secretCodes[2][1]).toBe(2);
     });
 });

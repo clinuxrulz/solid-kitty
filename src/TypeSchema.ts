@@ -486,7 +486,7 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                             return r.value;
                         }
                     }
-                    let r = loadFromJsonViaTypeSchema(elementTypeSchema, json[p]);
+                    let r = loadFromJsonViaTypeSchema(elementTypeSchema, elem);
                     if (r.type == "Err") {
                         return makeDefaultViaTypeSchema(elementTypeSchema);
                     }
