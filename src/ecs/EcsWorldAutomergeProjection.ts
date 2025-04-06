@@ -6,8 +6,54 @@ import { EcsRegistry } from "./EcsRegistry";
 import { err, ok, Result } from "../kitty-demo/Result";
 import { produce } from "solid-js/store";
 import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
-import { Accessor, batch, Component, createComputed, createMemo, createRoot, mapArray, on, onCleanup, untrack } from "solid-js";
+import { Accessor, batch, Component, createComputed, createMemo, createRoot, getListener, mapArray, on, onCleanup, untrack } from "solid-js";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+
+class ReactiveCache<A> {
+    private map = new Map<
+        string,
+        {
+            cache: Accessor<A>,
+            refCount: number,
+            dispose: () => void,
+        }
+    >();
+
+    cached(key: string, mkValue: () => A): Accessor<A> {
+        if (getListener() == null) {
+            let result = this.map.get(key);
+            if (result != undefined) {
+                return result.cache;
+            }
+            return mkValue;
+        }
+        let result = this.map.get(key);
+        if (result == undefined) {
+            let { dispose, cache, } = createRoot((dispose) => {
+                return {
+                    dispose,
+                    cache: createMemo(mkValue),
+                };
+            });
+            result = {
+                cache,
+                refCount: 1,
+                dispose,
+            };
+            this.map.set(key, result);
+        } else {
+            result.refCount++;
+        }
+        onCleanup(() => {
+            result.refCount--;
+            if (result.refCount == 0) {
+                result.dispose();
+                this.map.delete(key);
+            }
+        });
+        return result.cache;
+    }
+}
 
 export class EcsWorldAutomergeProjection implements IEcsWorld {
     private registry: EcsRegistry;
@@ -29,18 +75,24 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
         return ok(new EcsWorldAutomergeProjection(registry, docHandle, doc));
     }
 
+    private _entitiesCache = new ReactiveCache<string[]>();
     entities(): string[] {
-        return Object.keys(this.doc);
+        return this._entitiesCache.cached("", () => {
+            return Object.keys(this.doc);
+        })();
     }
 
+    private _entitiesWithComponentTypeCache = new ReactiveCache<string[]>();
     entitiesWithComponentType(componentType: IsEcsComponentType): string[] {
-        let result: string[] = [];
-        for (let entity of this.entities()) {
-            if (this.getComponent(entity, componentType as EcsComponentType<any>) != undefined) {
-                result.push(entity);
+        return this._entitiesWithComponentTypeCache.cached(componentType.typeName, () => {
+            let result: string[] = [];
+            for (let entity of this.entities()) {
+                if (this.getComponent(entity, componentType as EcsComponentType<any>) != undefined) {
+                    result.push(entity);
+                }
             }
-        }
-        return result;
+            return result;
+        })();
     }
 
     createEntityWithId(entityId: string, components: IsEcsComponent[]): void {

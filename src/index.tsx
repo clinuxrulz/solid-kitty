@@ -68,7 +68,7 @@ render(() => {
 
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
-        network: [/*new BroadcastChannelNetworkAdapter()*/],
+        network: [new BroadcastChannelNetworkAdapter()],
     });
     let automergeVirtualFileSystemDoc: Accessor<
         DocHandle<AutomergeVirtualFileSystemState> | undefined

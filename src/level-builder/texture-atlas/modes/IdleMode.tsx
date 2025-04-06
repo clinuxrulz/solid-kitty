@@ -52,8 +52,14 @@ export class IdleMode implements Mode {
                 screenPtToWorldPt: modeParams.screenPtToWorldPt,
                 worldPtToScreenPt: modeParams.worldPtToScreenPt,
                 rect: {
-                    pos: () => frame.state.pos,
-                    size: () => frame.state.size,
+                    pos: () => {
+                        return world.getComponent(entity, frameComponentType)
+                            ?.state?.pos ?? frame.state.pos;
+                    },
+                    size: () => {
+                        return world.getComponent(entity, frameComponentType)
+                            ?.state.size ?? frame.state.size;
+                    },
                     setPos: (x) =>
                         frame.setState(
                             "pos",
