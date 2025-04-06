@@ -78,7 +78,7 @@ export class RenderSystem {
         this.Render = () => (
             <Show when={level()}>
                 {(level2) => (
-                    <Index each={level2().mapData}>
+                    <Index each={JSON.parse(JSON.stringify(level2().mapData))}>
                         {(row, i) => {
                             let posY = i * tileHeight();
                             return (

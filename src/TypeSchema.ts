@@ -365,27 +365,29 @@ export function equalsViaTypeSchema<A>(typeSchema: TypeSchema<A>, a: A, b: A): b
 const objProjectionMap = new WeakMap();
 const arrProjectionMap = new WeakMap();
 
-export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Result<A> {
+export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: any, changeJson: (callback: (json: any) => void) => void): Result<A> {
     if (typeof typeSchema != "object" || typeSchema.type != "Object") {
         return err("Only projections of objects are supported");
     }
-    {
+    /*{
         let json2 = untrack(json);
         if (objProjectionMap.has(json2)) {
             return ok(objProjectionMap.get(json2)!);
         }
-    }
+    }*/
     let result: any = {};
-    let lastValues: any = {};
     for (let [fieldName, fieldTypeSchema] of Object.entries(typeSchema.properties)) {
         let fieldTypeSchema2 = fieldTypeSchema as TypeSchema<any>;
         Object.defineProperty(result, fieldName, {
             get() {
+                //
+                let field = json?.[fieldName];
+                //
                 if (typeof fieldTypeSchema == "object") {
                     if ((fieldTypeSchema as any).type == "Object") {
                         let r = createJsonProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            createMemo(() => json()[fieldName]),
+                            field,
                             (callback) => changeJson((json2) => callback(json2[fieldName])),
                         );
                         if (r.type == "Err") {
@@ -396,7 +398,7 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                     if ((fieldTypeSchema as any).type == "Array") {
                         let r = createJsonArrayProjectionViaTypeSchemaV2(
                             fieldTypeSchema2 as any,
-                            createMemo(() => json()[fieldName]),
+                            field,
                             (callback) => changeJson((json2) => {
                                 callback(json2[fieldName])
                             }),
@@ -407,72 +409,62 @@ export function createJsonProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>
                         return r.value;
                     }
                 }
-                let r = loadFromJsonViaTypeSchema<any>(fieldTypeSchema2, json()[fieldName]);
+                let r = loadFromJsonViaTypeSchema<any>(fieldTypeSchema2, field);
                 if (r.type == "Err") {
                     return makeDefaultViaTypeSchema(fieldTypeSchema2);
-                }
-                let lastValue = lastValues[fieldName];
-                if (lastValue != undefined) {
-                    if (equalsViaTypeSchema(fieldTypeSchema2, lastValue, r.value)) {
-                        return lastValue;
-                    }
                 }
                 return r.value;
             },
             set(v) {
                 let newValue = saveToJsonViaTypeSchema(fieldTypeSchema2, v);
-                if (JSON.stringify(json()[fieldName]) == JSON.stringify(newValue)) {
+                if (JSON.stringify(json[fieldName]) == JSON.stringify(newValue)) {
                     return;
                 }
                 changeJson((json2) => json2[fieldName] = newValue);
             },
         });
     }
+    /*
     {
         let json2 = untrack(json);
         objProjectionMap.set(json2, result);
-    }
+    }*/
     return ok(result as A);
 }
 
-function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Result<A> {
+function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, json: any, changeJson: (callback: (json: any) => void) => void): Result<A> {
     if (typeof typeSchema != "object" || typeSchema.type != "Array") {
         return err("Expected an array for projection");
     }
+    /*
     {
         let json2 = untrack(json);
         if (arrProjectionMap.has(json2)) {
             return ok(arrProjectionMap.get(json2)!);
         }
-    }
+    }*/
     let elementTypeSchema = typeSchema.element;
     let dummy: any = [];
-    createComputed(on(
-        json,
-        (json2) => {
-            let r = loadFromJsonViaTypeSchema(typeSchema, json2);
-            if (r.type == "Ok") {
-                dummy = r.value as any;
-            }
-        },
-    ));
-    let lastValues: any[] = [];
     let result = new Proxy(
         dummy,
         {
             get(target, p, receiver) {
                 if (p == "length") {
-                    return json().length;
+                    dummy.length = json.length;
+                    return json.length;
                 }
                 if (typeof p == "string" && !Number.isNaN(Number.parseInt(p))) {
                     let idx = Number.parseInt(p);
+                    //
+                    let elem = json?.[idx];
+                    //
                     if (typeof elementTypeSchema == "object") {
                         if (elementTypeSchema.type == "Object") {
                             let r = createJsonProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                createMemo(() => json()[p]),
+                                elem,
                                 (callback) => changeJson((json2) => {
-                                    callback(json2[p]);
+                                    callback(json2[idx]);
                                 }),
                             );
                             if (r.type == "Err") {
@@ -483,7 +475,7 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                         if (elementTypeSchema.type == "Array") {
                             let r = createJsonArrayProjectionViaTypeSchemaV2(
                                 elementTypeSchema as any,
-                                createMemo(() => json()[p]),
+                                elem,
                                 (callback) => changeJson((json2) => {
                                     callback(json2[p]);
                                 }),
@@ -494,15 +486,9 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
                             return r.value;
                         }
                     }
-                    let r = loadFromJsonViaTypeSchema(elementTypeSchema, json()[p]);
+                    let r = loadFromJsonViaTypeSchema(elementTypeSchema, json[p]);
                     if (r.type == "Err") {
                         return makeDefaultViaTypeSchema(elementTypeSchema);
-                    }
-                    let lastValue = lastValues[Number.parseInt(p)];
-                    if (lastValue != undefined) {
-                        if (equalsViaTypeSchema(elementTypeSchema as any, lastValue, r.value)) {
-                            return lastValue;
-                        }
                     }
                     return r.value;
                 }
@@ -510,20 +496,22 @@ function createJsonArrayProjectionViaTypeSchemaV2<A>(typeSchema: TypeSchema<A>, 
             },
             set(target, p, newValue, receiver) {
                 if (typeof p == "string" && !Number.isNaN(Number.parseInt(p))) {
+                    let idx = Number.parseInt(p);
                     let newValue2 = saveToJsonViaTypeSchema(elementTypeSchema as any, newValue);
-                    if (JSON.stringify(json()[p]) == JSON.stringify(newValue)) {
+                    if (JSON.stringify(json[idx]) == JSON.stringify(newValue)) {
                         return false;
                     }
-                    changeJson((json2) => json2[p] = newValue2);
+                    changeJson((json2) => json2[idx] = newValue2);
                 }
                 return Reflect.set(dummy, p, newValue, dummy);
             },
         },
     );
+    /*
     {
         let json2 = untrack(json);
         arrProjectionMap.set(json2, result);
-    }
+    }*/
     return ok(result as A);
 }
 

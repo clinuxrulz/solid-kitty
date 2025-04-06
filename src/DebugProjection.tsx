@@ -9,6 +9,10 @@ import { createStore } from "solid-js/store";
 import { createComputed } from "solid-js";
 import { Repo } from "@automerge/automerge-repo";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { EcsWorld } from "./ecs/EcsWorld";
+import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
+import { frameComponentType } from "./level-builder/components/FrameComponent";
+import { registry } from "./level-builder/components/registry";
 
 const DebugProjection: Component = () => {
     return (
@@ -19,14 +23,17 @@ const DebugProjection: Component = () => {
                 padding: "5px",
             }}
         >
-            <button class="btn btn-primary" onClick={() => runTest()}>
-                Run Test
+            <button class="btn btn-primary" onClick={() => runTest1()}>
+                Run Test 1 (type schema projection on automerge)
+            </button><br/>
+            <button class="btn btn-primary" style="margin-top: 5px;" onClick={() => runTest2()}>
+                Run Test 2 (ecs world automerge projection)
             </button>
         </div>
     );
 };
 
-function runTest() {
+function runTest1() {
     let repo = new Repo();
     let docHandle = repo.create({
         firstName: "John",
@@ -138,6 +145,33 @@ function runTest() {
         expect(json.secretCodes[2][0]).toBe(4);
         expect(json.secretCodes[2][1]).toBe(2);
         //
+        dispose();
+    });
+}
+
+function runTest2() {
+    let repo = new Repo();
+    let docHandle = repo.create(new EcsWorld().toJson());
+    createRoot((dispose) => {
+        let world1_ = EcsWorldAutomergeProjection.create(registry, docHandle);
+        let world2_ = EcsWorldAutomergeProjection.create(registry, docHandle);
+        if (world1_.type == "Err" || world2_.type == "Err") {
+            return;
+        }
+        let world1 = world1_.value;
+        let world2 = world2_.value;
+        createComputed(on(
+            () => world2.entities(),
+            (entities) => console.log(entities),
+        ));
+        world1.createEntity([
+            frameComponentType.create({
+                name: "aaa",
+                pos: Vec2.zero(),
+                size: Vec2.create(10, 10),
+                numCells: Vec2.create(1, 1),
+            })
+        ]);
         dispose();
     });
 }

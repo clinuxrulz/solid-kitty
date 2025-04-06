@@ -29,18 +29,18 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
         });
     }
 
-    createJsonProjectionV2(json: Accessor<any>, changeJson: (callback: (json: any) => void) => void): Accessor<Result<EcsComponent<S>>> {
+    createJsonProjectionV2(json: any, changeJson: (callback: (json: any) => void) => void): Result<EcsComponent<S>> {
         let projection = createJsonProjectionViaTypeSchemaV2(
             this.typeSchema,
             json,
             changeJson,
         );
         if (projection.type == "Err") {
-            return () => err(projection.message);
+            return err(projection.message);
         }
         let projection2 = projection.value;
         let [ state, setState, ] = untrack(() => createStore(projection2));
-        return () => ok(new EcsComponent({
+        return ok(new EcsComponent({
             type: this,
             state,
             setState,
@@ -130,8 +130,8 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
 
 export class EcsComponent<S extends object> implements IsEcsComponent {
     readonly type: EcsComponentType<S>;
-    readonly state: Store<S>;
-    readonly setState: SetStoreFunction<S>;
+    state: Store<S>;
+    setState: SetStoreFunction<S>;
 
     constructor(params: {
         type: EcsComponentType<S>;

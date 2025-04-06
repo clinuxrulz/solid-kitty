@@ -13,4 +13,5 @@ export interface IEcsWorld {
     getComponents(entityId: string): IsEcsComponent[];
     unsetComponent(entityId: string, componentType: IsEcsComponentType): void;
     unsetComponents(entityId: string, componentTypes: IsEcsComponentType[]): void;
+    debugInfo?(): string;
 }
