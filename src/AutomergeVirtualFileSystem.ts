@@ -99,7 +99,7 @@ export async function createAutomergeFileSystem(repo: Repo, docUrl?: string): Pr
             if (path[0] != "/") {
                 throw new Error("Path needs to start with /");
             }
-            if (path.endsWith("/")) {
+            if (path != "/" && path.endsWith("/")) {
                 path = path.slice(0, path.length-1);
             }
             path = path.trim();

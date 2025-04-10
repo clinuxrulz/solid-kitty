@@ -12,5 +12,8 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "solid-fs-components"
+  ]
 }

@@ -113,6 +113,12 @@ const App: Component<{
                     >
                         Debug Projection
                     </button>
+                    <button
+                        class="btn"
+                        onClick={() => navigate("/file-system-explorer")}
+                    >
+                        File System Explorer
+                    </button>
                 </div>
             </div>
         </div>
