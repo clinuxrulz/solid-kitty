@@ -1,9 +1,9 @@
 import { Accessor, Component, createMemo, createResource, createSignal, onCleanup, Show } from "solid-js";
 import { createFileSystem, DirEnt, FileTree } from "solid-fs-components";
-import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState, createAutomergeFileSystem } from "./AutomergeVirtualFileSystem";
+import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState, createAutomergeFileSystem } from "../AutomergeVirtualFileSystem";
 import { DocHandle, isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
-import { DirEntries } from "./AsyncFileSystemAdapter";
-import { asyncFailed, AsyncResult, asyncSuccess } from "./AsyncResult";
+import { DirEntries } from "../AsyncFileSystemAdapter";
+import { asyncFailed, AsyncResult, asyncSuccess } from "../AsyncResult";
 import { createRoot } from "solid-js";
 
 const FileSystemExplorer: Component<{

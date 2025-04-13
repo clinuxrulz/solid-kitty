@@ -115,9 +115,9 @@ const App: Component<{
                     </button>
                     <button
                         class="btn"
-                        onClick={() => navigate("/file-system-explorer")}
+                        onClick={() => navigate("/app")}
                     >
-                        File System Explorer
+                        App
                     </button>
                 </div>
             </div>

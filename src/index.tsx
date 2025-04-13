@@ -35,7 +35,8 @@ import {
 import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
 import { createStore } from "solid-js/store";
 import { PeerJsAutomergeNetworkAdapter } from "./PeerJsAutomergeNetworkAdapter";
-const FileSystemExplorer = lazy(() => import("./FileSystemExplorer"));
+const AppV2 = lazy(() => import("./app/AppV2"));
+const FileSystemExplorer = lazy(() => import("./app/FileSystemExplorer"));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 const LevelBuilder = lazy(() => import("./level-builder/LevelBuilder"));
@@ -197,13 +198,14 @@ render(() => {
                 component={DebugProjection}
             />
             <Route
-                path="/file-system-explorer"
+                path="/app"
                 component={() =>
                     <Show when={automergeVirtualFileSystemDoc()}>
                         {(doc) => (
-                            <FileSystemExplorer
+                            <AppV2
                                 repo={repo}
                                 docUrl={doc().url}
+                                ConnectionManagementUi={connectionManagementUi.Render}
                             />
                         )}
                     </Show>
