@@ -43,7 +43,7 @@ type State = {
 };
 
 const IMAGES_FOLDER_NAME = "images";
-const TEXTURE_ALIASES_FOLDER_NAME = "texture_aliases";
+const TEXTURE_ATLASES_FOLDER_NAME = "texture_atlases";
 const LEVELS_FOLDER_NAME = "levels";
 
 const LevelBuilder: Component<{
@@ -95,7 +95,7 @@ const LevelBuilder: Component<{
             return asyncSuccess(
                 createGetOrCreateRootFolder({
                     vfs: props.vfs,
-                    folderName: TEXTURE_ALIASES_FOLDER_NAME,
+                    folderName: TEXTURE_ATLASES_FOLDER_NAME,
                 }),
             );
         });

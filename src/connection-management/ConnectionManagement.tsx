@@ -194,7 +194,6 @@ export function createConnectionManagementUi(props: {
                 }}
             >
                 <div>
-                    <div class="text-xl pb-2">Connection Management</div>
                     <div class="pb-2">
                         <label>
                             <div style="display: inline-block; padding-right: 5px;">
@@ -231,8 +230,9 @@ export function createConnectionManagementUi(props: {
                 <div
                     style={{
                         "flex-grow": "1",
-                        display: "flex",
-                        "flex-direction": "row",
+                        "display": "flex",
+                        "flex-direction": "column",
+                        "margin-top": "10px",
                     }}
                 >
                     <div

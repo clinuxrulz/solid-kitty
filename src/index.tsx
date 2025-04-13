@@ -36,7 +36,6 @@ import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
 import { createStore } from "solid-js/store";
 import { PeerJsAutomergeNetworkAdapter } from "./PeerJsAutomergeNetworkAdapter";
 const AppV2 = lazy(() => import("./app/AppV2"));
-const FileSystemExplorer = lazy(() => import("./app/FileSystemExplorer"));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
 const LevelBuilder = lazy(() => import("./level-builder/LevelBuilder"));

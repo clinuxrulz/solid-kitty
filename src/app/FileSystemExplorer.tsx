@@ -1,19 +1,29 @@
-import { Accessor, Component, createMemo, createResource, createSignal, onCleanup, Show } from "solid-js";
-import { createFileSystem, DirEnt, FileTree } from "solid-fs-components";
+import { Accessor, Component, createComputed, createMemo, createResource, createSignal, onCleanup, Show } from "solid-js";
+import { FileTree } from "../solid-fs-components/file-tree";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState, createAutomergeFileSystem } from "../AutomergeVirtualFileSystem";
 import { DocHandle, isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
-import { DirEntries } from "../AsyncFileSystemAdapter";
 import { asyncFailed, AsyncResult, asyncSuccess } from "../AsyncResult";
 import { createRoot } from "solid-js";
+import { DefaultIndentGuide } from "../solid-fs-components/file-tree-defaults";
+import { DirEnt } from "../solid-fs-components/create-file-system";
+import { err, Result } from "../kitty-demo/Result";
+import { ReactiveMap } from "@solid-primitives/map";
 
-const FileSystemExplorer: Component<{
+export const createFileSystemExplorer: (props: {
     repo: Repo,
-    docUrl: string
-}> = (props) => {
-    let [ fs]  = createResource(() =>
-        createAutomergeFs(props.repo, props.docUrl)
-    );
-    return (
+    docUrl: string,
+	selected?: string,
+	onSelect?(path: string): void,
+}) => {
+    isSelected: (path: string) => boolean,
+    selectionCount: () => number,
+    Render: Component,
+} = (props) => {
+    let fs  = createMemo(() => createAutomergeFs(props.repo, props.docUrl));
+    let selectionMap = new ReactiveMap<string,Accessor<boolean>>();
+    let isSelected = (path: string) => selectionMap.get(path)?.() ?? false;
+    let [ selectionCount, setSelectionCount, ] = createSignal(0);
+    let Render: Component = () => (
         <div
             style={{
                 "width": "100%",
@@ -24,13 +34,63 @@ const FileSystemExplorer: Component<{
                 {(fs2) => (
                     <FileTree
                         fs={fs2()}
-                    />
+                        style={{ display: "grid", height: "100vh", "align-content": "start" }}
+                    >
+                        {(dirEnt) => {
+                            createComputed(() => {
+                                let path = dirEnt.path;
+                                let selected = () => dirEnt.selected;
+                                createComputed(() => {
+                                    if (!selected()) {
+                                        return;
+                                    }
+                                    setSelectionCount((x) => x + 1);
+                                    onCleanup(() => {
+                                        setSelectionCount((x) => x - 1);
+                                    });
+                                });
+                                selectionMap.set(path, selected);
+                                onCleanup(() => {
+                                    if (selectionMap.get(path) === selected) {
+                                        selectionMap.delete(path)
+                                    }
+                                });
+                            });
+                            return (
+                                <FileTree.DirEnt
+                                    style={{
+                                        "text-align": "left",
+                                        display: "flex",
+                                        margin: "0px",
+                                        padding: "0px",
+                                        border: "none",
+                                        color: "white",
+                                        background: dirEnt.selected ? "blue" : "none",
+                                    }}
+                                >
+                                    <FileTree.IndentGuides
+                                        guide={() => <DefaultIndentGuide color="white" width={15} />}
+                                    />
+                                    <FileTree.Opened
+                                        closed="+"
+                                        opened="-"
+                                        style={{ width: "15px", "text-align": "center" }}
+                                    />
+                                    {dirEnt.name}
+                                </FileTree.DirEnt>
+                            );
+                        }}
+                    </FileTree>
                 )}
             </Show>
         </div>
     );
+    return {
+        isSelected,
+        selectionCount,
+        Render,
+    };
 };
-
 
 interface Fs<T> {
     exists(path: string): boolean;
@@ -56,17 +116,17 @@ interface Fs<T> {
     writeFile(path: string, source: T): void;
 };
 
-export async function createAutomergeFs(
+export function createAutomergeFs(
     repo: Repo,
     docUrl: string
-): Promise<Fs<Blob>> {
+): Fs<Blob> {
     if (!isValidAutomergeUrl(docUrl)) {
-        throw new Error("Invallid automerge url");
+        throw new Error("Invalid automerge url.");
     }
-    let docHandle: DocHandle<AutomergeVirtualFileSystemState> = await repo.find(docUrl);
+    let [ docHandle, ] = createResource(() => repo.find<AutomergeVirtualFileSystemState>(docUrl));
     let vfs = new AutomergeVirtualFileSystem({
         repo,
-        docHandle: () => docHandle,
+        docHandle: () => docHandle(),
     });
     let accessCache: {
         [path: string]: {
@@ -248,15 +308,19 @@ export async function createAutomergeFs(
                         type2 = "dir";
                         break;
                 }
-                return { type: type2, path: x.name, };
+                return { type: type2, path: path + "/" + x.name, };
             });
         } else {
-            return r5.map((x) => x.name);
+            return r5.map((x) => path + "/" + x.name);
         }
     }
     return {
         exists(path) {
-            throw new Error("TODO");
+            let r = navigate(path)();
+            if (r.type != "Success") {
+                return false;
+            }
+            return true;
         },
         getType(path) {
             let fileOrFolder = navigate(path);
@@ -290,5 +354,3 @@ export async function createAutomergeFs(
         },
     };
 }
-
-export default FileSystemExplorer;

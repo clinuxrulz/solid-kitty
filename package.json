@@ -41,6 +41,7 @@
     "@automerge/automerge-repo-storage-indexeddb": "2.0.0-alpha.22",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@monaco-editor/loader": "^1.5.0",
+    "@solid-primitives/keyed": "^1.5.0",
     "@solid-primitives/map": "^0.6.0",
     "@solid-primitives/set": "^0.6.0",
     "@solidjs/router": "^0.15.3",

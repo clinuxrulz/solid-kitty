@@ -1,9 +1,9 @@
-import { Component, lazy, Show } from "solid-js";
+import { Component, createMemo, Match, Show, Switch } from "solid-js";
 import { createStore } from "solid-js/store";
 import LandingApp from "./LandingApp";
 import { Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
-const FileSystemExplorer = lazy(() => import("./FileSystemExplorer"));
+import { createFileSystemExplorer } from "./FileSystemExplorer";
 
 const AppV2: Component<{
     repo: Repo,
@@ -19,6 +19,35 @@ const AppV2: Component<{
     }>({
         overlayApp: undefined,
         SubApp: LandingApp,
+    });
+    let fileSystemExplorer = createFileSystemExplorer({
+        get repo() {
+            return props.repo;
+        },
+        get docUrl() {
+            return props.docUrl;
+        }
+    });
+    let selectionCount = () => fileSystemExplorer.selectionCount();
+    let contentFolderSelected = createMemo<
+        "Images" |
+        "Texture Atlases" |
+        "Levels" |
+        undefined
+    >(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        if (fileSystemExplorer.isSelected("/images")) {
+            return "Images";
+        }
+        if (fileSystemExplorer.isSelected("/texture_atlases")) {
+            return "Texture Atlases";
+        }
+        if (fileSystemExplorer.isSelected("/levels")) {
+            return "Levels";
+        }
+        return undefined;
     });
     const showConnectionManager = () => {
         setState(
@@ -41,10 +70,36 @@ const AppV2: Component<{
                     <h3 class="text-lg font-bold">File Explorer</h3>
                 ),
                 View: () => (
-                    <FileSystemExplorer
-                        repo={props.repo}
-                        docUrl={props.docUrl}
-                    />
+                    <div
+                        style={{
+                            "flex-grow": "1",
+                            "display": "flex",
+                            "flex-direction": "column",
+                        }}
+                    >
+                        <div style="margin-bottom: 5px;">
+                            <button
+                                class="btn btn-primary"
+                                disabled={contentFolderSelected() == undefined}
+                            >
+                                New {(() => {
+                                    let x = contentFolderSelected();
+                                    if (x == undefined) {
+                                        return undefined;
+                                    }
+                                    switch (x) {
+                                        case "Images":
+                                            return "Image";
+                                        case "Texture Atlases":
+                                            return "Texture Atlas";
+                                        case "Levels":
+                                            return "Level";
+                                    }
+                                })()}
+                            </button>
+                        </div>
+                        <fileSystemExplorer.Render/>
+                    </div>
                 ),
             }),
         );
@@ -87,6 +142,7 @@ const AppV2: Component<{
                             "bottom": "0",
                             "right": "0",
                             "display": "flex",
+                            "overflow": "hidden",
                         }}
                     >
                         <div
@@ -95,6 +151,7 @@ const AppV2: Component<{
                                 "margin": "5%",
                                 "display": "flex",
                                 "flex-direction": "column",
+                                "overflow": "hidden",
                             }}
                             class="bg-base-200 rounded-box"
                         >
@@ -112,6 +169,7 @@ const AppV2: Component<{
                                         "display": "flex",
                                         "flex-direction": "row",
                                         "align-items": "center",
+                                        "overflow": "hidden",
                                     }}
                                 >
                                     <overlayApp.Title/>
@@ -128,6 +186,7 @@ const AppV2: Component<{
                                     "flex-grow": "1",
                                     "display": "flex",
                                     "padding": "10px",
+                                    "overflow": "hidden",
                                 }}
                             >
                                 <overlayApp.View/>
