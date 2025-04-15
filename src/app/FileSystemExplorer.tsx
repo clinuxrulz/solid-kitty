@@ -15,6 +15,7 @@ export const createFileSystemExplorer: (props: {
 	selected?: string,
 	onSelect?(path: string): void,
 }) => {
+    fs: Accessor<Fs<Blob>>,
     isSelected: (path: string) => boolean,
     selectionCount: () => number,
     Render: Component,
@@ -85,10 +86,13 @@ export const createFileSystemExplorer: (props: {
             </Show>
         </div>
     );
+    let element = Render({});
+    let Render2: Component = () => element;
     return {
+        fs,
         isSelected,
         selectionCount,
-        Render,
+        Render: Render2,
     };
 };
 

@@ -1,9 +1,13 @@
-import { Component, createMemo, Match, Show, Switch } from "solid-js";
+import { Component, createMemo, createResource, Match, onCleanup, Show, Switch } from "solid-js";
 import { createStore } from "solid-js/store";
 import LandingApp from "./LandingApp";
-import { Repo } from "@automerge/automerge-repo";
+import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
 import { createFileSystemExplorer } from "./FileSystemExplorer";
+import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "../AutomergeVirtualFileSystem";
+import { err } from "../kitty-demo/Result";
+import { asyncFailed, asyncSuccess } from "../AsyncResult";
+import PixelEditor from "../pixel-editor/PixelEditor";
 
 const AppV2: Component<{
     repo: Repo,
@@ -15,10 +19,8 @@ const AppV2: Component<{
             Title: Component,
             View: Component,
         }> | undefined,
-        SubApp: Component,
     }>({
         overlayApp: undefined,
-        SubApp: LandingApp,
     });
     let fileSystemExplorer = createFileSystemExplorer({
         get repo() {
@@ -27,6 +29,17 @@ const AppV2: Component<{
         get docUrl() {
             return props.docUrl;
         }
+    });
+    let vfs = createMemo(() => {
+        if (!isValidAutomergeUrl(props.docUrl)) {
+            return asyncFailed("Invalid automerge url.");
+        }
+        let docUrl = props.docUrl;
+        let [ docHandle, ] = createResource(() => props.repo.find<AutomergeVirtualFileSystemState>(docUrl));
+        return asyncSuccess(new AutomergeVirtualFileSystem({
+            repo: props.repo,
+            docHandle: () => docHandle(),
+        }));
     });
     let selectionCount = () => fileSystemExplorer.selectionCount();
     let contentFolderSelected = createMemo<
@@ -46,6 +59,66 @@ const AppV2: Component<{
         }
         if (fileSystemExplorer.isSelected("/levels")) {
             return "Levels";
+        }
+        return undefined;
+    });
+    let rootFolder_ = createMemo(() => {
+        let vfs2 = vfs();
+        if (vfs2.type != "Success") {
+            return vfs2;
+        }
+        let vfs3 = vfs2.value;
+        return asyncSuccess(vfs3.rootFolder());
+    });
+    let rootFolder = createMemo(() => {
+        let tmp = rootFolder_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
+    let imagesFolder_ = createMemo(() => {
+        let rootFolder2 = rootFolder();
+        if (rootFolder2.type != "Success") {
+            return rootFolder2;
+        }
+        let rootFolder3 = rootFolder2.value;
+        let contents = rootFolder3.contents();
+        let images = contents.find((x) => x.name == "images");
+        if (images == undefined) {
+            return asyncFailed("images folder not found");
+        }
+        let images2 = images;
+        if (images2.type != "Folder") {
+            return asyncFailed("expected images to be a folder");
+        }
+        let imagesFolderId = images2.id;
+        return asyncSuccess(rootFolder3.openFolderById(imagesFolderId));
+    });
+    let imagesFolder = createMemo(() => {
+        let tmp = imagesFolder_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
+    let selectedImageFileById = createMemo(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        let imagesFolder2 = imagesFolder();
+        if (imagesFolder2.type != "Success") {
+            return undefined;
+        }
+        let imagesFolder3 = imagesFolder2.value;
+        let contents = imagesFolder3.contents();
+        for (let image of contents) {
+            if (image.type != "File") {
+                continue;
+            }
+            if (fileSystemExplorer.isSelected("/images/" + image.name)) {
+                return image.id;
+            }
         }
         return undefined;
     });
@@ -104,6 +177,71 @@ const AppV2: Component<{
             }),
         );
     };
+    let selectedImageFile_ = createMemo(() => {
+        let imagesFolder2 = imagesFolder();
+        if (imagesFolder2.type != "Success") {
+            return undefined;
+        }
+        let imagesFolder3 = imagesFolder2.value;
+        let fileId = selectedImageFileById();
+        if (fileId == undefined) {
+            return undefined;
+        }
+        return imagesFolder3.openFileById<{
+            mimeType: string,
+            data: Uint8Array,
+        }>(fileId);
+    });
+    let selectedImageFile = createMemo(() => {
+        let tmp = selectedImageFile_();
+        if (tmp == undefined) {
+            return undefined;
+        }
+        let tmp2 = tmp();
+        if (tmp2.type != "Success") {
+            return undefined;
+        }
+        return tmp2.value;
+    });
+    let selectedImage_ = createMemo(() => {
+        let file = selectedImageFile();
+        if (file == undefined) {
+            return undefined;
+        }
+        let mimeType: string = file.doc.mimeType;
+        let data: Uint8Array = file.doc.data;
+        let blob = new Blob([ data, ], { type: mimeType, });
+        let imageUrl = URL.createObjectURL(blob);
+        onCleanup(() => {
+            URL.revokeObjectURL(imageUrl);
+        });
+        let [ image ] = createResource(() => new Promise<HTMLImageElement>((resolve, reject) => {
+            let image = new Image();
+            image.src = imageUrl;
+            image.onload = (e) => {
+                resolve(image);
+            };
+            image.onerror = (e) => {
+                reject(e);
+            };
+        }));
+        return image;
+    });
+    let selectedImage = createMemo(() =>
+        selectedImage_()?.()
+    );
+    let subApp = createMemo(() => {
+        let selectedImage2 = selectedImage();
+        if (selectedImage2 != undefined) {
+            return () => (
+                <PixelEditor
+                    initImage={selectedImage2}
+                />
+            );
+        }
+        return LandingApp;
+    });
+    let SubApp: Component = () => (<>{subApp()({})}</>);
     return (
         <div style={{
             "flex-grow": "1",
@@ -112,6 +250,7 @@ const AppV2: Component<{
             "flex-direction": "column",
             "position": "relative",
         }}>
+            {selectedImageFileById()}
             <ul class="menu menu-horizontal bg-base-200 rounded-box">
                 <li
                     onClick={() => showConnectionManager()}
@@ -130,7 +269,7 @@ const AppV2: Component<{
                     "display": "flex",
                 }}
             >
-                <state.SubApp/>
+                <SubApp/>
             </div>
             <Show when={state.overlayApp?.value} keyed={true}>
                 {(overlayApp) => (

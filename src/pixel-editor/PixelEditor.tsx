@@ -35,7 +35,9 @@ import { DrawRectMode } from "./modes/DrawRectMode";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
-const PixelEditor: Component = () => {
+const PixelEditor: Component<{
+    initImage?: HTMLImageElement,
+}> = (props) => {
     let [state, setState] = createStore<{
         minPt: Vec2;
         size: Vec2;
@@ -259,6 +261,31 @@ const PixelEditor: Component = () => {
         }
         let image2 = untrack(() => image());
         if (image2 == undefined) {
+            return;
+        }
+        if (props.initImage != undefined) {
+            let initImage = props.initImage;
+            untrack(() => {
+                let x = resizeImage({
+                    minPt: Vec2.zero(),
+                    size: Vec2.create(initImage.width, initImage.height),
+                });
+                if (x == undefined) {
+                    return;
+                }
+                x.ctx.drawImage(initImage, 0, 0);
+                let imageData = x.ctx.getImageData(
+                    0,
+                    0,
+                    initImage.width,
+                    initImage.height,
+                );
+                setImage({
+                    image: x.image,
+                    imageData,
+                    ctx: x.ctx,
+                });
+            });
             return;
         }
         let storage2 = storage();
