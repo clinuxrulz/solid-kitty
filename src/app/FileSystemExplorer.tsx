@@ -34,7 +34,7 @@ export const createFileSystemExplorer: (props: {
                     <FileTree
                         fs={fs2()}
                         style={{ display: "grid", height: "100vh", "align-content": "start" }}
-                        base=""
+                        base="/"
                     >
                         {(dirEnt) => {
                             createComputed(() => {
@@ -69,7 +69,7 @@ export const createFileSystemExplorer: (props: {
                                         background: dirEnt().selected ? "blue" : "none",
                                     }}
                                 >
-                    i               <FileTree.IndentGuides
+                                    <FileTree.IndentGuides
                                         render={() => <DefaultIndentGuide color="white" width={15} />}
                                     />
                                     <FileTree.Expanded
@@ -316,10 +316,10 @@ export function createAutomergeFs(
                         type2 = "dir";
                         break;
                 }
-                return { type: type2, path: path + "/" + x.name, };
+                return { type: type2, path: (path != "" && path != "/" ? path + "/" : path) + x.name, };
             });
         } else {
-            return r5.map((x) => path + "/" + x.name);
+            return r5.map((x) => (path != "" && path != "/" ? path + "/" : path) + x.name);
         }
     }
     return {
