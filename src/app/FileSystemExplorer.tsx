@@ -1,11 +1,9 @@
 import { Accessor, Component, createComputed, createMemo, createResource, createSignal, onCleanup, Show } from "solid-js";
-import { FileTree } from "../solid-fs-components/file-tree";
+import { DefaultIndentGuide, DirEnt, FileTree } from "@bigmistqke/solid-fs-components";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState, createAutomergeFileSystem } from "../AutomergeVirtualFileSystem";
 import { DocHandle, isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { asyncFailed, AsyncResult, asyncSuccess } from "../AsyncResult";
 import { createRoot } from "solid-js";
-import { DefaultIndentGuide } from "../solid-fs-components/file-tree-defaults";
-import { DirEnt } from "../solid-fs-components/create-file-system";
 import { err, Result } from "../kitty-demo/Result";
 import { ReactiveMap } from "@solid-primitives/map";
 
@@ -36,11 +34,12 @@ export const createFileSystemExplorer: (props: {
                     <FileTree
                         fs={fs2()}
                         style={{ display: "grid", height: "100vh", "align-content": "start" }}
+                        base=""
                     >
                         {(dirEnt) => {
                             createComputed(() => {
-                                let path = dirEnt.path;
-                                let selected = () => dirEnt.selected;
+                                let path = dirEnt().path;
+                                let selected = () => dirEnt().selected;
                                 createComputed(() => {
                                     if (!selected()) {
                                         return;
@@ -57,6 +56,7 @@ export const createFileSystemExplorer: (props: {
                                     }
                                 });
                             });
+                            let [ editable, setEditable ] = createSignal(false);
                             return (
                                 <FileTree.DirEnt
                                     style={{
@@ -66,18 +66,22 @@ export const createFileSystemExplorer: (props: {
                                         padding: "0px",
                                         border: "none",
                                         color: "white",
-                                        background: dirEnt.selected ? "blue" : "none",
+                                        background: dirEnt().selected ? "blue" : "none",
                                     }}
                                 >
-                                    <FileTree.IndentGuides
-                                        guide={() => <DefaultIndentGuide color="white" width={15} />}
+                    i               <FileTree.IndentGuides
+                                        render={() => <DefaultIndentGuide color="white" width={15} />}
                                     />
-                                    <FileTree.Opened
-                                        closed="+"
-                                        opened="-"
-                                        style={{ width: "15px", "text-align": "center" }}
+                                    <FileTree.Expanded
+                                        collapsed="-"
+                                        expanded="+"
+                                        style={{ width: '15px', 'text-align': 'center' }}
                                     />
-                                    {dirEnt.name}
+                                    <FileTree.Name
+                                        editable={editable()}
+                                        style={{ 'margin-left': dirEnt().type === 'file' ? '7.5px' : undefined }}
+                                        onBlur={() => setEditable(false)}
+                                    />
                                 </FileTree.DirEnt>
                             );
                         }}

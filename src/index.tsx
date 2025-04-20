@@ -157,7 +157,7 @@ render(() => {
         <HashRouter>
             <Route path="/" component={App2} />
             <Route path="/kitty-demo" component={KittyDemoApp} />
-            <Route path="/pixel-editor" component={PixelEditor} />
+            <Route path="/pixel-editor" component={() => <PixelEditor/>} />
             <Route path="/level-builder" component={() => <LevelBuilder vfs={vfs}/>} />
             <Route path="/script-editor" component={ScriptEditor} />
             <Route
