@@ -32,7 +32,7 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { frameComponentType, FrameState } from "./components/FrameComponent";
 import { opToArr } from "../kitty-demo/util";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "../AutomergeVirtualFileSystem";
+import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile, VfsFolderContents } from "solid-fs-automerge";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 import { Doc } from "@automerge/automerge-repo";
 import { base64ToUint8Array } from "../util";

@@ -28,13 +28,10 @@ import {
 } from "@automerge/automerge-repo";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { BroadcastChannelNetworkAdapter } from "@automerge/automerge-repo-network-broadcastchannel";
-import {
-    AutomergeVirtualFileSystem,
-    AutomergeVirtualFileSystemState,
-} from "./AutomergeVirtualFileSystem";
 import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
 import { createStore } from "solid-js/store";
 import { PeerJsAutomergeNetworkAdapter } from "./PeerJsAutomergeNetworkAdapter";
+import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
 const AppV2 = lazy(() => import("./app/AppV2"));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));

@@ -14,7 +14,7 @@ import { createStore } from "solid-js/store";
 import { levelComponentType } from "./components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "solid-fs-automerge";
 import { makeDocumentProjection } from "automerge-repo-solid-primitives";
 
 export class LevelList {

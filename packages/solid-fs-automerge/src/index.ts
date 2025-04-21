@@ -4,6 +4,8 @@ import { Accessor, createMemo, createResource, createRoot, onCleanup } from "sol
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "./AutomergeVirtualFileSystem";
 import { asyncFailed, AsyncResult, asyncSuccess } from "control-flow-as-value";
 
+export * from "./AutomergeVirtualFileSystem";
+
 export function newAutomergeFsDoc(repo: Repo): {
     docUrl: string,
 } {

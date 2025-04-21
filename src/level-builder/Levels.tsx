@@ -14,7 +14,7 @@ import { Level } from "./level/Level";
 import { TextureAtlasState } from "./components/TextureAtlasComponent";
 import { FrameState } from "./components/FrameComponent";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
 
 type State = {
     showLevelList: boolean;

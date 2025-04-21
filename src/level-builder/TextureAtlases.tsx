@@ -12,7 +12,7 @@ import { TextureAtlasList } from "./TextureAtlasList";
 import { TextureAtlas } from "./texture-atlas/TextureAtlas";
 import { AsyncResult } from "../AsyncResult";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
-import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "../AutomergeVirtualFileSystem";
+import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "solid-fs-automerge";
 
 type State = {
     showTextureAtlasList: boolean;

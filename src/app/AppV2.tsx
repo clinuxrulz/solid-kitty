@@ -4,7 +4,7 @@ import LandingApp from "./LandingApp";
 import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
 import { createFileSystemExplorer } from "./FileSystemExplorer";
-import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "../AutomergeVirtualFileSystem";
+import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
 import { err } from "../kitty-demo/Result";
 import { asyncFailed, asyncSuccess } from "../AsyncResult";
 import PixelEditor from "../pixel-editor/PixelEditor";

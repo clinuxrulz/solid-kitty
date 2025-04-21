@@ -32,7 +32,7 @@ import { InsertTileMode } from "./modes/InsertTileMode";
 import { levelComponentType, LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
-import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "../../AutomergeVirtualFileSystem";
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
 import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
 
