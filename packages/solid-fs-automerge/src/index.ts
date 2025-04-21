@@ -17,17 +17,8 @@ export function newAutomergeFsDoc(repo: Repo): {
 }
 
 export function createAutomergeFs(
-    repo: Repo,
-    docUrl: string
+    vfs: AutomergeVirtualFileSystem
 ): FileSystem<Blob> {
-    if (!isValidAutomergeUrl(docUrl)) {
-        throw new Error("Invalid automerge url.");
-    }
-    let [ docHandle, ] = createResource(() => repo.find<AutomergeVirtualFileSystemState>(docUrl));
-    let vfs = new AutomergeVirtualFileSystem({
-        repo,
-        docHandle: () => docHandle(),
-    });
     let accessCache: {
         [path: string]: {
             fileOrFolder: Accessor<AsyncResult<{

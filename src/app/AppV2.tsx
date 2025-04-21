@@ -8,10 +8,10 @@ import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "sol
 import { err } from "../kitty-demo/Result";
 import { asyncFailed, asyncSuccess } from "../AsyncResult";
 import PixelEditor from "../pixel-editor/PixelEditor";
+import { TextureAtlas } from "../level-builder/texture-atlas/TextureAtlas";
 
 const AppV2: Component<{
-    repo: Repo,
-    docUrl: string,
+    vfs: AutomergeVirtualFileSystem,
     ConnectionManagementUi: Component,
 }> = (props) => {
     let [ state, setState, ] = createStore<{
@@ -23,24 +23,11 @@ const AppV2: Component<{
         overlayApp: undefined,
     });
     let fileSystemExplorer = createFileSystemExplorer({
-        get repo() {
-            return props.repo;
-        },
-        get docUrl() {
-            return props.docUrl;
+        get vfs() {
+            return props.vfs;
         }
     });
-    let vfs = createMemo(() => {
-        if (!isValidAutomergeUrl(props.docUrl)) {
-            return asyncFailed("Invalid automerge url.");
-        }
-        let docUrl = props.docUrl;
-        let [ docHandle, ] = createResource(() => props.repo.find<AutomergeVirtualFileSystemState>(docUrl));
-        return asyncSuccess(new AutomergeVirtualFileSystem({
-            repo: props.repo,
-            docHandle: () => docHandle(),
-        }));
-    });
+    let vfs = createMemo(() => asyncSuccess(props.vfs));
     let selectionCount = () => fileSystemExplorer.selectionCount();
     let contentFolderSelected = createMemo<
         "Images" |
@@ -102,6 +89,31 @@ const AppV2: Component<{
         }
         return tmp.value();
     });
+    let textureAtlasesFolder_ = createMemo(() => {
+        let rootFolder2 = rootFolder();
+        if (rootFolder2.type != "Success") {
+            return rootFolder2;
+        }
+        let rootFolder3 = rootFolder2.value;
+        let contents = rootFolder3.contents();
+        let textureAtlases = contents.find((x) => x.name == "texture_atlases");
+        if (textureAtlases == undefined) {
+            return asyncFailed("texture atlases folder not found");
+        }
+        let textureAtlases2 = textureAtlases;
+        if (textureAtlases2.type != "Folder") {
+            return asyncFailed("expected textureAtlases to be a folder");
+        }
+        let textureAtlasesFolderId = textureAtlases2.id;
+        return asyncSuccess(rootFolder3.openFolderById(textureAtlasesFolderId));
+    });
+    let textureAtlasesFolder = createMemo(() => {
+        let tmp = textureAtlasesFolder_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
     let selectedImageFileById = createMemo(() => {
         if (selectionCount() != 1) {
             return undefined;
@@ -118,6 +130,26 @@ const AppV2: Component<{
             }
             if (fileSystemExplorer.isSelected("/images/" + image.name)) {
                 return image.id;
+            }
+        }
+        return undefined;
+    });
+    let selectedTextureAtlasFileById = createMemo(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        let textureAtlasesFolder2 = textureAtlasesFolder();
+        if (textureAtlasesFolder2.type != "Success") {
+            return undefined;
+        }
+        let textureAtlasesFolder3 = textureAtlasesFolder2.value;
+        let contents = textureAtlasesFolder3.contents();
+        for (let textureAtlas of contents) {
+            if (textureAtlas.type != "File") {
+                continue;
+            }
+            if (fileSystemExplorer.isSelected("/texture_atlases/" + textureAtlas.name)) {
+                return textureAtlas.id;
             }
         }
         return undefined;
@@ -236,6 +268,27 @@ const AppV2: Component<{
             return () => (
                 <PixelEditor
                     initImage={selectedImage2}
+                />
+            );
+        }
+        let selectedTextureAtlasFileById2 = selectedTextureAtlasFileById();
+        if (selectedTextureAtlasFileById2 != undefined) {
+            let vfs2 = vfs();
+            if (vfs2.type != "Success") {
+                return LandingApp;
+            }
+            let vfs3 = vfs2.value;
+            let textureAtlas = new TextureAtlas({
+                vfs: vfs3,
+                imagesFolder,
+                textureAtlasesFolder,
+                textureAtlasFileId: () => selectedTextureAtlasFileById2,
+            });
+            return (() =>
+                <textureAtlas.Render
+                    style={{
+                        "flex-grow": "1",
+                    }}
                 />
             );
         }

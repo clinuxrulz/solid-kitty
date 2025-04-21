@@ -1,21 +1,19 @@
 import { Accessor, Component, createComputed, createMemo, createSignal, onCleanup, Show } from "solid-js";
 import { DefaultIndentGuide, FileSystem, FileTree } from "@bigmistqke/solid-fs-components";
-import { Repo } from "@automerge/automerge-repo";
 import { ReactiveMap } from "@solid-primitives/map";
-import { createAutomergeFs } from "solid-fs-automerge";
+import { AutomergeVirtualFileSystem, createAutomergeFs } from "solid-fs-automerge";
 
 export const createFileSystemExplorer: (props: {
-    repo: Repo,
-    docUrl: string,
-	selected?: string,
-	onSelect?(path: string): void,
+    vfs: AutomergeVirtualFileSystem,
+    selected?: string,
+    onSelect?(path: string): void,
 }) => {
     fs: Accessor<FileSystem<Blob>>,
     isSelected: (path: string) => boolean,
     selectionCount: () => number,
     Render: Component,
 } = (props) => {
-    let fs  = createMemo(() => createAutomergeFs(props.repo, props.docUrl));
+    let fs  = createMemo(() => createAutomergeFs(props.vfs));
     let selectionMap = new ReactiveMap<string,Accessor<boolean>>();
     let isSelected = (path: string) => selectionMap.get(path)?.() ?? false;
     let [ selectionCount, setSelectionCount, ] = createSignal(0);

@@ -196,15 +196,10 @@ render(() => {
             <Route
                 path="/app"
                 component={() =>
-                    <Show when={automergeVirtualFileSystemDoc()}>
-                        {(doc) => (
-                            <AppV2
-                                repo={repo}
-                                docUrl={doc().url}
-                                ConnectionManagementUi={connectionManagementUi.Render}
-                            />
-                        )}
-                    </Show>
+                    <AppV2
+                        vfs={vfs}
+                        ConnectionManagementUi={connectionManagementUi.Render}
+                    />
                 }
             />
         </HashRouter>
