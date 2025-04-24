@@ -1,14 +1,21 @@
-import { Component, createMemo, createResource, Match, onCleanup, Show, Switch } from "solid-js";
+import { Accessor, Component, createMemo, createResource, mapArray, Match, onCleanup, Show, Switch } from "solid-js";
 import { createStore } from "solid-js/store";
 import LandingApp from "./LandingApp";
 import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
 import { createFileSystemExplorer } from "./FileSystemExplorer";
-import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
+import { AutomergeVfsFile, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
 import { err } from "../kitty-demo/Result";
-import { asyncFailed, asyncSuccess } from "../AsyncResult";
+import { asyncFailed, AsyncResult, asyncSuccess } from "../AsyncResult";
 import PixelEditor from "../pixel-editor/PixelEditor";
 import { TextureAtlas } from "../level-builder/texture-atlas/TextureAtlas";
+import { Level } from "../level-builder/level/Level";
+import { textureAtlasComponentType, TextureAtlasState } from "../level-builder/components/TextureAtlasComponent";
+import { frameComponentType, FrameState } from "../level-builder/components/FrameComponent";
+import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
+import { registry } from "../level-builder/components/registry";
+import { opToArr } from "../kitty-demo/util";
+import { asyncPending, ok, Result } from "control-flow-as-value";
 
 const AppV2: Component<{
     vfs: AutomergeVirtualFileSystem,
@@ -114,6 +121,31 @@ const AppV2: Component<{
         }
         return tmp.value();
     });
+    let levelsFolder_ = createMemo(() => {
+        let rootFolder2 = rootFolder();
+        if (rootFolder2.type != "Success") {
+            return rootFolder2;
+        }
+        let rootFolder3 = rootFolder2.value;
+        let contents = rootFolder3.contents();
+        let levels = contents.find((x) => x.name == "levels");
+        if (levels == undefined) {
+            return asyncFailed("levels folder not found");
+        }
+        let levels2 = levels;
+        if (levels2.type != "Folder") {
+            return asyncFailed("expected levels to be a folder");
+        }
+        let levelsFolderId = levels2.id;
+        return asyncSuccess(rootFolder3.openFolderById(levelsFolderId));
+    });
+    let levelsFolder = createMemo(() => {
+        let tmp = levelsFolder_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
     let selectedImageFileById = createMemo(() => {
         if (selectionCount() != 1) {
             return undefined;
@@ -150,6 +182,26 @@ const AppV2: Component<{
             }
             if (fileSystemExplorer.isSelected("/texture_atlases/" + textureAtlas.name)) {
                 return textureAtlas.id;
+            }
+        }
+        return undefined;
+    });
+    let selectedLevelFileById = createMemo(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        let levelsFolder2 = levelsFolder();
+        if (levelsFolder2.type != "Success") {
+            return undefined;
+        }
+        let levelsFolder3 = levelsFolder2.value;
+        let contents = levelsFolder3.contents();
+        for (let level of contents) {
+            if (level.type != "File") {
+                continue;
+            }
+            if (fileSystemExplorer.isSelected("/levels/" + level.name)) {
+                return level.id;
             }
         }
         return undefined;
@@ -262,6 +314,290 @@ const AppV2: Component<{
     let selectedImage = createMemo(() =>
         selectedImage_()?.()
     );
+    let imageFiles: Accessor<AsyncResult<AutomergeVfsFile<any>[]>>;
+    {
+        let imageFiles_ = createMemo(() => {
+            let imagesFolder2 = imagesFolder();
+            if (imagesFolder2.type != "Success") {
+                return imagesFolder2;
+            }
+            let imageFolder3 = imagesFolder2.value;
+            let result_ = createMemo(mapArray(
+                () => imageFolder3.contents(),
+                (entry) => {
+                    return createMemo(() => {
+                        if (entry.type != "File") {
+                            return undefined;
+                        }
+                        return imageFolder3.openFileById(entry.id);
+                    });
+                },
+            ));
+            return asyncSuccess(createMemo(() => {
+                let result: AutomergeVfsFile<any>[] = [];
+                let tmp = result_();
+                for (let tmp2 of tmp) {
+                    let tmp3 = tmp2();
+                    if (tmp3 == undefined) {
+                        continue;
+                    }
+                    let tmp4 = tmp3();
+                    if (tmp4.type != "Success") {
+                        return tmp4;
+                    }
+                    result.push(tmp4.value);
+                }
+                return asyncSuccess(result);
+            }));
+        });
+        imageFiles = createMemo(() => {
+            let tmp = imageFiles_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    // Keep all tiles available for level creation
+    let textureAtlasWithImageAndFramesList: Accessor<
+        AsyncResult<
+            {
+                textureAtlasFilename: Accessor<string>;
+                textureAtlas: TextureAtlasState;
+                image: HTMLImageElement;
+                frames: { frameId: string, frame: FrameState, }[];
+            }[]
+        >
+    >;
+    {
+        let textureAtlasFiles_ = createMemo(() => {
+            let textureAtlasesFolder2 = textureAtlasesFolder();
+            if (textureAtlasesFolder2.type != "Success") {
+                return textureAtlasesFolder2;
+            }
+            let textureAtlasesFolder3 = textureAtlasesFolder2.value;
+            let result_ = createMemo(mapArray(
+                () => textureAtlasesFolder3.contents(),
+                (entry) => createMemo(() => {
+                    if (entry.type != "File") {
+                        return undefined;
+                    }
+                    return textureAtlasesFolder3.openFileById(entry.id);
+                }),
+            ));
+            return asyncSuccess(createMemo(() => {
+                let result: AutomergeVfsFile<any>[] = [];
+                let tmp = result_();
+                for (let tmp2 of tmp) {
+                    let tmp3 = tmp2();
+                    if (tmp3 == undefined) {
+                        continue;
+                    }
+                    let tmp4 = tmp3();
+                    if (tmp4.type != "Success") {
+                        return tmp4;
+                    }
+                    result.push(tmp4.value);
+                }
+                return asyncSuccess(result);
+            }));
+        });
+        let imageFilenameFileMap = createMemo(() => {
+            let imageFiles2 = imageFiles();
+            if (imageFiles2.type != "Success") {
+                return imageFiles2;
+            }
+            let imageFiles3 = imageFiles2.value;
+            let result: Map<string, AutomergeVfsFile<any>> = new Map();
+            for (let imageFile of imageFiles3) {
+                result.set(imageFile.name(), imageFile);
+            }
+            return asyncSuccess(result);
+        });
+        let textureAtlasFiles = createMemo(() => {
+            let tmp = textureAtlasFiles_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+        let textureAtlasFilesAsyncType = createMemo(
+            () => textureAtlasFiles().type,
+        );
+        let textureAtlases_ = createMemo(() => {
+            let imageFilenameFileMap2 = imageFilenameFileMap();
+            if (imageFilenameFileMap2.type != "Success") {
+                return imageFilenameFileMap2;
+            }
+            let imageFilenameFileMap3 = imageFilenameFileMap2.value;
+            if (textureAtlasFilesAsyncType() != "Success") {
+                return textureAtlasFiles() as AsyncResult<never>;
+            }
+            let textureAtlasFiles2 = createMemo(() => {
+                let tmp = textureAtlasFiles();
+                if (tmp.type != "Success") {
+                    throw new Error("Unreachable");
+                }
+                return tmp.value;
+            });
+            return asyncSuccess(
+                createMemo(
+                    mapArray(textureAtlasFiles2, (textureAtlasFile) => {
+                        return createMemo(() => {
+                            let r = EcsWorldAutomergeProjection.create(
+                                registry,
+                                textureAtlasFile.docHandle,
+                            );
+                            if (r.type == "Err") {
+                                return asyncFailed(r.message);
+                            }
+                            let textureAtlasWorld = r.value;
+                            return asyncSuccess(
+                                createMemo(() => {
+                                    let world = textureAtlasWorld;
+                                    let entities =
+                                        world.entitiesWithComponentType(
+                                            textureAtlasComponentType,
+                                        );
+                                    if (entities.length != 1) {
+                                        return asyncFailed(
+                                            "Expected expect exactly one texture atlas entity.",
+                                        );
+                                    }
+                                    let entity = entities[0];
+                                    let textureAtlas = world.getComponent(
+                                        entity,
+                                        textureAtlasComponentType,
+                                    )?.state;
+                                    if (textureAtlas == undefined) {
+                                        return asyncFailed(
+                                            "Texture atlas not found in texture atlas file.",
+                                        );
+                                    }
+                                    let frameEntities =
+                                        world.entitiesWithComponentType(
+                                            frameComponentType,
+                                        );
+                                    let frames = frameEntities.flatMap(
+                                        (frameEntity) =>
+                                            opToArr(
+                                                world.getComponent(
+                                                    frameEntity,
+                                                    frameComponentType,
+                                                )?.state,
+                                            ).map((frame) => ({
+                                                frameId: frameEntity,
+                                                frame,
+                                            })),
+                                    );
+                                    let textureAtlas2 = textureAtlas;
+                                    let imageFilename = textureAtlas2.imageRef;
+                                    let imageFile =
+                                        imageFilenameFileMap3.get(
+                                            imageFilename,
+                                        );
+                                    if (imageFile == undefined) {
+                                        return asyncFailed(
+                                            "Texture atlas referenced image not found.",
+                                        );
+                                    }
+                                    return asyncSuccess(
+                                        createMemo(() => {
+                                            let blob = new Blob(
+                                                [ imageFile.doc.data, ],
+                                                { "type": imageFile.doc.mimeType, }
+                                            );
+                                            let imageUrl =
+                                                URL.createObjectURL(blob);
+                                            onCleanup(() =>
+                                                URL.revokeObjectURL(imageUrl),
+                                            );
+                                            let [image] = createResource(
+                                                () =>
+                                                    new Promise<
+                                                        Result<HTMLImageElement>
+                                                    >((resolve) => {
+                                                        let image2 =
+                                                            new Image();
+                                                        image2.src = imageUrl;
+                                                        image2.onerror = () => {
+                                                            resolve(
+                                                                err(
+                                                                    "Failed to load image.",
+                                                                ),
+                                                            );
+                                                        };
+                                                        image2.onload = () => {
+                                                            resolve(ok(image2));
+                                                        };
+                                                    }),
+                                            );
+                                            return asyncSuccess(
+                                                createMemo(() => {
+                                                    let image2 = image();
+                                                    if (image2 == undefined) {
+                                                        return asyncPending();
+                                                    }
+                                                    if (image2.type == "Err") {
+                                                        return asyncFailed(
+                                                            image2.message,
+                                                        );
+                                                    }
+                                                    let image3 = image2.value;
+                                                    return asyncSuccess({
+                                                        textureAtlasFilename:
+                                                            textureAtlasFile.name,
+                                                        textureAtlas:
+                                                            textureAtlas2,
+                                                        image: image3,
+                                                        frames,
+                                                    });
+                                                }),
+                                            );
+                                        }),
+                                    );
+                                }),
+                            );
+                        });
+                    }),
+                ),
+            );
+        });
+        textureAtlasWithImageAndFramesList = createMemo(() => {
+            let result: {
+                textureAtlasFilename: Accessor<string>;
+                textureAtlas: TextureAtlasState;
+                image: HTMLImageElement;
+                frames: { frameId: string, frame: FrameState, }[];
+            }[] = [];
+            let tmp = textureAtlases_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            let tmp2 = tmp.value();
+            for (let tmp3 of tmp2) {
+                let tmp4 = tmp3();
+                if (tmp4.type != "Success") {
+                    return tmp4;
+                }
+                let tmp5 = tmp4.value();
+                if (tmp5.type != "Success") {
+                    return tmp5;
+                }
+                let tmp6 = tmp5.value();
+                if (tmp6.type != "Success") {
+                    return tmp6;
+                }
+                let tmp7 = tmp6.value();
+                if (tmp7.type != "Success") {
+                    return tmp7;
+                }
+                let tmp8 = tmp7.value;
+                result.push(tmp8);
+            }
+            return asyncSuccess(result);
+        });
+    }
     let subApp = createMemo(() => {
         let selectedImage2 = selectedImage();
         if (selectedImage2 != undefined) {
@@ -286,6 +622,28 @@ const AppV2: Component<{
             });
             return (() =>
                 <textureAtlas.Render
+                    style={{
+                        "flex-grow": "1",
+                    }}
+                />
+            );
+        }
+        let selectedLevelFileById2 = selectedLevelFileById();
+        if (selectedLevelFileById2 != undefined) {
+            let vfs2 = vfs();
+            if (vfs2.type != "Success") {
+                return LandingApp;
+            }
+            let vfs3 = vfs2.value;
+            let level = new Level({
+                vfs: vfs3,
+                imagesFolder,
+                textureAtlasesFolder,
+                levelFileId: () => selectedLevelFileById2,
+                textureAtlasWithImageAndFramesList,
+            });
+            return (() =>
+                <level.Render
                     style={{
                         "flex-grow": "1",
                     }}
