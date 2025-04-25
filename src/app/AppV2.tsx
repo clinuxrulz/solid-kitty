@@ -16,6 +16,8 @@ import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection"
 import { registry } from "../level-builder/components/registry";
 import { opToArr } from "../kitty-demo/util";
 import { asyncPending, ok, Result } from "control-flow-as-value";
+import { levelComponentType } from "../level-builder/components/LevelComponent";
+import { EcsWorld } from "../ecs/EcsWorld";
 
 const AppV2: Component<{
     vfs: AutomergeVirtualFileSystem,
@@ -45,13 +47,13 @@ const AppV2: Component<{
         if (selectionCount() != 1) {
             return undefined;
         }
-        if (fileSystemExplorer.isSelected("/images")) {
+        if (fileSystemExplorer.isSelected("images")) {
             return "Images";
         }
-        if (fileSystemExplorer.isSelected("/texture_atlases")) {
+        if (fileSystemExplorer.isSelected("texture_atlases")) {
             return "Texture Atlases";
         }
-        if (fileSystemExplorer.isSelected("/levels")) {
+        if (fileSystemExplorer.isSelected("levels")) {
             return "Levels";
         }
         return undefined;
@@ -160,7 +162,7 @@ const AppV2: Component<{
             if (image.type != "File") {
                 continue;
             }
-            if (fileSystemExplorer.isSelected("/images/" + image.name)) {
+            if (fileSystemExplorer.isSelected("images/" + image.name)) {
                 return image.id;
             }
         }
@@ -180,7 +182,7 @@ const AppV2: Component<{
             if (textureAtlas.type != "File") {
                 continue;
             }
-            if (fileSystemExplorer.isSelected("/texture_atlases/" + textureAtlas.name)) {
+            if (fileSystemExplorer.isSelected("texture_atlases/" + textureAtlas.name)) {
                 return textureAtlas.id;
             }
         }
@@ -200,7 +202,7 @@ const AppV2: Component<{
             if (level.type != "File") {
                 continue;
             }
-            if (fileSystemExplorer.isSelected("/levels/" + level.name)) {
+            if (fileSystemExplorer.isSelected("levels/" + level.name)) {
                 return level.id;
             }
         }
@@ -218,6 +220,49 @@ const AppV2: Component<{
                 ),
             }),
         );
+    };
+    const newImage = () => {
+        // TODO
+    };
+    const newTextureAtlas = () => {
+        // TODO
+    };
+    const newLevel = () => {
+        let levelsFolder2 = levelsFolder();
+        if (levelsFolder2.type != "Success") {
+            return;
+        }
+        let levelsFolder3 = levelsFolder2.value;
+        let levelFilename = window.prompt("Enter name for level:");
+        if (levelFilename == null) {
+            return;
+        }
+        levelFilename = levelFilename.trim();
+        if (levelFilename == "") {
+            return;
+        }
+        levelFilename += ".json";
+        let level = levelComponentType.create({
+            tileToShortIdTable: [],
+            mapData: Array(10)
+                .fill(undefined)
+                .map((_) =>
+                    Array(10)
+                        .fill(undefined)
+                        .map((_) => 0),
+                ),
+        });
+        let world = new EcsWorld();
+        world.createEntity([level]);
+        let result = levelsFolder3.createFile(
+            levelFilename,
+            world.toJson(),
+        );
+        if (result.type == "Err") {
+            return;
+        }
+        let fileId = result.value.id;
+        // TODO: Set selection of file explorer to fileId
     };
     const showFileExplorer = () => {
         setState(
@@ -238,6 +283,24 @@ const AppV2: Component<{
                             <button
                                 class="btn btn-primary"
                                 disabled={contentFolderSelected() == undefined}
+                                onClick={() => {
+                                    let x = contentFolderSelected();
+                                    if (x == undefined) {
+                                        return undefined;
+                                    }
+                                    switch (x) {
+                                        case "Images": {
+                                            newImage();
+                                            break;
+                                        }
+                                        case "Texture Atlases": {}
+                                            newTextureAtlas();
+                                            break;
+                                        case "Levels":
+                                            newLevel();
+                                            break;
+                                    }
+                                }}
                             >
                                 New {(() => {
                                     let x = contentFolderSelected();

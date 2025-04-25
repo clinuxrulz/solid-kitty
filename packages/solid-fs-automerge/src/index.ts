@@ -40,6 +40,9 @@ export function createAutomergeFs(
         value: Accessor<AsyncResult<AutomergeVfsFolder>>,
     }>> => {
         path = path.trim();
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
         if (path.endsWith("/")) {
             path = path.slice(0, path.length-1);
         }

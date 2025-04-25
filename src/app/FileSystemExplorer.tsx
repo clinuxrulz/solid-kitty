@@ -29,7 +29,6 @@ export const createFileSystemExplorer: (props: {
                     <FileTree
                         fs={fs2()}
                         style={{ display: "grid", height: "100vh", "align-content": "start" }}
-                        base="/"
                     >
                         {(dirEnt) => {
                             createComputed(() => {
