@@ -7,7 +7,7 @@ import { err, ok, Result } from "../kitty-demo/Result";
 import { produce } from "solid-js/store";
 import { loadFromJsonViaTypeSchema, saveToJsonViaTypeSchema, TypeSchema } from "../TypeSchema";
 import { Accessor, batch, Component, createComputed, createMemo, createRoot, getListener, mapArray, on, onCleanup, untrack } from "solid-js";
-import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { makeDocumentProjection } from "solid-automerge";
 
 class ReactiveCache<A> {
     private map = new Map<

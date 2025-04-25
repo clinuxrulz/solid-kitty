@@ -16,7 +16,7 @@ import { textureAtlasComponentType } from "./components/TextureAtlasComponent";
 import { registry } from "./components/registry";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "solid-fs-automerge";
-import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { makeDocumentProjection } from "solid-automerge";
 import { mkAccessorToPromise, uint8ArrayToBase64 } from "../util";
 
 type State = {

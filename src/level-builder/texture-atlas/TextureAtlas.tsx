@@ -29,7 +29,7 @@ import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
 import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
-import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { makeDocumentProjection } from "solid-automerge";
 import { ok } from "../../kitty-demo/Result";
 import { base64ToUint8Array } from "../../util";
 import { IEcsWorld } from "../../ecs/IEcsWorld";

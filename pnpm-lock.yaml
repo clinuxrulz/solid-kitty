@@ -47,9 +47,6 @@ importers:
       '@unocss/reset':
         specifier: ^65.4.3
         version: 65.5.0
-      automerge-repo-solid-primitives:
-        specifier: 2.0.0-beta.12
-        version: 2.0.0-beta.12(@automerge/automerge-repo@2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2))(solid-js@1.9.3)
       awesome-qr:
         specifier: ^2.1.5-rc.0
         version: 2.1.5-rc.0
@@ -83,6 +80,9 @@ importers:
       qr-scanner:
         specifier: ^1.4.2
         version: 1.4.2
+      solid-automerge:
+        specifier: git+https://github.com/clinuxrulz/solid-automerge.git#restore
+        version: https://codeload.github.com/clinuxrulz/solid-automerge/tar.gz/325de86c13a44784b849fc4cede2ae11a1926179(@automerge/automerge-repo@2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2))(solid-js@1.9.3)
       solid-fs-automerge:
         specifier: workspace:*
         version: link:packages/solid-fs-automerge
@@ -1349,13 +1349,6 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  automerge-repo-solid-primitives@2.0.0-beta.12:
-    resolution: {integrity: sha512-kgbyzZoU9/rJo5nXEliqDcB8PTM7qepbVP+Xf8lLWchRQKVpr3MSbDrf/8z17u/WPvgMyszXa2M7l/1neQLZwg==}
-    deprecated: ✨ renamed to solid-automerge. use that! 💞
-    peerDependencies:
-      '@automerge/automerge-repo': 2.0.0-alpha.22
-      solid-js: ^1.9.4
-
   awesome-qr@2.1.5-rc.0:
     resolution: {integrity: sha512-nRxvKuJxoxdOIStb79bElh52YPI+Cbu/UewgLjVSpXJvxwIZQjcvZgrCjXPe3jSl2i6mz3foxA6xgzLf8NQy+Q==}
 
@@ -1444,8 +1437,8 @@ packages:
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
-  cabbages@0.1.0:
-    resolution: {integrity: sha512-sAGTxqsLyTHAXM2T3mTKdIwJPqczswCuToYlQdytO5m2zYAgT4RbTLn1R5IjIuwUPm2+kzLDxHPo12kWYBURVA==}
+  cabbages@0.2.6:
+    resolution: {integrity: sha512-KFDON4qSbKVFGBwjS4Jk/1Sgnai81fi9Ax2Q+XoxrXrRtWQ/pNTTkAlVl2zx52y0kbfk3X3Di6t1NtEz0G5ZGw==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -2832,6 +2825,13 @@ packages:
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
+
+  solid-automerge@https://codeload.github.com/clinuxrulz/solid-automerge/tar.gz/325de86c13a44784b849fc4cede2ae11a1926179:
+    resolution: {tarball: https://codeload.github.com/clinuxrulz/solid-automerge/tar.gz/325de86c13a44784b849fc4cede2ae11a1926179}
+    version: 1.0.0-beta.5
+    peerDependencies:
+      '@automerge/automerge-repo': 2.0.0-alpha.22
+      solid-js: ^1.9.4
 
   solid-js@1.9.3:
     resolution: {integrity: sha512-5ba3taPoZGt9GY3YlsCB24kCg0Lv/rie/HTD4kG6h4daZZz7+yK02xn8Vx8dLYBc9i6Ps5JwAbEiqjmKaLB3Ag==}
@@ -4681,13 +4681,6 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  automerge-repo-solid-primitives@2.0.0-beta.12(@automerge/automerge-repo@2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2))(solid-js@1.9.3):
-    dependencies:
-      '@automerge/automerge-repo': 2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2)
-      '@solid-primitives/utils': 6.3.0(solid-js@1.9.3)
-      cabbages: 0.1.0
-      solid-js: 1.9.3
-
   awesome-qr@2.1.5-rc.0:
     dependencies:
       buffer: 6.0.3
@@ -4827,7 +4820,11 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  cabbages@0.1.0: {}
+  cabbages@0.2.6:
+    dependencies:
+      debug: 4.4.0
+    transitivePeerDependencies:
+      - supports-color
 
   cac@6.7.14: {}
 
@@ -6321,6 +6318,15 @@ snapshots:
   sisteransi@1.0.5: {}
 
   slash@3.0.0: {}
+
+  solid-automerge@https://codeload.github.com/clinuxrulz/solid-automerge/tar.gz/325de86c13a44784b849fc4cede2ae11a1926179(@automerge/automerge-repo@2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2))(solid-js@1.9.3):
+    dependencies:
+      '@automerge/automerge-repo': 2.0.0-alpha.22(@types/node@22.14.1)(typescript@5.7.2)
+      '@solid-primitives/utils': 6.3.0(solid-js@1.9.3)
+      cabbages: 0.2.6
+      solid-js: 1.9.3
+    transitivePeerDependencies:
+      - supports-color
 
   solid-js@1.9.3:
     dependencies:

@@ -15,7 +15,7 @@ import { levelComponentType } from "./components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { ReactiveVirtualFileSystem } from "../ReactiveVirtualFileSystem";
 import { AutomergeVfsFolder, AutomergeVirtualFileSystem, VfsFile } from "solid-fs-automerge";
-import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { makeDocumentProjection } from "solid-automerge";
 
 export class LevelList {
     readonly selectedLevelByFileId: Accessor<string | undefined>;

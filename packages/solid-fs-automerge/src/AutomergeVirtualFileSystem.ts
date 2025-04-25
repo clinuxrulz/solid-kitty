@@ -4,7 +4,7 @@ import {
     isValidAutomergeUrl,
     Repo,
 } from "@automerge/automerge-repo";
-import { createDocumentProjection, makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { createDocumentProjection, makeDocumentProjection } from "solid-automerge";
 import { Accessor, createComputed, createMemo, createResource, createRoot, mapArray, on, onCleanup, untrack } from "solid-js";
 import { Store } from "solid-js/store";
 import {

@@ -49,8 +49,8 @@
     "@solidjs/router": "^0.15.3",
     "@tailwindcss/vite": "^4.0.14",
     "@unocss/reset": "^65.4.3",
-    "automerge-repo-solid-primitives": "2.0.0-beta.12",
     "awesome-qr": "^2.1.5-rc.0",
+    "control-flow-as-value": "workspace:*",
     "daisyui": "^5.0.6",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
@@ -60,13 +60,13 @@
     "peerjs": "^1.5.4",
     "pixi.js": "^8.6.6",
     "qr-scanner": "^1.4.2",
+    "solid-automerge": "git+https://github.com/clinuxrulz/solid-automerge.git#restore",
+    "solid-fs-automerge": "workspace:*",
     "solid-js": "^1.9.3",
     "tailwindcss": "^4.0.14",
     "unique-username-generator": "^1.4.0",
     "uuid": "^11.0.5",
-    "vite-plugin-wasm": "^3.4.1",
-    "solid-fs-automerge": "workspace:*",
-    "control-flow-as-value": "workspace:*"
+    "vite-plugin-wasm": "^3.4.1"
   },
-  "packageManager": "pnpm@9.1.1"
+  "packageManager": "pnpm@10.9.0"
 }

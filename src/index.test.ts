@@ -4,7 +4,7 @@ import { createJsonProjectionViaTypeSchema, createJsonProjectionViaTypeSchemaV2,
 import { createComputed, createRoot, createSignal, on } from "solid-js";
 import { createStore } from 'solid-js/store';
 import { Vec2 } from "./Vec2";
-import { makeDocumentProjection } from "automerge-repo-solid-primitives";
+import { makeDocumentProjection } from "solid-automerge";
 import { Repo } from "@automerge/automerge-repo";
 
 describe("TypeSchema json projection for automerge", () => {
