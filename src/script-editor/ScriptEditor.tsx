@@ -3,6 +3,7 @@ import type { editor } from "monaco-editor";
 
 import loader from "@monaco-editor/loader";
 import { AutomergeVfsFile } from "solid-fs-automerge";
+import * as Automerge from "@automerge/automerge-repo";
 
 let monaco = await loader.init();
 
@@ -47,7 +48,7 @@ const ScriptEditor: Component<{
                 return;
             }
             file.docHandle.change((doc) => {
-                doc.source = source;
+                Automerge.updateText(doc, ["source"], source);
             });
         };
         let dispose = model?.onDidChangeContent(changeHandler);
