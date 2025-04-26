@@ -102,7 +102,7 @@ export function createAutomergeFs(
                         return preFolder;
                     }
                     let preFolder2 = preFolder.value;
-                    let contents = preFolder2.contents();
+                    let contents = preFolder2.contents;
                     let fileOrFolderEntry = contents.find((entry) => entry.name == tail);
                     if (fileOrFolderEntry == undefined) {
                         return asyncFailed("File or folder not found");
@@ -190,7 +190,7 @@ export function createAutomergeFs(
             }
         }
         let r4 = r3.value;
-        let r5 = r4.contents();
+        let r5 = r4.contents;
         if (options?.withFileTypes) {
             return r5.map((x) => {
                 let type2: "dir" | "file";

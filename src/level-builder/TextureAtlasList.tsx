@@ -50,7 +50,7 @@ export class TextureAtlasList {
                     return textureAtlasesFolder;
                 }
                 let textureAtlasesFolder2 = textureAtlasesFolder.value;
-                let filesAndFolders = createMemo(() => textureAtlasesFolder2.contents());
+                let filesAndFolders = createMemo(() => textureAtlasesFolder2.contents);
                 createEffect(
                     on(filesAndFolders, () => {
                         let filesAndFolders2 = filesAndFolders();
@@ -183,7 +183,7 @@ export class TextureAtlasList {
                     return;
                 }
                 let imageFilename = textureAtlas.imageRef;
-                let filesAndFolders = untrack(() => imagesFolder2.contents());
+                let filesAndFolders = untrack(() => imagesFolder2.contents);
                 let imageFileId: string | undefined = undefined;
                 for (let x of filesAndFolders) {
                     if (x.type == "File" && x.name == imageFilename) {

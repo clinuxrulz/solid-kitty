@@ -4,7 +4,7 @@ import LandingApp from "./LandingApp";
 import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
 import { createFileSystemExplorer } from "./FileSystemExplorer";
-import { AutomergeVfsFile, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
+import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
 import { err } from "../kitty-demo/Result";
 import { asyncFailed, AsyncResult, asyncSuccess } from "../AsyncResult";
 import PixelEditor from "../pixel-editor/PixelEditor";
@@ -18,6 +18,8 @@ import { opToArr } from "../kitty-demo/util";
 import { asyncPending, ok, Result } from "control-flow-as-value";
 import { levelComponentType } from "../level-builder/components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
+import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, SOURCE_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "../level-builder/LevelBuilder";
+import ScriptEditor from "../script-editor/ScriptEditor";
 
 const AppV2: Component<{
     vfs: AutomergeVirtualFileSystem,
@@ -42,6 +44,7 @@ const AppV2: Component<{
         "Images" |
         "Texture Atlases" |
         "Levels" |
+        "Source" |
         undefined
     >(() => {
         if (selectionCount() != 1) {
@@ -55,6 +58,9 @@ const AppV2: Component<{
         }
         if (fileSystemExplorer.isSelected("levels")) {
             return "Levels";
+        }
+        if (fileSystemExplorer.isSelected(SOURCE_FOLDER_NAME)) {
+            return "Source";
         }
         return undefined;
     });
@@ -73,81 +79,52 @@ const AppV2: Component<{
         }
         return tmp.value();
     });
-    let imagesFolder_ = createMemo(() => {
-        let rootFolder2 = rootFolder();
-        if (rootFolder2.type != "Success") {
-            return rootFolder2;
-        }
-        let rootFolder3 = rootFolder2.value;
-        let contents = rootFolder3.contents();
-        let images = contents.find((x) => x.name == "images");
-        if (images == undefined) {
-            return asyncFailed("images folder not found");
-        }
-        let images2 = images;
-        if (images2.type != "Folder") {
-            return asyncFailed("expected images to be a folder");
-        }
-        let imagesFolderId = images2.id;
-        return asyncSuccess(rootFolder3.openFolderById(imagesFolderId));
-    });
-    let imagesFolder = createMemo(() => {
-        let tmp = imagesFolder_();
-        if (tmp.type != "Success") {
-            return tmp;
-        }
-        return tmp.value();
-    });
-    let textureAtlasesFolder_ = createMemo(() => {
-        let rootFolder2 = rootFolder();
-        if (rootFolder2.type != "Success") {
-            return rootFolder2;
-        }
-        let rootFolder3 = rootFolder2.value;
-        let contents = rootFolder3.contents();
-        let textureAtlases = contents.find((x) => x.name == "texture_atlases");
-        if (textureAtlases == undefined) {
-            return asyncFailed("texture atlases folder not found");
-        }
-        let textureAtlases2 = textureAtlases;
-        if (textureAtlases2.type != "Folder") {
-            return asyncFailed("expected textureAtlases to be a folder");
-        }
-        let textureAtlasesFolderId = textureAtlases2.id;
-        return asyncSuccess(rootFolder3.openFolderById(textureAtlasesFolderId));
-    });
-    let textureAtlasesFolder = createMemo(() => {
-        let tmp = textureAtlasesFolder_();
-        if (tmp.type != "Success") {
-            return tmp;
-        }
-        return tmp.value();
-    });
-    let levelsFolder_ = createMemo(() => {
-        let rootFolder2 = rootFolder();
-        if (rootFolder2.type != "Success") {
-            return rootFolder2;
-        }
-        let rootFolder3 = rootFolder2.value;
-        let contents = rootFolder3.contents();
-        let levels = contents.find((x) => x.name == "levels");
-        if (levels == undefined) {
-            return asyncFailed("levels folder not found");
-        }
-        let levels2 = levels;
-        if (levels2.type != "Folder") {
-            return asyncFailed("expected levels to be a folder");
-        }
-        let levelsFolderId = levels2.id;
-        return asyncSuccess(rootFolder3.openFolderById(levelsFolderId));
-    });
-    let levelsFolder = createMemo(() => {
-        let tmp = levelsFolder_();
-        if (tmp.type != "Success") {
-            return tmp;
-        }
-        return tmp.value();
-    });
+    let getOrCreateFolderInRoot = (folderName: string): Accessor<AsyncResult<AutomergeVfsFolder>> => {
+        let result_ = createMemo(() => {
+            let rootFolder2 = rootFolder();
+            if (rootFolder2.type != "Success") {
+                return rootFolder2;
+            }
+            let rootFolder3 = rootFolder2.value;
+            let folderId = createMemo(() => {
+                let folderId2 = rootFolder3.getFolderId(folderName);
+                if (folderId2 != undefined) {
+                    return asyncSuccess(folderId2);
+                }
+                let folderId3 = rootFolder3.createFolder(folderName);
+                if (folderId3.type == "Err") {
+                    return asyncFailed(folderId3.message);
+                }
+                return asyncSuccess(folderId3.value.id);
+            });
+            let result_ = createMemo(() => {
+                let folderId2 = folderId();
+                if (folderId2.type != "Success") {
+                    return folderId2;
+                }
+                let folderId3 = folderId2.value;
+                return asyncSuccess(rootFolder3.openFolderById(folderId3));
+            });
+            return asyncSuccess(createMemo(() => {
+                let tmp = result_();
+                if (tmp.type != "Success") {
+                    return tmp;
+                }
+                return tmp.value();
+            }));
+        });
+        return createMemo(() => {
+            let tmp = result_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    };
+    let imagesFolder = getOrCreateFolderInRoot(IMAGES_FOLDER_NAME);
+    let textureAtlasesFolder = getOrCreateFolderInRoot(TEXTURE_ATLASES_FOLDER_NAME);
+    let levelsFolder = getOrCreateFolderInRoot(LEVELS_FOLDER_NAME);
+    let sourceFolder = getOrCreateFolderInRoot(SOURCE_FOLDER_NAME);
     let selectedImageFileById = createMemo(() => {
         if (selectionCount() != 1) {
             return undefined;
@@ -157,7 +134,7 @@ const AppV2: Component<{
             return undefined;
         }
         let imagesFolder3 = imagesFolder2.value;
-        let contents = imagesFolder3.contents();
+        let contents = imagesFolder3.contents;
         for (let image of contents) {
             if (image.type != "File") {
                 continue;
@@ -177,7 +154,7 @@ const AppV2: Component<{
             return undefined;
         }
         let textureAtlasesFolder3 = textureAtlasesFolder2.value;
-        let contents = textureAtlasesFolder3.contents();
+        let contents = textureAtlasesFolder3.contents;
         for (let textureAtlas of contents) {
             if (textureAtlas.type != "File") {
                 continue;
@@ -197,13 +174,33 @@ const AppV2: Component<{
             return undefined;
         }
         let levelsFolder3 = levelsFolder2.value;
-        let contents = levelsFolder3.contents();
+        let contents = levelsFolder3.contents;
         for (let level of contents) {
             if (level.type != "File") {
                 continue;
             }
             if (fileSystemExplorer.isSelected("levels/" + level.name)) {
                 return level.id;
+            }
+        }
+        return undefined;
+    });
+    let selectedSourceFileById = createMemo(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        let sourceFolder2 = sourceFolder();
+        if (sourceFolder2.type != "Success") {
+            return undefined;
+        }
+        let sourceFolder3 = sourceFolder2.value;
+        let contents = sourceFolder3.contents;
+        for (let sourceFile of contents) {
+            if (sourceFile.type != "File") {
+                continue;
+            }
+            if (fileSystemExplorer.isSelected(SOURCE_FOLDER_NAME + "/" + sourceFile.name)) {
+                return sourceFile.id;
             }
         }
         return undefined;
@@ -264,6 +261,31 @@ const AppV2: Component<{
         let fileId = result.value.id;
         // TODO: Set selection of file explorer to fileId
     };
+    const newSource = () => {
+        let sourceFolder2 = sourceFolder();
+        if (sourceFolder2.type != "Success") {
+            return;
+        }
+        let sourceFolder3 = sourceFolder2.value;
+        let sourceFileName = window.prompt("Enter name of source file:");
+        if (sourceFileName == null) {
+            return;
+        }
+        sourceFileName = sourceFileName.trim();
+        if (sourceFileName == "") {
+            return;
+        }
+        sourceFileName += ".ts";
+        let result = sourceFolder3.createFile(
+            sourceFileName,
+            "",
+        );
+        if (result.type == "Err") {
+            return;
+        }
+        let fileId = result.value.id;
+        // TODO: Set selection of file explorer to fileId
+    };
     const showFileExplorer = () => {
         setState(
             "overlayApp",
@@ -299,6 +321,9 @@ const AppV2: Component<{
                                         case "Levels":
                                             newLevel();
                                             break;
+                                        case "Source":
+                                            newSource();
+                                            break;
                                     }
                                 }}
                             >
@@ -314,6 +339,8 @@ const AppV2: Component<{
                                             return "Texture Atlas";
                                         case "Levels":
                                             return "Level";
+                                        case "Source":
+                                            return "Source";
                                     }
                                 })()}
                             </button>
@@ -386,7 +413,7 @@ const AppV2: Component<{
             }
             let imageFolder3 = imagesFolder2.value;
             let result_ = createMemo(mapArray(
-                () => imageFolder3.contents(),
+                () => imageFolder3.contents,
                 (entry) => {
                     return createMemo(() => {
                         if (entry.type != "File") {
@@ -440,7 +467,7 @@ const AppV2: Component<{
             }
             let textureAtlasesFolder3 = textureAtlasesFolder2.value;
             let result_ = createMemo(mapArray(
-                () => textureAtlasesFolder3.contents(),
+                () => textureAtlasesFolder3.contents,
                 (entry) => createMemo(() => {
                     if (entry.type != "File") {
                         return undefined;
@@ -711,6 +738,31 @@ const AppV2: Component<{
                         "flex-grow": "1",
                     }}
                 />
+            );
+        }
+        let selectedSourceFileById2 = selectedSourceFileById();
+        if (selectedSourceFileById2 != undefined) {
+            let sourceFolder2 = sourceFolder();
+            if (sourceFolder2.type != "Success") {
+                return LandingApp;
+            }
+            let sourceFolder3 = sourceFolder2.value;
+            let file = sourceFolder3.openFileById<{ source: string, }>(selectedSourceFileById2);
+            let file2 = createMemo(() => {
+                let tmp = file();
+                if (tmp.type != "Success") {
+                    return undefined;
+                }
+                return tmp.value;
+            });
+            return (() =>
+                <Show when={file2()}>
+                    {(file3) => (
+                        <ScriptEditor
+                            file={file3()}
+                        />
+                    )}
+                </Show>
             );
         }
         return LandingApp;

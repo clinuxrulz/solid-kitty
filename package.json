@@ -60,6 +60,7 @@
     "peerjs": "^1.5.4",
     "pixi.js": "^8.6.6",
     "qr-scanner": "^1.4.2",
+    "reactive-cache": "workspace:*",
     "solid-automerge": "1.0.0-beta.6",
     "solid-fs-automerge": "workspace:*",
     "solid-js": "^1.9.3",

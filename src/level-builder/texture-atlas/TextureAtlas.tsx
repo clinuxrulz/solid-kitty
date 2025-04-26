@@ -156,7 +156,7 @@ export class TextureAtlas {
                             return;
                         }
                         let imageFilename = textureAtlas.imageRef;
-                        let filesAndFolders = createMemo(() => imagesFolder2.contents());
+                        let filesAndFolders = createMemo(() => imagesFolder2.contents);
                         createEffect(
                             on(filesAndFolders, () => {
                                 let imageFileId: string | undefined = undefined;

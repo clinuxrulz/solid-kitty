@@ -41,7 +41,7 @@ export class LevelList {
                     return;
                 }
                 let levelsFolder2 = levelsFolder.value;
-                let filesAndFolders = createMemo(() => levelsFolder2.contents());
+                let filesAndFolders = createMemo(() => levelsFolder2.contents);
                 createEffect(() => {
                     let filesAndFolders2 = filesAndFolders();
                     let levelFiles = filesAndFolders2.flatMap((x) => {

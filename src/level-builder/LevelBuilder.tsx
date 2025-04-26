@@ -42,9 +42,10 @@ type State = {
     selectedTab: "Texture Atlases" | "Levels";
 };
 
-const IMAGES_FOLDER_NAME = "images";
-const TEXTURE_ATLASES_FOLDER_NAME = "texture_atlases";
-const LEVELS_FOLDER_NAME = "levels";
+export const IMAGES_FOLDER_NAME = "images";
+export const TEXTURE_ATLASES_FOLDER_NAME = "texture_atlases";
+export const LEVELS_FOLDER_NAME = "levels";
+export const SOURCE_FOLDER_NAME = "src";
 
 const LevelBuilder: Component<{
     vfs: AutomergeVirtualFileSystem,
@@ -144,7 +145,7 @@ const LevelBuilder: Component<{
             }
             let imageFolder3 = imagesFolder2.value;
             let result_ = createMemo(mapArray(
-                () => imageFolder3.contents(),
+                () => imageFolder3.contents,
                 (entry) => {
                     return createMemo(() => {
                         if (entry.type != "File") {
@@ -207,7 +208,7 @@ const LevelBuilder: Component<{
             }
             let textureAtlasesFolder3 = textureAtlasesFolder2.value;
             let result_ = createMemo(mapArray(
-                () => textureAtlasesFolder3.contents(),
+                () => textureAtlasesFolder3.contents,
                 (entry) => createMemo(() => {
                     if (entry.type != "File") {
                         return undefined;
@@ -504,7 +505,7 @@ function createGetOrCreateRootFolder(params: {
                 return rootFolder2;
             }
             let rootFolder3 = rootFolder2.value;
-            return asyncSuccess(rootFolder3.contents());
+            return asyncSuccess(rootFolder3.contents);
         });
         rootFilesAndFolders = createMemo(() => {
             let tmp = rootFilesAndFolders_();
