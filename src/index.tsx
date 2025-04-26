@@ -122,10 +122,17 @@ render(() => {
         },
     ));
 
-    let vfs = new AutomergeVirtualFileSystem({
-        repo,
-        docHandle: vfsDoc2,
+    // Make a new file system when the root doc handle
+    // changes so the FileTree can reload when peers
+    // connect.
+    let vfs = createMemo(() => {
+        let vfsDoc3 = vfsDoc2();
+        return new AutomergeVirtualFileSystem({
+            repo,
+            docHandle: () => vfsDoc3,
+        });
     });
+
 
     let App2: Component = () => (
         <App
@@ -155,7 +162,7 @@ render(() => {
             <Route path="/" component={App2} />
             <Route path="/kitty-demo" component={KittyDemoApp} />
             <Route path="/pixel-editor" component={() => <PixelEditor/>} />
-            <Route path="/level-builder" component={() => <LevelBuilder vfs={vfs}/>} />
+            <Route path="/level-builder" component={() => <LevelBuilder vfs={vfs()}/>} />
             <Route path="/script-editor" component={() => <ScriptEditor/>} />
             <Route
                 path="/colour-picker"
@@ -197,7 +204,7 @@ render(() => {
                 path="/app"
                 component={() =>
                     <AppV2
-                        vfs={vfs}
+                        vfs={vfs()}
                         ConnectionManagementUi={connectionManagementUi.Render}
                     />
                 }
