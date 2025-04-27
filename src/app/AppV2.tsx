@@ -20,17 +20,20 @@ import { levelComponentType } from "../level-builder/components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, SOURCE_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "../level-builder/LevelBuilder";
 import ScriptEditor from "../script-editor/ScriptEditor";
+import Game from "./Game";
 
 const AppV2: Component<{
     vfs: AutomergeVirtualFileSystem,
     ConnectionManagementUi: Component,
 }> = (props) => {
     let [ state, setState, ] = createStore<{
+        showGame: boolean,
         overlayApp: NoTrack<{
             Title: Component,
             View: Component,
         }> | undefined,
     }>({
+        showGame: false,
         overlayApp: undefined,
     });
     let fileSystemExplorer = createFileSystemExplorer({
@@ -701,6 +704,9 @@ const AppV2: Component<{
         if (selectedTextureAtlasFileById2 != undefined) {
             let vfs2 = vfs();
             if (vfs2.type != "Success") {
+                if (state.showGame) {
+                    return () => undefined;
+                }
                 return LandingApp;
             }
             let vfs3 = vfs2.value;
@@ -722,6 +728,9 @@ const AppV2: Component<{
         if (selectedLevelFileById2 != undefined) {
             let vfs2 = vfs();
             if (vfs2.type != "Success") {
+                if (state.showGame) {
+                    return () => undefined;
+                }
                 return LandingApp;
             }
             let vfs3 = vfs2.value;
@@ -744,6 +753,9 @@ const AppV2: Component<{
         if (selectedSourceFileById2 != undefined) {
             let sourceFolder2 = sourceFolder();
             if (sourceFolder2.type != "Success") {
+                if (state.showGame) {
+                    return () => undefined;
+                }
                 return LandingApp;
             }
             let sourceFolder3 = sourceFolder2.value;
@@ -764,6 +776,9 @@ const AppV2: Component<{
                     )}
                 </Show>
             );
+        }
+        if (state.showGame) {
+            return () => undefined;
         }
         return LandingApp;
     });
@@ -788,14 +803,37 @@ const AppV2: Component<{
                 >
                     <i class="fa-solid fa-folder-tree"/>
                 </li>
+                <li>
+                    <label>
+                        <input
+                            type="checkbox"
+                            class="checkbox"
+                            checked={state.showGame}
+                            style="display: inline-block;"
+                            onChange={(e) => {
+                                setState("showGame", e.currentTarget.checked)
+                            }}
+                        />
+                        Show Game
+                    </label>
+                </li>
             </ul>
             <div
                 style={{
                     "flex-grow": "1",
                     "display": "flex",
+                    "flex-direction": "row",
                 }}
             >
-                <SubApp/>
+                <Switch>
+                    <Match when={!state.showGame}>
+                        <SubApp/>
+                    </Match>
+                    <Match when={state.showGame}>
+                        <SubApp/>
+                        <Game vfs={props.vfs}/>
+                    </Match>
+                </Switch>
             </div>
             <Show when={state.overlayApp?.value} keyed={true}>
                 {(overlayApp) => (
