@@ -281,7 +281,9 @@ const AppV2: Component<{
         sourceFileName += ".ts";
         let result = sourceFolder3.createFile(
             sourceFileName,
-            "",
+            {
+                source: "",
+            },
         );
         if (result.type == "Err") {
             return;
