@@ -19,6 +19,14 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      external: ["typescript"],
+      output: {
+        globals: {
+          "typescript": "typescript",
+        },
+      },
+    },
   },
   publicDir: "public",
   resolve: {
