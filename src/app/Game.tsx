@@ -6,11 +6,12 @@ import {
     Transform,
     transformModulePaths
 } from '@bigmistqke/repl'
-import ts from 'typescript'
+import ts, { ModuleKind } from 'typescript'
 import { AutomergeVirtualFileSystem } from "solid-fs-automerge";
 import { Component } from "solid-js";
 
-import preludeIndex from "./prelude/index.html?raw";
+import preludeIndexHtml from "./prelude/index.html?raw";
+import preludeIndexTs from "./prelude/index.ts?raw";
 
 function createRepl() {
     const transformJs: Transform = ({ path, source, executables }) => {
@@ -39,7 +40,16 @@ function createRepl() {
         ts: {
             type: 'javascript',
             transform({ path, source, executables }) {
-                return transformJs({ path, source: ts.transpile(source), executables })
+                return transformJs({
+                    path,
+                    source: ts.transpile(
+                        source,
+                        {
+                            module: ModuleKind.ES2022,
+                        }
+                    ),
+                    executables,
+                })
             },
         },
         html: {
@@ -65,7 +75,8 @@ const Game: Component<{
     vfs: AutomergeVirtualFileSystem
 }> = (props) => {
     let repl = createRepl();
-    repl.writeFile("index.html", preludeIndex);
+    repl.writeFile("index.html", preludeIndexHtml);
+    repl.writeFile("index.ts", preludeIndexTs);
     return (
         <iframe
             src={repl.getExecutable("index.html")}
