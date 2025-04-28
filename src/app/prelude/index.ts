@@ -1,16 +1,16 @@
 // @ts-ignore
-import * as _ecsy from "ecsy@0.4.3";
-type Ecsy = typeof import("ecsy");
-const ecsy = _ecsy as Ecsy;
-const { Component, Types, World, } = ecsy;
+import * as _ecs from "ecs-lib@0.8.0-pre.2";
+type Ecs = typeof import("ecs-lib");
+const ecs = _ecs as Ecs;
+let world = new ecs.default();
 
-let world = new ecsy.World();
+type ECS = typeof world;
 
 let sources = new Map<string,{
     url: string,
     code: Promise<{
-        init: (ecsy: Ecsy, world: ecsy.World) => void,
-        onCleanup: (ecsy: Ecsy, world: ecsy.World) => void,
+        init: (ecsy: Ecs, world: ECS) => void,
+        onCleanup: (ecsy: Ecs, world: ECS) => void,
     }>,
 }>();
 
@@ -26,7 +26,7 @@ window.addEventListener("message", (e) => {
         });
         (async () => {
             let code2 = await code;
-            code2.init(ecsy, world);
+            code2.init(ecs, world);
         })();
     } else if (msg.type == "DisposeSource") {
         let path = msg.path;
@@ -35,7 +35,7 @@ window.addEventListener("message", (e) => {
             sources.delete(path);
             (async () => {
                 let code2 = await node.code;
-                code2.onCleanup(ecsy, world);
+                code2.onCleanup(ecs, world);
             })();
         }
     }

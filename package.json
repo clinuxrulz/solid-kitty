@@ -24,7 +24,7 @@
     "@types/jest": "^29.5.14",
     "@types/md5": "^2.3.5",
     "@types/pako": "^2.0.3",
-    "ecsy": "^0.4.3",
+    "ecs-lib": "0.8.0-pre.2",
     "jsdom": "^26.0.0",
     "monaco-editor": "^0.52.2",
     "prettier": "^3.5.2",
