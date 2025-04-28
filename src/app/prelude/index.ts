@@ -1,16 +1,17 @@
 // @ts-ignore
 import * as _ecs from "ecs-lib@0.8.0-pre.2";
 type Ecs = typeof import("ecs-lib");
-const ecs = _ecs as Ecs;
-let world = new ecs.default();
+const _ecs2 = _ecs as Ecs;
+let world = new _ecs2.default();
+let ecs = _ecs2.default;
 
 type ECS = typeof world;
 
 let sources = new Map<string,{
     url: string,
     code: Promise<{
-        init: (ecsy: Ecs, world: ECS) => void,
-        onCleanup: (ecsy: Ecs, world: ECS) => void,
+        init: (ecsy: Ecs["default"], world: ECS) => void,
+        onCleanup: (ecsy: Ecs["default"], world: ECS) => void,
     }>,
 }>();
 
