@@ -176,13 +176,11 @@ const Game: Component<{
             }
             let [ ready, ] = createResource(() => {
                 return new Promise<true>((resolve) => {
-                    let onMessage = (e: MessageEvent) => {
-                        if (e.data == "ready") {
-                            iframeWindow.removeEventListener("message", onMessage);
-                            resolve(true);
-                        }
+                    let onLoad = () => {
+                        iframeElement3.removeEventListener("load", onLoad);
+                        resolve(true);
                     };
-                    iframeWindow.addEventListener("message", onMessage);
+                    iframeElement3.addEventListener("load", onLoad);
                 });
             });
             return ready;

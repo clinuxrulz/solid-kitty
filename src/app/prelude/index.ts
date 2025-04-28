@@ -42,9 +42,3 @@ window.addEventListener("message", (e) => {
 });
 
 document.body.append(document.createTextNode("Hello World!"));
-
-let onDOMContentLoaded = () => {
-    window.postMessage("ready");
-    document.removeEventListener("DOMContentLoaded", onDOMContentLoaded);
-};
-document.addEventListener("DOMContentLoaded", onDOMContentLoaded);
