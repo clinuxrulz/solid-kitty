@@ -7,11 +7,13 @@ import {
     transformModulePaths
 } from '@bigmistqke/repl'
 import ts, { ModuleKind } from 'typescript'
-import { AutomergeVirtualFileSystem } from "solid-fs-automerge";
-import { Component } from "solid-js";
+import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
+import { Accessor, Component, createComputed, createMemo, createResource, createSignal, mapArray, onCleanup, onMount, untrack } from "solid-js";
 
 import preludeIndexHtml from "./prelude/index.html?raw";
 import preludeIndexTs from "./prelude/index.ts?raw";
+import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
+import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
 function createRepl() {
     const transformJs: Transform = ({ path, source, executables }) => {
@@ -74,11 +76,168 @@ function createRepl() {
 const Game: Component<{
     vfs: AutomergeVirtualFileSystem
 }> = (props) => {
+    let [ iframeElement, setIFrameElement, ] = createSignal<HTMLIFrameElement>();
     let repl = createRepl();
     repl.writeFile("index.html", preludeIndexHtml);
     repl.writeFile("index.ts", preludeIndexTs);
+    let rootFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+    {
+        let rootFolder_ = createMemo(() => props.vfs.rootFolder());
+        rootFolder = createMemo(() => rootFolder_()());
+    }
+    let sourceFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
+    {
+        let sourceFolder_ = createMemo(() => {
+            let rootFolder2 = rootFolder();
+            if (rootFolder2.type != "Success") {
+                return rootFolder2;
+            }
+            let rootFolder3 = rootFolder2.value;
+            let sourceFolderId: string | undefined = undefined;
+            for (let entry of rootFolder3.contents) {
+                if (entry.name == SOURCE_FOLDER_NAME && entry.type == "Folder") {
+                    sourceFolderId = entry.id;
+                    break;
+                }
+            }
+            if (sourceFolderId == undefined) {
+                return asyncFailed("Source folder not found.");
+            }
+            return asyncSuccess(rootFolder3.openFolderById(sourceFolderId));
+        });
+        sourceFolder = createMemo(() => {
+            let tmp = sourceFolder_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            return tmp.value();
+        });
+    }
+    let sourceFiles: Accessor<AsyncResult<AutomergeVfsFile<{ source: string, }>[]>>;
+    {
+        let sourceFiles_ = createMemo(() => {
+            let sourceFolder2 = sourceFolder();
+            if (sourceFolder2.type != "Success") {
+                return sourceFolder2;
+            }
+            let sourceFolder3 = sourceFolder2.value;
+            return asyncSuccess(createMemo(mapArray(
+                () => sourceFolder3.contents,
+                (entry) => createMemo(() => {
+                    if (entry.type != "File") {
+                        return undefined;
+                    }
+                    return sourceFolder3.openFileById<{ source: string, }>(entry.id);
+                }),
+            )));
+        });
+        sourceFiles = createMemo(() => {
+            let tmp = sourceFiles_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            let tmp2 = tmp.value();
+            let result: AutomergeVfsFile<{ source: string, }>[] = [];
+            for (let tmp3 of tmp2) {
+                let tmp4 = tmp3();
+                if (tmp4 == undefined) {
+                    continue;
+                }
+                let tmp5 = tmp4();
+                if (tmp5.type != "Success") {
+                    return tmp5;
+                }
+                result.push(tmp5.value);
+            }
+            return asyncSuccess(result);
+        });
+    }
+    let sourceFilesAsArray = createMemo(() => {
+        let sourceFiles2 = sourceFiles();
+        if (sourceFiles2.type == "Pending") {
+            return [];
+        }
+        if (sourceFiles2.type == "Failed") {
+            console.log(sourceFiles2.message);
+            return [];
+        }
+        return sourceFiles2.value;
+    });
+    onMount(() => {
+        let iframeReady_ = createMemo(() => {
+            let iframeElement2 = iframeElement();
+            if (iframeElement2 == undefined) {
+                return;
+            }
+            let iframeElement3 = iframeElement2;
+            let iframeWindow = iframeElement3.contentWindow;
+            if (iframeWindow == null) {
+                return;
+            }
+            let [ ready, ] = createResource(() => {
+                return new Promise<true>((resolve) => {
+                    let onMessage = (e: MessageEvent) => {
+                        if (e.data == "ready") {
+                            iframeWindow.removeEventListener("message", onMessage);
+                            resolve(true);
+                        }
+                    };
+                    iframeWindow.addEventListener("message", onMessage);
+                });
+            });
+            return ready;
+        });
+        let iframeReady = createMemo(() =>
+            iframeReady_()?.() ?? false
+        );
+        repl.mkdir("user_code");
+        createComputed(() => {
+            if (!iframeReady()) {
+                return;
+            }
+            let iframeElement2 = iframeElement();
+            if (iframeElement2 == undefined) {
+                return;
+            }
+            let iframeElement3 = iframeElement2;
+            let iframeWindow = iframeElement3.contentWindow;
+            if (iframeWindow == null) {
+                return;
+            }
+            createComputed(mapArray(
+                sourceFilesAsArray,
+                (sourceFile) => {
+                    createComputed(() => {
+                        let filePath = "user_code/" + sourceFile.name();
+                        let source = sourceFile.doc.source;
+                        untrack(() => repl.writeFile(filePath, source));
+                        onCleanup(() => {
+                            repl.rm(filePath);
+                        });
+                        createComputed(() => {
+                            let url = repl.getExecutable(filePath);
+                            if (url == undefined) {
+                                return;
+                            }
+                            iframeWindow.postMessage({
+                                type: "UpdateSource",
+                                url,
+                            });
+                            onCleanup(() => {
+                                iframeWindow.postMessage({
+                                    type: "DisposeSource",
+                                    url,
+                                });
+                            });
+                        });
+                    });
+                },
+            ));
+        });
+    });
     return (
         <iframe
+            ref={setIFrameElement}
             src={repl.getExecutable("index.html")}
             style="flex-grow: 1;"
         />

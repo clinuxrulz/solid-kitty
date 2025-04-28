@@ -135,6 +135,9 @@ importers:
       '@types/pako':
         specifier: ^2.0.3
         version: 2.0.3
+      ecsy:
+        specifier: ^0.4.3
+        version: 0.4.3
       jsdom:
         specifier: ^26.0.0
         version: 26.1.0
@@ -1739,6 +1742,9 @@ packages:
 
   earcut@2.2.4:
     resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==}
+
+  ecsy@0.4.3:
+    resolution: {integrity: sha512-wJWiIIUosxS17S/a2DZGR/jD6Kwm7OKJv/cSe7NIbPLZHdmNo6O7aFVDGqVK24MA3a5+AJOWbREL+4GFYQEmGQ==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -5121,6 +5127,8 @@ snapshots:
   duplexer@0.1.2: {}
 
   earcut@2.2.4: {}
+
+  ecsy@0.4.3: {}
 
   ejs@3.1.10:
     dependencies:
