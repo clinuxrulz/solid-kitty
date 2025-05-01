@@ -27,6 +27,7 @@ const ScriptEditor: Component<{
                     comments: !isAndroid,
                     strings: !isAndroid,
                 },
+                automaticLayout: true,
                 acceptSuggestionOnCommitCharacter: !isAndroid,
                 acceptSuggestionOnEnter: !isAndroid ? "on" : "off",
                 accessibilitySupport: !isAndroid ? "on" : "off",

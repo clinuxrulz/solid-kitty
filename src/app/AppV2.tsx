@@ -1,7 +1,7 @@
 import { Accessor, Component, createMemo, createResource, mapArray, Match, onCleanup, Show, Switch } from "solid-js";
 import { createStore } from "solid-js/store";
+import Resizeable from "@corvu/resizable";
 import LandingApp from "./LandingApp";
-import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { NoTrack } from "../util";
 import { createFileSystemExplorer } from "./FileSystemExplorer";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
@@ -831,9 +831,39 @@ const AppV2: Component<{
                     <Match when={!state.showGame}>
                         <SubApp/>
                     </Match>
-                    <Match when={state.showGame}>
-                        <SubApp/>
+                    <Match when={state.showGame && subApp()({}) == undefined}>
                         <Game vfs={props.vfs}/>
+                    </Match>
+                    <Match when={state.showGame && subApp()({}) != undefined}>
+                        <Resizeable
+                            orientation="horizontal"
+                            style={{
+                                "flex-grow": "1",
+                            }}
+                        >
+                            <Resizeable.Panel
+                                style={{
+                                    "display": "flex",
+                                    "overflow": "hidden",
+                                }}
+                            >
+                                <SubApp/>
+                            </Resizeable.Panel>
+                            <Resizeable.Handle
+                                aria-label="Resize Handle"
+                                class="group basis-3 px-0.75"
+                            >
+                                <div class="size-full rounded-sm transition-colors group-data-active:bg-corvu-300 group-data-dragging:bg-corvu-100" />
+                            </Resizeable.Handle>
+                            <Resizeable.Panel
+                                style={{
+                                    "display": "flex",
+                                    "overflow": "hidden",
+                                }}
+                            >
+                                <Game vfs={props.vfs}/>
+                            </Resizeable.Panel>
+                        </Resizeable>
                     </Match>
                 </Switch>
             </div>
