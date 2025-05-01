@@ -1,4 +1,4 @@
-import { Accessor, Component, createMemo, createResource, mapArray, Match, onCleanup, Show, Switch } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createResource, mapArray, Match, on, onCleanup, Show, Switch } from "solid-js";
 import { createStore } from "solid-js/store";
 import Resizeable from "@corvu/resizable";
 import LandingApp from "./LandingApp";
@@ -19,7 +19,7 @@ import { asyncPending, ok, Result } from "control-flow-as-value";
 import { levelComponentType } from "../level-builder/components/LevelComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, SOURCE_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "../level-builder/LevelBuilder";
-import ScriptEditor from "../script-editor/ScriptEditor";
+import ScriptEditor, { mountAutomergeFolderToMonacoVfsWhileMounted } from "../script-editor/ScriptEditor";
 import Game from "./Game";
 
 const AppV2: Component<{
@@ -128,6 +128,16 @@ const AppV2: Component<{
     let textureAtlasesFolder = getOrCreateFolderInRoot(TEXTURE_ATLASES_FOLDER_NAME);
     let levelsFolder = getOrCreateFolderInRoot(LEVELS_FOLDER_NAME);
     let sourceFolder = getOrCreateFolderInRoot(SOURCE_FOLDER_NAME);
+    createComputed(on(
+        sourceFolder,
+        (sourceFolder) => {
+            if (sourceFolder.type != "Success") {
+                return;
+            }
+            let sourceFolder2 = sourceFolder.value;
+            mountAutomergeFolderToMonacoVfsWhileMounted(sourceFolder2);
+        },
+    ));
     let selectedImageFileById = createMemo(() => {
         if (selectionCount() != 1) {
             return undefined;
@@ -184,6 +194,26 @@ const AppV2: Component<{
             }
             if (fileSystemExplorer.isSelected("levels/" + level.name)) {
                 return level.id;
+            }
+        }
+        return undefined;
+    });
+    let selectedSourceFileRelPath = createMemo(() => {
+        if (selectionCount() != 1) {
+            return undefined;
+        }
+        let sourceFolder2 = sourceFolder();
+        if (sourceFolder2.type != "Success") {
+            return undefined;
+        }
+        let sourceFolder3 = sourceFolder2.value;
+        let contents = sourceFolder3.contents;
+        for (let sourceFile of contents) {
+            if (sourceFile.type != "File") {
+                continue;
+            }
+            if (fileSystemExplorer.isSelected(SOURCE_FOLDER_NAME + "/" + sourceFile.name)) {
+                return sourceFile.name;
             }
         }
         return undefined;
@@ -751,8 +781,8 @@ const AppV2: Component<{
                 />
             );
         }
-        let selectedSourceFileById2 = selectedSourceFileById();
-        if (selectedSourceFileById2 != undefined) {
+        let selectedSourceFileRelPath2 = selectedSourceFileRelPath();
+        if (selectedSourceFileRelPath2 != undefined) {
             let sourceFolder2 = sourceFolder();
             if (sourceFolder2.type != "Success") {
                 if (state.showGame) {
@@ -761,22 +791,10 @@ const AppV2: Component<{
                 return LandingApp;
             }
             let sourceFolder3 = sourceFolder2.value;
-            let file = sourceFolder3.openFileById<{ source: string, }>(selectedSourceFileById2);
-            let file2 = createMemo(() => {
-                let tmp = file();
-                if (tmp.type != "Success") {
-                    return undefined;
-                }
-                return tmp.value;
-            });
             return (() =>
-                <Show when={file2()}>
-                    {(file3) => (
-                        <ScriptEditor
-                            file={file3()}
-                        />
-                    )}
-                </Show>
+                <ScriptEditor
+                    path={selectedSourceFileRelPath2}
+                />
             );
         }
         if (state.showGame) {
