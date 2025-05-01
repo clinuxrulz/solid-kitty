@@ -825,6 +825,7 @@ const AppV2: Component<{
                     "flex-grow": "1",
                     "display": "flex",
                     "flex-direction": "row",
+                    "overflow": "hidden",
                 }}
             >
                 <Switch>
@@ -839,6 +840,7 @@ const AppV2: Component<{
                             orientation="horizontal"
                             style={{
                                 "flex-grow": "1",
+                                "overflow": "hidden",
                             }}
                         >
                             <Resizeable.Panel
