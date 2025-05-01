@@ -62,9 +62,6 @@ importers:
       daisyui:
         specifier: ^5.0.6
         version: 5.0.27
-      ecs-lib:
-        specifier: 0.8.0-pre.2
-        version: 0.8.0-pre.2
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
@@ -141,6 +138,9 @@ importers:
       '@types/pako':
         specifier: ^2.0.3
         version: 2.0.3
+      ecs-lib:
+        specifier: 0.8.0-pre.2
+        version: 0.8.0-pre.2
       jsdom:
         specifier: ^26.0.0
         version: 26.1.0

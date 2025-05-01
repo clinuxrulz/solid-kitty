@@ -10,7 +10,8 @@ import ts, { ModuleKind } from 'typescript'
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
 import { Accessor, Component, createComputed, createMemo, createResource, createSignal, mapArray, onCleanup, onMount, untrack } from "solid-js";
 
-import preludeIndexHtmlUrl from "./prelude/index.html?url";
+import preludeIndexHtml from "./prelude/index.html?raw";
+import preludeIndexTs from "./prelude/index.ts?raw";
 import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
 import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
@@ -77,6 +78,8 @@ const Game: Component<{
 }> = (props) => {
     let [ iframeElement, setIFrameElement, ] = createSignal<HTMLIFrameElement>();
     let repl = createRepl();
+    repl.writeFile("index.html", preludeIndexHtml);
+    repl.writeFile("index.ts", preludeIndexTs);
     let rootFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
     {
         let rootFolder_ = createMemo(() => props.vfs.rootFolder());
@@ -233,7 +236,7 @@ const Game: Component<{
     return (
         <iframe
             ref={setIFrameElement}
-            src={preludeIndexHtmlUrl}
+            src={repl.getExecutable("index.html")}
             style="flex-grow: 1;"
         />
     );
