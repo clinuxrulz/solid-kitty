@@ -4,3 +4,6 @@ export * from "./ecs/EcsWorld";
 export * from "./TypeSchema";
 
 export const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS = () => undefined;
+
+export const libUrl = import.meta.url;
+

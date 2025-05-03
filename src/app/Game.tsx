@@ -15,7 +15,7 @@ import preludeIndexTs from "./prelude/index.ts?raw";
 import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
 import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
-import libJsUrl from "../lib?worker&url";
+import { libUrl as libJsUrl } from '../lib';
 
 let lib = await import(libJsUrl);
 console.log(lib);

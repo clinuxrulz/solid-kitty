@@ -32,11 +32,16 @@ export default defineConfig({
     target: 'esnext',
     rollupOptions: {
       external: ["typescript"],
+      input: [
+        "index.html",
+        "src/lib.ts",
+      ],
       output: {
         globals: {
           "typescript": "typescript",
         },
       },
+      preserveEntrySignatures: "allow-extension",
     },
     assetsInlineLimit: (file) => {
       return !file.endsWith('.ts');
