@@ -20,7 +20,9 @@ export default defineConfig({
       include: [
         "./src/lib.ts",
         "./src/ecs/**/*.ts",
+        "./src/TypeSchema.ts",
       ],
+      outDir: "./types",
     }),
   ],
   server: {

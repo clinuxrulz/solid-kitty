@@ -6,20 +6,19 @@ import { AutomergeVfsFile, AutomergeVfsFolder } from "solid-fs-automerge";
 import * as Automerge from "@automerge/automerge-repo";
 import { ReactiveMap } from "@solid-primitives/map";
 
-import libTypeDef from "../../types/lib.d.ts?raw";
 import ecsComponentTypeDef from "../../types/ecs/EcsComponent.d.ts?raw";
 import ecsRegistryTypeDef from "../../types/ecs/EcsRegistry.d.ts?raw";
 import ecsWorldTypeDef from "../../types/ecs/EcsWorld.d.ts?raw";
-import libJsUrl from "../lib?url";
+import libTypeDef from "../../types/lib.d.ts?raw";
+import typeSchemaTypeDef from "../../types/TypeSchema.d.ts?raw";
 
 const types: Record<string,string> = {
-    "prelude/lib.d.ts": libTypeDef,
     "prelude/ecs/EcsComponent.d.ts": ecsComponentTypeDef,
     "prelude/ecs/EcsRegistry.d.ts": ecsRegistryTypeDef,
     "prelude/ecs/EcsWorld.d.ts": ecsWorldTypeDef,
+    "prelude/lib.d.ts": libTypeDef,
+    "prelude/TypeSchema.d.ts": typeSchemaTypeDef,
 };
-
-let libJsCode = await fetch(libJsUrl).then((x) => x.text());
 
 let monaco = await loader.init();
 
@@ -33,15 +32,6 @@ let relPathToModelAndFileMap = new ReactiveMap<string, {
 export function mountAutomergeFolderToMonacoVfsWhileMounted(
     baseFolder: AutomergeVfsFolder,
 ) {
-    debugger;
-    {
-        let model = monaco.editor.createModel(
-            libJsCode,
-            "javascript",
-            monaco.Uri.parse("file://prelude/lib.js")
-        );
-        onCleanup(() => model.dispose());
-    }
     for (let [ typeFile, typeDecl ] of Object.entries(types)) {
         let dispose = monaco.languages.typescript.typescriptDefaults.addExtraLib(
             typeDecl,
