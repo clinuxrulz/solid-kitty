@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import solidPlugin from 'vite-plugin-solid';
 import wasmPlugin from "vite-plugin-wasm";
 import mkcertPlugin from "vite-plugin-mkcert";
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   base: "",
@@ -13,12 +14,19 @@ export default defineConfig({
     solidPlugin(),
     wasmPlugin(),
     // mkcertPlugin(),
+    dts({
+      insertTypesEntry: true,
+      copyDtsFiles: false,
+      include: [
+        "./src/lib.ts",
+        "./src/ecs/**/*.ts",
+        "./src/TypeSchema.ts",
+      ],
+      outDir: "./types",
+    }),
   ],
   server: {
     port: 3000,
-  },
-  worker: {
-    format: "es",
   },
   build: {
     target: 'esnext',
@@ -27,9 +35,6 @@ export default defineConfig({
       output: {
         globals: {
           "typescript": "typescript",
-        },
-        manualChunks: {
-          toolkitty: ["tool-kitty"],
         },
       },
     },

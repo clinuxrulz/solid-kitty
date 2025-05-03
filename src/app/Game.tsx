@@ -15,8 +15,7 @@ import preludeIndexTs from "./prelude/index.ts?raw";
 import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
 import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
-//import libJsUrl from "../lib?worker&url";
-let libJsUrl = (window as any)["tool_kitty_url"] as string;
+import libJsUrl from "../lib?worker&url";
 
 let lib = await import(libJsUrl);
 console.log(lib);
@@ -67,7 +66,7 @@ function createRepl() {
                     source: ts.transpile(
                         source,
                         {
-                            module: ModuleKind.ESNext,
+                            module: ModuleKind.ES2022,
                         }
                     ),
                     executables,

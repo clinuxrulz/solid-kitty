@@ -1,5 +1,5 @@
 {
-  "name": "tool-kitty",
+  "name": "vite-template-solid",
   "version": "0.0.0",
   "description": "",
   "type": "module",
@@ -69,7 +69,6 @@
     "solid-fs-automerge": "workspace:*",
     "solid-js": "^1.9.3",
     "tailwindcss": "^4.0.14",
-    "tool-kitty": "workspace:*",
     "unique-username-generator": "^1.4.0",
     "uuid": "^11.0.5",
     "vite-plugin-wasm": "^3.4.1"
