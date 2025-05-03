@@ -1,6 +1,6 @@
 import { err, ok, Result } from "./Result.js";
 // @ts-ignore
-import initGME from "../../libgme-as-worklet/gme.js";
+import initGME from "../../../../libgme-as-worklet/gme.js";
 
 interface AudioWorkletProcessor {
     readonly port: MessagePort;

@@ -1,0 +1,16 @@
+{
+  "name": "tool-kitty",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/lib.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.9.0",
+  "devDependencies": {
+    "vite-plugin-dts": "^4.5.3"
+  }
+}
