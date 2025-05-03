@@ -15,7 +15,10 @@ import preludeIndexTs from "./prelude/index.ts?raw";
 import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
 import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
-import libJsUrl from "../lib?url";
+import libJsUrl from "../lib?worker&url";
+
+let lib = await import(libJsUrl);
+console.log(lib);
 
 const currentUrl = window.location.href;
 const urlParts = new URL(currentUrl);
@@ -26,6 +29,9 @@ function createRepl() {
         return transformModulePaths(source, modulePath => {
             if (modulePath == "prelude") {
                 let tmp = libJsUrl;
+                if (tmp.startsWith("http:") || tmp.startsWith("https:")) {
+                    return tmp;
+                }
                 if (tmp.startsWith("/")) {
                     tmp = tmp.slice(1);
                 }

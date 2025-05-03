@@ -32,6 +32,7 @@ import { asyncPending, AsyncResult, asyncSuccess } from "./AsyncResult";
 import { createStore } from "solid-js/store";
 import { PeerJsAutomergeNetworkAdapter } from "./PeerJsAutomergeNetworkAdapter";
 import { AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
+import { REQUIRED_FOR_KEEPING_MANUAL_CHUNKS } from "./lib";
 const AppV2 = lazy(() => import("./app/AppV2"));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
@@ -59,6 +60,8 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
         "Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?",
     );
 }
+
+REQUIRED_FOR_KEEPING_MANUAL_CHUNKS();
 
 render(() => {
     let urlParams = new URLSearchParams(window.location.search);

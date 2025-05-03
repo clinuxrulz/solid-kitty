@@ -38,6 +38,9 @@ export default defineConfig({
         },
       },
     },
+    assetsInlineLimit: (file) => {
+      return !file.endsWith('.ts');
+    },
   },
   publicDir: "public",
   resolve: {
