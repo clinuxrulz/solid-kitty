@@ -15,9 +15,22 @@ import preludeIndexTs from "./prelude/index.ts?raw";
 import { asyncFailed, AsyncResult, asyncSuccess } from 'control-flow-as-value';
 import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
+import libJsUrl from "../lib?url";
+
+const currentUrl = window.location.href;
+const urlParts = new URL(currentUrl);
+const hostnameWithPath = urlParts.protocol + urlParts.host + urlParts.pathname;
+
 function createRepl() {
     const transformJs: Transform = ({ path, source, executables }) => {
         return transformModulePaths(source, modulePath => {
+            if (modulePath == "prelude") {
+                let tmp = libJsUrl;
+                if (tmp.startsWith("/")) {
+                    tmp = tmp.slice(1);
+                }
+                return hostnameWithPath + tmp;
+            }
             if (modulePath.startsWith('.')) {
                 // Swap relative module-path out with their respective module-url
                 const url = executables.get(resolvePath(path, modulePath))

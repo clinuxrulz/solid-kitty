@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import solidPlugin from 'vite-plugin-solid';
 import wasmPlugin from "vite-plugin-wasm";
 import mkcertPlugin from "vite-plugin-mkcert";
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   base: "",
@@ -13,6 +14,14 @@ export default defineConfig({
     solidPlugin(),
     wasmPlugin(),
     // mkcertPlugin(),
+    dts({
+      insertTypesEntry: true,
+      copyDtsFiles: false,
+      include: [
+        "./src/lib.ts",
+        "./src/ecs/**/*.ts",
+      ],
+    }),
   ],
   server: {
     port: 3000,
