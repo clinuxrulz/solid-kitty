@@ -10,9 +10,6 @@ export function makeRefCountedMakeReactiveObject<A>(
     let dispose: () => void = () => {};
     let refCount = 0;
     return () => {
-        if (getListener() == null) {
-            return fn();
-        }
         if (cache == undefined) {
             let { cache: cache2, dispose: dispose2 } = createRoot((dispose) => {
                 return {
