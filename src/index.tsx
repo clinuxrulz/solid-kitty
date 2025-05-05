@@ -68,6 +68,7 @@ render(() => {
     let lastDocUrl = window.localStorage.getItem("lastDocUrl");
     let initDocumentUrl = urlParams.get("docUrl") ?? lastDocUrl;
 
+    let [ broadcastNetworkAdapterIsEnabled, setBroadcastNetworkAdapterIsEnabled, ] = createSignal(false);
     let repo = new Repo({
         storage: new IndexedDBStorageAdapter(),
         network: [],//[new BroadcastChannelNetworkAdapter()],
@@ -209,6 +210,13 @@ render(() => {
                     <AppV2
                         vfs={vfs()}
                         ConnectionManagementUi={connectionManagementUi.Render}
+                        broadcastNetworkAdapterIsEnabled={broadcastNetworkAdapterIsEnabled()}
+                        enableBroadcastNetworkAdapter={/* @once */() => {
+                            repo.networkSubsystem.addNetworkAdapter(
+                                new BroadcastChannelNetworkAdapter()
+                            );
+                            setBroadcastNetworkAdapterIsEnabled(true);
+                        }}
                     />
                 }
             />

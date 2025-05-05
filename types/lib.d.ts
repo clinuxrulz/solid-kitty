@@ -1,6 +1,13 @@
+import { EcsWorld, EcsRegistry } from './lib';
 export * from './ecs/EcsComponent';
 export * from './ecs/EcsRegistry';
 export * from './ecs/EcsWorld';
 export * from './TypeSchema';
+export { PixiRenderSystem, } from './systems/PixiRenderSystem';
+export * from 'solid-js';
 export declare const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS: () => undefined;
+export declare function launch(): void;
 export declare const libUrl: string;
+export declare const world: EcsWorld;
+export declare const registry: EcsRegistry;
+export declare function fixRelativeUrl(relativeUrl: string): string;

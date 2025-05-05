@@ -25,6 +25,8 @@ import Game from "./Game";
 const AppV2: Component<{
     vfs: AutomergeVirtualFileSystem,
     ConnectionManagementUi: Component,
+    broadcastNetworkAdapterIsEnabled: boolean,
+    enableBroadcastNetworkAdapter: () => void,
 }> = (props) => {
     let [ state, setState, ] = createStore<{
         showGame: boolean,
@@ -837,6 +839,18 @@ const AppV2: Component<{
                         Show Game
                     </label>
                 </li>
+                <Show when={!props.broadcastNetworkAdapterIsEnabled}>
+                    <li>
+                        <button
+                            class="btn btn-secondary"
+                            onClick={() => {
+                                props.enableBroadcastNetworkAdapter();
+                            }}
+                        >
+                            Enable Broadcast Network Adapter
+                        </button>
+                    </li>
+                </Show>
             </ul>
             <div
                 style={{
