@@ -1,6 +1,9 @@
 import { Accessor } from 'solid-js';
 import { EcsWorld, EcsRegistry } from './lib';
 import { AutomergeVirtualFileSystem } from 'solid-fs-automerge';
+import { AsyncResult } from 'control-flow-as-value';
+import { TextureAtlasState } from './level-builder/components/TextureAtlasComponent';
+import { FrameState } from './level-builder/components/FrameComponent';
 export * from './ecs/EcsComponent';
 export * from './ecs/EcsRegistry';
 export * from './ecs/EcsWorld';
@@ -14,3 +17,12 @@ export declare const libUrl: string;
 export declare const world: EcsWorld;
 export declare const registry: EcsRegistry;
 export declare function fixRelativeUrl(relativeUrl: string): string;
+export declare const createTextureAtlasWithImageAndFramesList: () => Accessor<AsyncResult<{
+    textureAtlasFilename: Accessor<string>;
+    textureAtlas: TextureAtlasState;
+    image: HTMLImageElement;
+    frames: {
+        frameId: string;
+        frame: FrameState;
+    }[];
+}[]> | undefined>;

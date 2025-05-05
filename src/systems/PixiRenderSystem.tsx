@@ -13,7 +13,7 @@ import { Text } from "pixi.js";
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
 await Promise.all([
-    Assets.load(tilesetAtlasData.meta.image),
+    //Assets.load(tilesetAtlasData.meta.image),
     //Assets.load(atlasData.meta.image),
     //Assets.load(smSpriteAtlasData.meta.image),
     //Assets.load(mmSpriteAtlasData.meta.image),
@@ -44,12 +44,14 @@ const mmSpritesheet = new Spritesheet(
 await mmSpritesheet.parse();
 */
 
+/*
 const tileset = new Spritesheet(
     Texture.from(tilesetAtlasData.meta.image),
     tilesetAtlasData,
 );
 
 await tileset.parse();
+*/
 
 export class PixiRenderSystem {
     pixiApp: Accessor<Application<Renderer> | undefined>;
@@ -95,12 +97,6 @@ export class PixiRenderSystem {
                     return;
                 }
                 /*
-                let render = () => {
-                    pixiApp.render();
-                    requestAnimationFrame(render);
-                };
-                requestAnimationFrame(render);
-                */
                 {
                     let level = renderLevel({
                         windowSize: {
@@ -153,7 +149,7 @@ export class PixiRenderSystem {
                         });
                     },
                 )
-        
+                */
             }
         ));
         this.pixiApp = () => pixiApp();
