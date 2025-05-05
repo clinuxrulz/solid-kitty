@@ -207,17 +207,22 @@ render(() => {
             <Route
                 path="/app"
                 component={() =>
-                    <AppV2
-                        vfs={vfs()}
-                        ConnectionManagementUi={connectionManagementUi.Render}
-                        broadcastNetworkAdapterIsEnabled={broadcastNetworkAdapterIsEnabled()}
-                        enableBroadcastNetworkAdapter={/* @once */() => {
-                            repo.networkSubsystem.addNetworkAdapter(
-                                new BroadcastChannelNetworkAdapter()
-                            );
-                            setBroadcastNetworkAdapterIsEnabled(true);
-                        }}
-                    />
+                    <Show when={vfsDoc2()}>
+                        {(vfsDoc3) => (
+                            <AppV2
+                                vfsDocUrl={vfsDoc3().url}
+                                vfs={vfs()}
+                                ConnectionManagementUi={connectionManagementUi.Render}
+                                broadcastNetworkAdapterIsEnabled={broadcastNetworkAdapterIsEnabled()}
+                                enableBroadcastNetworkAdapter={/* @once */() => {
+                                    repo.networkSubsystem.addNetworkAdapter(
+                                        new BroadcastChannelNetworkAdapter()
+                                    );
+                                    setBroadcastNetworkAdapterIsEnabled(true);
+                                }}
+                            />
+                        )}
+                    </Show>
                 }
             />
         </HashRouter>

@@ -23,6 +23,7 @@ import ScriptEditor, { mountAutomergeFolderToMonacoVfsWhileMounted } from "../sc
 import Game from "./Game";
 
 const AppV2: Component<{
+    vfsDocUrl: string,
     vfs: AutomergeVirtualFileSystem,
     ConnectionManagementUi: Component,
     broadcastNetworkAdapterIsEnabled: boolean,
@@ -865,7 +866,10 @@ const AppV2: Component<{
                         <SubApp/>
                     </Match>
                     <Match when={state.showGame && subApp()({}) == undefined}>
-                        <Game vfs={props.vfs}/>
+                        <Game
+                            vfsDocUrl={props.vfsDocUrl}
+                            vfs={props.vfs}
+                        />
                     </Match>
                     <Match when={state.showGame && subApp()({}) != undefined}>
                         <Resizeable
@@ -895,7 +899,10 @@ const AppV2: Component<{
                                     "overflow": "hidden",
                                 }}
                             >
-                                <Game vfs={props.vfs}/>
+                                <Game
+                                    vfsDocUrl={props.vfsDocUrl}
+                                    vfs={props.vfs}
+                                />
                             </Resizeable.Panel>
                         </Resizeable>
                     </Match>

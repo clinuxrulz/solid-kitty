@@ -1,5 +1,4 @@
-import { Accessor, createComputed, createMemo, createRoot, on, onCleanup } from "solid-js";
-import { getOwner } from "solid-js/web";
+import { Accessor, createComputed, createMemo, createRoot, getListener, on, onCleanup } from "solid-js";
 import { AsyncResult } from "./AsyncResult";
 import { err, ok, Result } from "./kitty-demo/Result";
 
@@ -11,7 +10,7 @@ export function makeRefCountedMakeReactiveObject<A>(
     let dispose: () => void = () => {};
     let refCount = 0;
     return () => {
-        if (getOwner() == undefined) {
+        if (getListener() == null) {
             return fn();
         }
         if (cache == undefined) {

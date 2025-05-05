@@ -8,7 +8,7 @@ import {
 } from '@bigmistqke/repl'
 import ts, { ModuleKind } from 'typescript'
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem } from "solid-fs-automerge";
-import { Accessor, Component, createComputed, createMemo, createResource, createSignal, mapArray, onCleanup, onMount, untrack } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createResource, createSignal, mapArray, on, onCleanup, onMount, untrack } from "solid-js";
 
 import preludeIndexHtml from "./prelude/index.html?raw";
 import preludeIndexTs from "./prelude/index.ts?raw";
@@ -91,9 +91,9 @@ function createRepl() {
     })
 }
 
-
 const Game: Component<{
-    vfs: AutomergeVirtualFileSystem
+    vfsDocUrl: string,
+    vfs: AutomergeVirtualFileSystem,
 }> = (props) => {
     let [ iframeElement, setIFrameElement, ] = createSignal<HTMLIFrameElement>();
     let repl = createRepl();
@@ -207,6 +207,31 @@ const Game: Component<{
         let iframeReady = createMemo(() =>
             iframeReady_()?.() ?? false
         );
+        createComputed(() => {
+            if (!iframeReady()) {
+                return;
+            }
+            let iframeElement2 = iframeElement();
+            if (iframeElement2 == undefined) {
+                return;
+            }
+            let iframeElement3 = iframeElement2;
+            let iframeWindow = iframeElement3.contentWindow;
+            if (iframeWindow == null) {
+                return;
+            }
+            createComputed(on(
+                () => props.vfsDocUrl,
+                (vfsDocUrl) => {
+                    iframeWindow.postMessage({
+                        type: "SetDocUrl",
+                        params: {
+                            docUrl: vfsDocUrl,
+                        },
+                    });
+                }
+            ));
+        });
         repl.mkdir("user_code");
         createComputed(() => {
             if (!iframeReady()) {

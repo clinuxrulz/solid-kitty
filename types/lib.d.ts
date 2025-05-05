@@ -1,4 +1,6 @@
+import { Accessor } from 'solid-js';
 import { EcsWorld, EcsRegistry } from './lib';
+import { AutomergeVirtualFileSystem } from 'solid-fs-automerge';
 export * from './ecs/EcsComponent';
 export * from './ecs/EcsRegistry';
 export * from './ecs/EcsWorld';
@@ -7,6 +9,7 @@ export { PixiRenderSystem, } from './systems/PixiRenderSystem';
 export * from 'solid-js';
 export declare const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS: () => undefined;
 export declare function launch(): void;
+export declare const createAutomergeVfs: () => Accessor<AutomergeVirtualFileSystem | undefined>;
 export declare const libUrl: string;
 export declare const world: EcsWorld;
 export declare const registry: EcsRegistry;
