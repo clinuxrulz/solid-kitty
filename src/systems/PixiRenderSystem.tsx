@@ -9,6 +9,7 @@ import { smSpriteAtlasData } from "../kitty-demo/SmSprites";
 import { mmSpriteAtlasData } from "../kitty-demo/MmSprites";
 import { atlasData } from "../kitty-demo/KittySprites";
 import { Text } from "pixi.js";
+import { createTextureAtlasWithImageAndFramesList, levelRefComponentType } from "../lib";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -59,7 +60,34 @@ export class PixiRenderSystem {
     constructor(params: {
         world: EcsWorld,
     }) {
-        
+        let textureAtlasWithImageAndFramesList = createTextureAtlasWithImageAndFramesList();
+        let images = createMemo(() => {
+            let textureAtlasWithImageAndFramesList2 = textureAtlasWithImageAndFramesList();
+            if (textureAtlasWithImageAndFramesList2.type != "Success") {
+                return [];
+            }
+            let textureAtlasWithImageAndFramesList3 = textureAtlasWithImageAndFramesList2.value;
+            return textureAtlasWithImageAndFramesList3.map((entry) =>
+                entry.image
+            );
+        });
+        createComputed(mapArray(
+            images,
+            (image) => {
+                Assets.load(image.src);
+                onCleanup(() => {
+                    Assets.unload(image.src);
+                });
+            },
+        ));
+        createComputed(() => {
+            let textureAtlasWithImageAndFramesList2 = textureAtlasWithImageAndFramesList();
+            if (textureAtlasWithImageAndFramesList2.type != "Success") {
+                return;
+            }
+            let textureAtlasWithImageAndFramesList3 = textureAtlasWithImageAndFramesList2.value;
+            
+        });
         let [ state, setState, ] = createStore<{
             windowWidth: number,
             windowHeight: number,
@@ -89,13 +117,23 @@ export class PixiRenderSystem {
                 app.destroy();
             });
         }
-        let levelEntities = () => world.entitiesWithComponentType(levelComponentType);
         createComputed(on(
             pixiApp,
             (pixiApp) => {
                 if (pixiApp == undefined) {
                     return;
                 }
+                let levelRefEntities = () => world.entitiesWithComponentType(levelRefComponentType);
+                createComputed(mapArray(
+                    levelRefEntities,
+                    (levelRefEntity) => createComputed(() => {
+                        let levelRef = world.getComponent(levelRefEntity, levelRefComponentType)?.state;
+                        if (levelRef == undefined) {
+                            return;
+                        }
+                        console.log(levelRef.levelFilename);
+                    }),
+                ));
                 /*
                 {
                     let level = renderLevel({

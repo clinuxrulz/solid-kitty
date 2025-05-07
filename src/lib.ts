@@ -10,9 +10,10 @@ import { BroadcastChannelNetworkAdapter } from "@automerge/automerge-repo-networ
 import { asyncFailed, asyncPending, AsyncResult, asyncSuccess, err, ok, Result } from "control-flow-as-value";
 import { textureAtlasComponentType, TextureAtlasState } from "./level-builder/components/TextureAtlasComponent";
 import { frameComponentType, FrameState } from "./level-builder/components/FrameComponent";
-import { IMAGES_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "./level-builder/LevelBuilder";
+import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "./level-builder/LevelBuilder";
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { opToArr } from "./kitty-demo/util";
+import { EcsComponentType } from "./ecs/EcsComponent";
 
 export * from "./ecs/EcsComponent";
 export * from "./ecs/EcsRegistry";
@@ -27,7 +28,9 @@ export function launch() {
     import("./index");
 }
 
-let [ docUrl, setDocUrl, ] = createSignal<string>();
+let [ docUrl, setDocUrl, ] = createSignal<string>(
+    window.localStorage.getItem("lastDocUrl") ?? ""
+);
 
 window.addEventListener("message", (e) => {
     let data = e.data;
@@ -58,31 +61,38 @@ export const createAutomergeVfs = makeRefCountedMakeReactiveObject(
         let doc_ = createMemo(() => {
             let docUrl2 = docUrl();
             if (docUrl2 == undefined) {
-                return undefined;
+                return asyncPending();
+            }
+            let docUrl3 = docUrl2;
+            if (!isValidAutomergeUrl(docUrl3)) {
+                return asyncFailed("Not a valid automerge url");
             }
             let [ doc, ] = createResource(() => {
-                if (docUrl2 == undefined) {
-                    return;
-                }
-                if (!isValidAutomergeUrl(docUrl2)) {
-                    return;
-                }
-                return repo.find<AutomergeVirtualFileSystemState>(docUrl2)
+                return repo.find<AutomergeVirtualFileSystemState>(docUrl3)
             });
-            return doc as Accessor<ReturnType<typeof doc>>;
+            return asyncSuccess(doc as Accessor<ReturnType<typeof doc>>);
         });
-        let doc = createMemo(() =>
-            doc_()?.()
-        );
+        let doc = createMemo(() => {
+            let tmp = doc_();
+            if (tmp.type != "Success") {
+                return tmp;
+            }
+            let tmp2 = tmp.value();
+            if (tmp2 == undefined) {
+                return asyncPending();
+            }
+            return asyncSuccess(tmp2);
+        });
         let vfs = createMemo(() => {
             let doc2 = doc();
-            if (doc2 == undefined) {
-                return undefined;
+            if (doc2.type != "Success") {
+                return doc2;
             }
-            return new AutomergeVirtualFileSystem({
+            let doc3 = doc2.value;
+            return asyncSuccess(new AutomergeVirtualFileSystem({
                 repo,
-                docHandle: () => doc2,
-            });
+                docHandle: () => doc3,
+            }));
         });
         return vfs;
     },
@@ -92,38 +102,114 @@ export const libUrl = import.meta.url;
 
 export const world = new EcsWorld();
 
+export type LevelRefState = {
+    levelFilename: string,
+};
+
+export const levelRefComponentType = new EcsComponentType<LevelRefState>({
+    typeName: "LevelRef",
+    typeSchema: {
+        type: "Object",
+        properties: {
+            levelFilename: "String",
+        }
+    }
+});
+
 export const registry = new EcsRegistry([
     ...baseRegistry.componentTypes,
+    levelRefComponentType,
 ]);
+
+function getBlobOrigin(blobUrl: string): string | null {
+    const blobRegex = /^(blob:)([a-f0-9-]+-){4}[a-f0-9-]+$/i;
+    const match = blobUrl.match(blobRegex);
+  
+    if (match) {
+      // The origin is everything before the first hyphen after "blob:"
+      const firstHyphenIndex = blobUrl.indexOf('-');
+      if (firstHyphenIndex > -1 && firstHyphenIndex > 'blob:'.length) {
+        return blobUrl.substring(0, firstHyphenIndex);
+      }
+    }
+    return null; // Not a valid Blob URL
+}
 
 export function fixRelativeUrl(relativeUrl: string): string {
     let tmp = import.meta.url;
+    if (tmp.startsWith("blob:")) {
+        let tmp2 = getBlobOrigin(tmp);
+        if (tmp2 != undefined) {
+            if (!tmp2.endsWith("/")) {
+                tmp2 += "/";
+            }
+            return tmp2 + relativeUrl;
+        }
+    }
     if (tmp.includes("/src/")) {
         tmp = tmp.slice(0, tmp.indexOf("/src"));
         let url = tmp + "/" + relativeUrl;
         return url;
     }
-    tmp = tmp.slice(0, tmp.lastIndexOf("/"));
-    let url = tmp + "/" + relativeUrl;
-    if (url.startsWith("blob:")) {
-        let x = url;
-        let result = [x.slice(5, x.lastIndexOf("/"))]
-            .map((x2) => x2.slice(0, x2.lastIndexOf("/") + 1))[0]
-            + x.slice(x.lastIndexOf("/")+1);
-        console.log(result);
-        return result;
-    }
     return relativeUrl;
 }
+
+export const createGetRootFolder = makeRefCountedMakeReactiveObject(() => {
+    let vfs = createAutomergeVfs();
+    let rootFolder_ = createMemo(() => {
+        let vfs2 = vfs();
+        if (vfs2.type != "Success") {
+            return vfs2;
+        }
+        let vfs3 = vfs2.value;
+        return asyncSuccess(vfs3.rootFolder());
+    });
+    let rootFolder = createMemo(() => {
+        let tmp = rootFolder_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
+    return rootFolder;
+});
+
+export const createGetLevelsFolder = makeRefCountedMakeReactiveObject(() => {
+    let rootFolder = createGetRootFolder();
+    let result_ = createMemo(() => {
+        let rootFolder2 = rootFolder();
+        if (rootFolder2.type != "Success") {
+            return rootFolder2;
+        }
+        let rootFolder3 = rootFolder2.value;
+        let folderId: string | undefined = undefined;
+        for (let entry of rootFolder3.contents) {
+            if (entry.name == LEVELS_FOLDER_NAME && entry.type == "Folder") {
+                folderId = entry.id;
+            }
+        }
+        if (folderId == undefined) {
+            return asyncFailed("Levels folder not found");
+        }
+        return asyncSuccess(rootFolder3.openFolderById(folderId));
+    });
+    return createMemo(() => {
+        let tmp = result_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
+});
 
 export const createTextureAtlasWithImageAndFramesList = makeRefCountedMakeReactiveObject(() => {
     let vfs = createAutomergeVfs();
     let result_ = createMemo(() => {
         let vfs2 = vfs();
-        if (vfs2 == undefined) {
-            return undefined;
+        if (vfs2.type != "Success") {
+            return vfs2;
         }
-        let vfs3 = vfs2;
+        let vfs3 = vfs2.value;
         let rootFolder = vfs3.rootFolder();
         let imagesFolder: Accessor<AsyncResult<AutomergeVfsFolder>>;
         {
@@ -458,7 +544,13 @@ export const createTextureAtlasWithImageAndFramesList = makeRefCountedMakeReacti
                 return asyncSuccess(result);
             });
         }
-        return textureAtlasWithImageAndFramesList;
+        return asyncSuccess(textureAtlasWithImageAndFramesList);
     });
-    return createMemo(() => result_()?.());
+    return createMemo(() => {
+        let tmp = result_();
+        if (tmp.type != "Success") {
+            return tmp;
+        }
+        return tmp.value();
+    });
 });
