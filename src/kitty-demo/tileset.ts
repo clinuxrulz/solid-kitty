@@ -1,7 +1,7 @@
 import { SpritesheetData } from "pixi.js";
 import { fixRelativeUrl } from "../lib";
 
-const TILESET_IMAGE = fixRelativeUrl("smb3-tileset.png");
+const TILESET_IMAGE = "smb3-tileset.png";
 
 export const tilesetAtlasData = {
     frames: {
