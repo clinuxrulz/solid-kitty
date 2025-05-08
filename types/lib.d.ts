@@ -1,6 +1,6 @@
 import { Accessor } from 'solid-js';
 import { EcsWorld, EcsRegistry } from './lib';
-import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem } from 'solid-fs-automerge';
+import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from 'solid-fs-automerge';
 import { AsyncResult } from 'control-flow-as-value';
 import { TextureAtlasState } from './level-builder/components/TextureAtlasComponent';
 import { FrameState } from './level-builder/components/FrameComponent';
@@ -31,7 +31,7 @@ export declare const levelRefComponentType: EcsComponentType<LevelRefState>;
 export declare const registry: EcsRegistry;
 export declare function fixRelativeUrl(relativeUrl: string): string;
 export declare const createGetRootFolder: () => Accessor<AsyncResult<AutomergeVfsFolder>>;
-export declare const createGetLevelsFolder: () => Accessor<AsyncResult<AutomergeVfsFile<unknown>>>;
+export declare const createGetLevelsFolder: () => Accessor<AsyncResult<AutomergeVfsFolder>>;
 export declare const createTextureAtlasWithImageAndFramesList: () => Accessor<AsyncResult<{
     textureAtlasFilename: Accessor<string>;
     textureAtlas: TextureAtlasState;
