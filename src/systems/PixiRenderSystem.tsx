@@ -67,6 +67,26 @@ export class PixiRenderSystem {
         world: EcsWorld,
     }) {
         let textureAtlasWithImageAndFramesList = createTextureAtlasWithImageAndFramesList();
+        let frameIdToFrameMap = createMemo(() => {
+            let textureAtlasWithImageAndFramesList2 = textureAtlasWithImageAndFramesList();
+            if (textureAtlasWithImageAndFramesList2.type != "Success") {
+                return undefined;
+            }
+            let textureAtlasWithImageAndFramesList3 = textureAtlasWithImageAndFramesList2.value;
+            let result = new Map<string,FrameState>();
+            for (let entry of textureAtlasWithImageAndFramesList3) {
+                for (let entry2 of entry.frames) {
+                    result.set(entry2.frameId, entry2.frame);
+                }
+            }
+            return result;
+        });
+        let lookupFrameById_ = new ReactiveCache<FrameState | undefined>();
+        let lookupFrameById = (frameId: string) =>
+            lookupFrameById_.cached(
+                frameId,
+                () => frameIdToFrameMap()?.get(frameId),
+            );
         let lookupSpriteSheetFromTextureAtlasRef_ = new ReactiveCache<Spritesheet<{
             frames: Dict<SpritesheetFrameData>;
             meta: {
@@ -243,6 +263,7 @@ export class PixiRenderSystem {
                                                             cameraY: 0.0,
                                                             levelState,
                                                             lookupSpriteSheetFromTextureAtlasRef,
+                                                            lookupFrameById,
                                                         });
                                                         pixiApp.stage.addChild(container);
                                                         onCleanup(() => {
@@ -363,9 +384,9 @@ function createSpriteSheets(params: {
             return textureAtlasWithImageAndFramesList2.value;
         })
     );
-    return createMemo(mapArray(
+    let result_ = createMemo(mapArray(
         textureAtlasWithImageAndFramesList,
-        (entry) => {
+        (entry) => createMemo(() => {
             let texture = Texture.from(entry.image.src);
             onCleanup(() => texture.destroy());
             let frames: Dict<SpritesheetFrameData> = {};
@@ -394,8 +415,9 @@ function createSpriteSheets(params: {
                 imageRef: entry.textureAtlas.imageRef,
                 spritesheet,
             };
-        },
+        }),
     ));
+    return createMemo(() => result_().map((x) => x()));
 }
 
 function renderLevel(props: {
@@ -410,6 +432,7 @@ function renderLevel(props: {
             scale: number;
         };
     }> | undefined,
+    lookupFrameById: (frameId: string) => FrameState | undefined,
 }): ContainerChild {
     let shortIdToTextureAtlasRefAndFrameIdMap = createMemo(() => {
         let result = new Map<number, { textureAtlasRef: string, frameId: string, }>();
@@ -554,6 +577,11 @@ function renderLevel(props: {
                         if (cell2 == undefined) {
                             sprite.visible = false;
                         } else {
+                            let frameData = props.lookupFrameById(cell2.frameId);
+                            if (frameData != undefined) {
+                                sprite.width = tileRenderWidth() * frameData.numCells.x;
+                                sprite.height = tileRenderHeight() * frameData.numCells.y;
+                            }
                             sprite.texture = cell2.spritesheet.textures[cell2.frameId];
                             sprite.visible = true;
                         }
