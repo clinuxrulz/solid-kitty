@@ -10,13 +10,13 @@ export class ReactiveCache<A> {
         }
     >();
 
-    cached(key: string, mkValue: () => A): Accessor<A> {
+    cached(key: string, mkValue: () => A): A {
         if (getListener() == null) {
             let result = this.map.get(key);
             if (result != undefined) {
-                return result.cache;
+                return result.cache();
             }
-            return mkValue;
+            return mkValue();
         }
         let result = this.map.get(key);
         if (result == undefined) {
@@ -42,6 +42,6 @@ export class ReactiveCache<A> {
                 this.map.delete(key);
             }
         });
-        return result.cache;
+        return result.cache();
     }
 }

@@ -643,14 +643,14 @@ export class AutomergeVfsFolder {
                 type: v.type,
                 name: v.name,
             }))
-        )();
+        );
     }
 
     private _getFolderIdCache = new ReactiveCache<string | undefined>();
     getFolderId(name: string): string | undefined {
         return this._getFolderIdCache.cached(name, () =>
             this.contents.find((entry) => entry.name == name && entry.type == "Folder")?.id
-        )();
+        );
     }
 
     private _openFolderById = new ReactiveCache<Accessor<AsyncResult<AutomergeVfsFolder>>>();
@@ -747,7 +747,7 @@ export class AutomergeVfsFolder {
                     docHandl3,
                 ));
             });
-        })();
+        });
     }
 
     private _openFileById = new ReactiveCache<Accessor<AsyncResult<AutomergeVfsFile<any>>>>();
@@ -844,7 +844,7 @@ export class AutomergeVfsFolder {
                     docHandl3,
                 ));
             });
-        })() as Accessor<AsyncResult<AutomergeVfsFile<A>>>;
+        }) as Accessor<AsyncResult<AutomergeVfsFile<A>>>;
     }
 
     async openFolderByIdNonReactive(id: string): Promise<Result<AutomergeVfsFolder>> {
