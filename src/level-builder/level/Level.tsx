@@ -15,7 +15,7 @@ import {
 } from "solid-js";
 import { AsyncResult } from "../../AsyncResult";
 import { VirtualFileSystem } from "../VirtualFileSystem";
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { UndoManager, UndoUnit } from "../../pixel-editor/UndoManager";
 import { Vec2 } from "../../Vec2";
@@ -246,18 +246,20 @@ export class Level {
                 (x) => x.textureAtlasRef == params.textureAtlasRef,
             );
             if (idx1 == -1) {
-                levelComponent2.setState("tileToShortIdTable", (x) => [
-                    ...x,
-                    {
-                        textureAtlasRef: params.textureAtlasRef,
-                        frames: [
-                            {
-                                frameId: params.frameRef,
-                                shortId: newIndex,
-                            },
-                        ],
-                    },
-                ]);
+                // FIX ME: We don't use the closure approach due to
+                // the array proxy underneath not working 100%
+                levelComponent2.setState("tileToShortIdTable", produce((x) => {
+                    x.push(
+                        {
+                            textureAtlasRef: params.textureAtlasRef,
+                            frames: [
+                                {
+                                    frameId: params.frameRef,
+                                    shortId: newIndex,
+                                },
+                            ],
+                        });
+                }));
             } else {
                 levelComponent2.setState("tileToShortIdTable", idx1, "frames", [
                     ...levelComponent2.state.tileToShortIdTable[idx1].frames,
