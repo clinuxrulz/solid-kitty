@@ -1,7 +1,5 @@
 import { Accessor, createMemo, createResource, createRoot, createSignal, mapArray, onCleanup } from "solid-js";
-import { registry as baseRegistry } from "./ecs/components/registry";
 import { EcsWorld } from "./lib";
-import { EcsRegistry } from "./lib";
 import { makeRefCountedMakeReactiveObject } from "./util";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
 import { isValidAutomergeUrl, Repo } from "@automerge/automerge-repo";
@@ -13,7 +11,7 @@ import { frameComponentType, FrameState } from "./level-builder/components/Frame
 import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "./level-builder/LevelBuilder";
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { opToArr } from "./kitty-demo/util";
-import { EcsComponentType } from "./ecs/EcsComponent";
+import { registry } from "./components/registry";
 
 export * from "./ecs/EcsComponent";
 export * from "./ecs/EcsRegistry";
@@ -102,24 +100,8 @@ export const libUrl = import.meta.url;
 
 export const world = new EcsWorld();
 
-export type LevelRefState = {
-    levelFilename: string,
-};
-
-export const levelRefComponentType = new EcsComponentType<LevelRefState>({
-    typeName: "LevelRef",
-    typeSchema: {
-        type: "Object",
-        properties: {
-            levelFilename: "String",
-        }
-    }
-});
-
-export const registry = new EcsRegistry([
-    ...baseRegistry.componentTypes,
-    levelRefComponentType,
-]);
+export { type LevelRefState, levelRefComponentType } from "./components/LevelRefComponent";
+export { registry } from "./components/registry";
 
 function getBlobOrigin(blobUrl: string): string | null {
     const blobRegex = /^(blob:)([a-f0-9-]+-){4}[a-f0-9-]+$/i;
