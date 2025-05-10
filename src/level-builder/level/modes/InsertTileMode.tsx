@@ -3,7 +3,7 @@ import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
 import { NoTrack } from "../../../util";
-import { Vec2 } from "../../../Vec2";
+import { Vec2 } from "../../../math/Vec2";
 
 export class InsertTileMode implements Mode {
     instructions: Component;

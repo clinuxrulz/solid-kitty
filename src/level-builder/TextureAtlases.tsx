@@ -1,5 +1,5 @@
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 import {
     Accessor,
     Component,

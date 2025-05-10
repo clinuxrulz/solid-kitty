@@ -1,5 +1,5 @@
 import { Accessor, createMemo, mapArray } from "solid-js";
-import { Vec2 } from "../../../Vec2";
+import { Vec2 } from "../../../math/Vec2";
 import { EcsWorld } from "../../../ecs/EcsWorld";
 import {
     frameComponentType,

@@ -1,5 +1,5 @@
 import { Accessor, createMemo } from "solid-js";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { Node, NODE_RADIUS, NODE_RADIUS_SQUARED } from "../Node";
 
 export class PickingSystem {

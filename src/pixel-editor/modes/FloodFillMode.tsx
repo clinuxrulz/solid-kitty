@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { UndoUnit } from "../UndoManager";
 import { createStore } from "solid-js/store";
 import { floodFill } from "../shapes";

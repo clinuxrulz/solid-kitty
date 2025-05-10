@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { RenderSystem } from "./systems/RenderSystem";
 import { ModeParams } from "./ModeParams";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 import { Mode } from "./Mode";
 import { InsertCatmullRomSplineMode } from "./modes/InsertCatmullRomSpline";
 import { IdleMode } from "./modes/IdleMode";
