@@ -1,6 +1,6 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
 import { TypeSchema, vec2TypeSchema } from "../../TypeSchema";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 
 export type FrameState = {
     name: string;

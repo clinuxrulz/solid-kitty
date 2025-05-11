@@ -18,7 +18,7 @@ import { VirtualFileSystem } from "../VirtualFileSystem";
 import { createStore, produce } from "solid-js/store";
 import { EcsWorld } from "../../ecs/EcsWorld";
 import { UndoManager, UndoUnit } from "../../pixel-editor/UndoManager";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { PickingSystem } from "./systems/PickingSystem";
 import { ModeParams } from "./ModeParams";
 import { Mode } from "./Mode";

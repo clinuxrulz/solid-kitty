@@ -9,7 +9,7 @@ import { smSpriteAtlasData } from "../kitty-demo/SmSprites";
 import { mmSpriteAtlasData } from "../kitty-demo/MmSprites";
 import { atlasData } from "../kitty-demo/KittySprites";
 import { Text } from "pixi.js";
-import { createGetLevelsFolder, createTextureAtlasWithImageAndFramesList, levelRefComponentType } from "../lib";
+import { createGetLevelsFolder, createTextureAtlasWithImageAndFramesList, levelRefComponentType, spriteComponentType, transform2DComponentType } from "../lib";
 import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
 import { registry } from "../level-builder/components/registry";
 import { TextureAtlasState } from "../level-builder/components/TextureAtlasComponent";
@@ -81,6 +81,29 @@ export class PixiRenderSystem {
             }
             return result;
         });
+        let textureAtlasFilename_frameName_toFrameIdMap = createMemo(() => {
+            let textureAtlasWithImageAndFramesList2 = textureAtlasWithImageAndFramesList();
+            if (textureAtlasWithImageAndFramesList2.type != "Success") {
+                return undefined;
+            }
+            let textureAtlasWithImageAndFramesList3 = textureAtlasWithImageAndFramesList2.value;
+            let result = new Map<string,string>();
+            for (let entry of textureAtlasWithImageAndFramesList3) {
+                for (let entry2 of entry.frames) {
+                    result.set(entry.textureAtlasFilename() + "/" + entry2.frame.name, entry2.frameId);
+                }
+            }
+            return result;
+        });
+        let lookupFrameIdByTextureAtlasFilenameAndFrameName_ = new ReactiveCache<string | undefined>();
+        let lookupFrameIdByTextureAtlasFilenameAndFrameName = (textureAtlasFilename: string, frameName: string) =>
+            lookupFrameIdByTextureAtlasFilenameAndFrameName_.cached(
+                textureAtlasFilename + "/" + frameName,
+                () =>
+                    textureAtlasFilename_frameName_toFrameIdMap()?.get(
+                        textureAtlasFilename + "/" + frameName
+                    )
+            );
         let lookupFrameById_ = new ReactiveCache<FrameState | undefined>();
         let lookupFrameById = (frameId: string) =>
             lookupFrameById_.cached(
@@ -190,7 +213,7 @@ export class PixiRenderSystem {
                             }
                             return undefined;
                         },
-                    );        
+                    );
                 let levelsFolder = createGetLevelsFolder();
                 createComputed(on(
                     [ levelsFolder, textureAtlasWithImageAndFramesList, ],
@@ -279,6 +302,58 @@ export class PixiRenderSystem {
                             }),
                         ));
                     },
+                ));
+                let spriteEntities = () => world.entitiesWithComponentType(spriteComponentType);
+                createComputed(mapArray(
+                    spriteEntities,
+                    (entity) => createComputed(() => {
+                        let sprite = world.getComponent(entity, spriteComponentType)?.state;
+                        let space = world.getComponent(entity, transform2DComponentType)?.state?.transform;
+                        if (sprite == undefined) {
+                            return;
+                        }
+                        if (space == undefined) {
+                            return;
+                        }
+                        let spriteSheet = () => lookupSpriteSheetFromTextureAtlasRef(sprite.textureAtlasFilename);
+                        let frameId = () => lookupFrameIdByTextureAtlasFilenameAndFrameName(sprite.textureAtlasFilename, sprite.frameName);
+                        let frame = () => {
+                            let frameId2 = frameId();
+                            if (frameId2 == undefined) {
+                                return undefined;
+                            }
+                            return lookupFrameById(frameId2);
+                        };
+                        let hasSpriteSheet = createMemo(() => spriteSheet() != undefined);
+                        let hasFrameId = createMemo(() => frameId() != undefined);
+                        let hasFrame = createMemo(() => frame() != undefined);
+                        createComputed(() => {
+                            if (!hasSpriteSheet()) {
+                                return;
+                            }
+                            if (!hasFrameId()) {
+                                return;
+                            }
+                            if (!hasFrame()) {
+                                return;
+                            }
+                            let spriteSheet2 = spriteSheet as Accessor<NonNullable<ReturnType<typeof spriteSheet>>>;
+                            let frameId2 = frameId as Accessor<NonNullable<ReturnType<typeof frameId>>>;
+                            let frame2 = frame as Accessor<NonNullable<ReturnType<typeof frame>>>;
+                            let sprite = new Sprite();
+                            createComputed(() => {
+                                sprite.texture = spriteSheet2().textures[frameId2()];
+                                sprite.width = frame2().size.x;
+                                sprite.height = frame2().size.y;
+                            });
+                            createComputed(() => {
+                                sprite.x = space.origin.x;
+                                sprite.y = space.origin.y;
+                            });
+                            pixiApp.stage.addChild(sprite);
+                            onCleanup(() => pixiApp.stage.removeChild(sprite));
+                        });
+                    }),
                 ));
                 /*
                 {

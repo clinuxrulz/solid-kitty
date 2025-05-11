@@ -9,7 +9,7 @@ import {
     Show,
     untrack,
 } from "solid-js";
-import { Vec2 } from "../../../Vec2";
+import { Vec2 } from "../../../math/Vec2";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
 import { NoTrack } from "../../../util";

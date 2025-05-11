@@ -1,5 +1,5 @@
 import { Result } from './kitty-demo/Result';
-import { Vec2 } from './Vec2';
+import { Vec2 } from './math/Vec2';
 export type TypeSchema<A> = undefined extends A ? {
     type: "MaybeUndefined";
     element: TypeSchema<NonNullable<A>>;

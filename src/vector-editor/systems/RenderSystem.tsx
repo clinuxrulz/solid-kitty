@@ -6,7 +6,7 @@ import {
 } from "../components/CatmullRomSplineComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { nurbsComponentType, NurbsState } from "../components/NurbsComponent";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 // @ts-ignore
 import nurbs from "nurbs";
 

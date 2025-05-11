@@ -1,10 +1,9 @@
 import { Accessor } from 'solid-js';
-import { EcsWorld, EcsRegistry } from './lib';
+import { EcsWorld } from './lib';
 import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from 'solid-fs-automerge';
 import { AsyncResult } from 'control-flow-as-value';
 import { TextureAtlasState } from './level-builder/components/TextureAtlasComponent';
 import { FrameState } from './level-builder/components/FrameComponent';
-import { EcsComponentType } from './ecs/EcsComponent';
 export * from './ecs/EcsComponent';
 export * from './ecs/EcsRegistry';
 export * from './ecs/EcsWorld';
@@ -24,11 +23,14 @@ export declare const createAutomergeVfs: () => Accessor<{
 }>;
 export declare const libUrl: string;
 export declare const world: EcsWorld;
-export type LevelRefState = {
-    levelFilename: string;
-};
-export declare const levelRefComponentType: EcsComponentType<LevelRefState>;
-export declare const registry: EcsRegistry;
+export { type AnimatedState, animatedComponentType } from './components/AnimatedComponent';
+export { type LevelRefState, levelRefComponentType } from './components/LevelRefComponent';
+export { type SpriteState, spriteComponentType } from './components/SpriteComponent';
+export { type Transform2DState, transform2DComponentType } from './components/Transform2DComponent';
+export { registry } from './components/registry';
+export { Complex } from './math/Complex';
+export { Transform2D } from './math/Transform2D';
+export { Vec2 } from './math/Vec2';
 export declare function fixRelativeUrl(relativeUrl: string): string;
 export declare const createGetRootFolder: () => Accessor<AsyncResult<AutomergeVfsFolder>>;
 export declare const createGetLevelsFolder: () => Accessor<AsyncResult<AutomergeVfsFolder>>;

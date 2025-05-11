@@ -1,6 +1,6 @@
 import { Accessor, createComputed, createMemo, mapArray, on, untrack } from "solid-js";
 import { err, ok, Result } from "./kitty-demo/Result";
-import { Vec2 } from "./Vec2";
+import { Vec2 } from "./math/Vec2";
 import { SetStoreFunction, Store } from "solid-js/store";
 
 export type TypeSchema<A> = undefined extends A

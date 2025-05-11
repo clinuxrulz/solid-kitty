@@ -1,6 +1,6 @@
 import { Accessor } from "solid-js";
 import { Node } from "./Node";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 import { PickingSystem } from "./systems/PickingSystem";
 
 export type ModeParams = {

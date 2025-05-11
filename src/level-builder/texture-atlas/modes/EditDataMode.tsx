@@ -4,7 +4,7 @@ import { FrameState } from "../../components/FrameComponent";
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "../../../Vec2";
+import { Vec2 } from "../../../math/Vec2";
 
 export class EditDataMode implements Mode {
     overlayHtmlUI: Component;

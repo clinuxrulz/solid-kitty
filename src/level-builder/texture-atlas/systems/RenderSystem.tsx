@@ -4,7 +4,7 @@ import {
     frameComponentType,
     FrameState,
 } from "../../components/FrameComponent";
-import { Vec2 } from "../../../Vec2";
+import { Vec2 } from "../../../math/Vec2";
 import { RenderParams } from "../RenderParams";
 import { IEcsWorld } from "../../../ecs/IEcsWorld";
 

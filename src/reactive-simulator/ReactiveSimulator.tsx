@@ -8,7 +8,7 @@ import { AddLinkMode } from "./modes/AddLinkMode";
 import { MarkDirtyMode } from "./modes/MarkDirtyMode";
 import { RunningMode } from "./modes/RunningMode";
 import { Mode } from "./Mode";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 import { PickingSystem } from "./systems/PickingSystem";
 
 type State = {

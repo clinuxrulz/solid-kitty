@@ -12,7 +12,7 @@ import {
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { opToArr } from "../../kitty-demo/util";
 import { nurbsComponentType } from "../components/NurbsComponent";
 import { err, ok, Result } from "../../kitty-demo/Result";

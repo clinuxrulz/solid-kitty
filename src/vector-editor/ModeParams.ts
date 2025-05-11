@@ -1,6 +1,6 @@
 import { Accessor } from "solid-js";
 import { EcsWorld } from "../ecs/EcsWorld";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 
 export type ModeParams = {
     mousePos: Accessor<Vec2 | undefined>;

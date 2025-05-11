@@ -1,5 +1,5 @@
 import { Accessor } from "solid-js";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { AsyncResult } from "../../AsyncResult";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";

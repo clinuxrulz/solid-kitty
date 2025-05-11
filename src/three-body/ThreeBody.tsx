@@ -15,7 +15,7 @@
 
 import { batch, Component, createMemo, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 
 const FPS = 60;
 const TARGET_TIME_STEP = 1.0 / FPS;

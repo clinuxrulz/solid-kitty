@@ -8,7 +8,7 @@ import {
     onCleanup,
     Switch,
 } from "solid-js";
-import { Vec2 } from "../Vec2";
+import { Vec2 } from "../math/Vec2";
 import { createStore } from "solid-js/store";
 import { TextureAtlases } from "./TextureAtlases";
 import { EcsWorld } from "../ecs/EcsWorld";

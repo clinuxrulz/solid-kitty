@@ -11,7 +11,7 @@ import {
 import { Mode } from "../Mode";
 import { ModeParams } from "../ModeParams";
 import { createStore } from "solid-js/store";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { catmullRomSplineComponentType } from "../components/CatmullRomSplineComponent";
 import { opToArr } from "../../kitty-demo/util";
 

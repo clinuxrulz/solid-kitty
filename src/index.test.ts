@@ -3,7 +3,7 @@ import { levelComponentType, LevelState } from './level-builder/components/Level
 import { createJsonProjectionViaTypeSchema, createJsonProjectionViaTypeSchemaV2, saveToJsonViaTypeSchema, TypeSchema, vec2TypeSchema } from './TypeSchema';
 import { createComputed, createRoot, createSignal, on } from "solid-js";
 import { createStore } from 'solid-js/store';
-import { Vec2 } from "./Vec2";
+import { Vec2 } from "./math/Vec2";
 import { makeDocumentProjection } from "solid-automerge";
 import { Repo } from "@automerge/automerge-repo";
 

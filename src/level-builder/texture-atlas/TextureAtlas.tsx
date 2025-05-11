@@ -13,7 +13,7 @@ import {
     Setter,
     Show,
 } from "solid-js";
-import { Vec2 } from "../../Vec2";
+import { Vec2 } from "../../math/Vec2";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { UndoManager, UndoUnit } from "../../pixel-editor/UndoManager";
 import { Mode } from "./Mode";
