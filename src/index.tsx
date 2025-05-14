@@ -159,6 +159,7 @@ render(() => {
                     window.location.reload();
                 };
             }}
+            vfs={vfs()}
         />
     );
     return (

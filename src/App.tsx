@@ -1,9 +1,13 @@
 import { A, useNavigate } from "@solidjs/router";
+import { AutomergeVirtualFileSystem } from "solid-fs-automerge";
+import { importFromZip } from "solid-fs-automerge/src/export-import";
+import { untrack } from "solid-js";
 import { Component } from "solid-js";
 
 const App: Component<{
     onShareVfs: () => void;
     onDeleteVfs: () => void;
+    vfs: AutomergeVirtualFileSystem,
 }> = (props) => {
     let navigate = useNavigate();
     return (
@@ -27,7 +31,35 @@ const App: Component<{
                 }}
             >
                 Delete Virtual File System
-            </button>
+            </button><br/>
+            {untrack(() => {
+                let fileInputElement!: HTMLInputElement;
+                return (
+                    <button
+                        class="btn btn-primary"
+                        onClick={() => {
+                            fileInputElement.click();
+                        }}
+                    >
+                        Import Virtual File System
+                        <input
+                            ref={fileInputElement}
+                            type="file"
+                            hidden
+                            onChange={() => {
+                                let files = fileInputElement.files;
+                                if (files == null) {
+                                    return;
+                                }
+                                if (files.length != 1) {
+                                    return;
+                                }
+                                importFromZip({ file: files[0], vfs: props.vfs, });
+                            }}
+                        />
+                    </button>
+                );
+            })}
             <br/>
             <b>Links:</b>
             <br />

@@ -848,7 +848,7 @@ export class AutomergeVfsFolder {
     }
 
     async openFolderByIdNonReactive(id: string): Promise<Result<AutomergeVfsFolder>> {
-        let fileOrFolder = untrack(() => this.doc.contents[id]);
+        let fileOrFolder = this.docHandle.doc().contents[id];
         if (fileOrFolder == undefined) {
             return err("Folder not found");
         }
@@ -859,7 +859,7 @@ export class AutomergeVfsFolder {
             return err("Invalid automerge url");
         }
         let docHandle = await this.repo.find<AutomergeVfsFolderState>(fileOrFolder.docUrl);
-        let name = createMemo(() => this.doc.contents[id].name);
+        let name = () => this.doc.contents[id].name;
         return ok(new AutomergeVfsFolder(
             this.repo,
             id,

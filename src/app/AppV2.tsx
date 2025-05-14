@@ -1,4 +1,4 @@
-import { Accessor, Component, createComputed, createMemo, createResource, mapArray, Match, on, onCleanup, Show, Switch } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, createResource, mapArray, Match, on, onCleanup, Show, Switch, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import Resizeable from "@corvu/resizable";
 import LandingApp from "./LandingApp";
@@ -21,6 +21,7 @@ import { EcsWorld } from "../ecs/EcsWorld";
 import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, SOURCE_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } from "../level-builder/LevelBuilder";
 import ScriptEditor, { mountAutomergeFolderToMonacoVfsWhileMounted } from "../script-editor/ScriptEditor";
 import Game from "./Game";
+import { exportToZip, importFromZip } from "solid-fs-automerge/src/export-import";
 
 const AppV2: Component<{
     vfsDocUrl: string,
@@ -852,6 +853,38 @@ const AppV2: Component<{
                         </button>
                     </li>
                 </Show>
+                <li
+                    onClick={() => exportToZip({ vfs: props.vfs, })}
+                >
+                    <i class="fa-solid fa-download"/>
+                </li>
+                {untrack(() => {
+                    let fileInputElement!: HTMLInputElement;
+                    return (
+                        <li
+                            onClick={() => {
+                                fileInputElement.click();
+                            }}
+                        >
+                            <i class="fa-solid fa-upload"/>
+                            <input
+                                ref={fileInputElement}
+                                type="file"
+                                hidden
+                                onChange={() => {
+                                    let files = fileInputElement.files;
+                                    if (files == null) {
+                                        return;
+                                    }
+                                    if (files.length != 1) {
+                                        return;
+                                    }
+                                    importFromZip({ file: files[0], vfs: props.vfs, });
+                                }}
+                            />
+                        </li>
+                    );
+                })}
             </ul>
             <div
                 style={{
