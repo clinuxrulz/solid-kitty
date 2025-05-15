@@ -153,11 +153,8 @@ render(() => {
             }}
             onDeleteVfs={() => {
                 window.localStorage.removeItem("lastDocUrl");
-                let request = indexedDB.deleteDatabase("automerge");
-                request.onsuccess = () => {
-                    window.location.search = "";
-                    window.location.reload();
-                };
+                let _request = indexedDB.deleteDatabase("automerge");
+                window.location.reload();
             }}
             vfs={vfs()}
         />
@@ -221,6 +218,7 @@ render(() => {
                                     );
                                     setBroadcastNetworkAdapterIsEnabled(true);
                                 }}
+                                flushRepo={() => repo.flush()}
                             />
                         )}
                     </Show>

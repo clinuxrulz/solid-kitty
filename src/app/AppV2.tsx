@@ -29,6 +29,7 @@ const AppV2: Component<{
     ConnectionManagementUi: Component,
     broadcastNetworkAdapterIsEnabled: boolean,
     enableBroadcastNetworkAdapter: () => void,
+    flushRepo: () => Promise<void>,
 }> = (props) => {
     let [ state, setState, ] = createStore<{
         showGame: boolean,
@@ -94,7 +95,9 @@ const AppV2: Component<{
             }
             let rootFolder3 = rootFolder2.value;
             let folderId = createMemo(() => {
-                let folderId2 = rootFolder3.getFolderId(folderName);
+                // untrack this so we are not being a Hydra
+                let folderId2 = untrack(() => rootFolder3.getFolderId(folderName));
+                //
                 if (folderId2 != undefined) {
                     return asyncSuccess(folderId2);
                 }
@@ -879,7 +882,11 @@ const AppV2: Component<{
                                     if (files.length != 1) {
                                         return;
                                     }
-                                    importFromZip({ file: files[0], vfs: props.vfs, });
+                                    (async () => {
+                                        await importFromZip({ file: files[0], vfs: props.vfs, });
+                                        await props.flushRepo();
+                                        window.location.reload();
+                                    })();
                                 }}
                             />
                         </li>

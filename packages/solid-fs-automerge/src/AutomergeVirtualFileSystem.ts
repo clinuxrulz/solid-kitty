@@ -657,7 +657,7 @@ export class AutomergeVfsFolder {
     openFolderById(id: string): Accessor<AsyncResult<AutomergeVfsFolder>> {
         return this._openFolderById.cached(id, () => {
             let folderInfo = createMemo(() => {
-                let fileOrFolder = this.doc.contents[id];
+                let fileOrFolder = this.doc.contents[id] ?? this.docHandle.doc().contents[id];
                 if (fileOrFolder == undefined) {
                     return asyncFailed("Folder does not exist");
                 }

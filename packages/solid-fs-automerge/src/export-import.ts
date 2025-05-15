@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import FileSaver from "file-saver";
 import { AutomergeVfsFolder, AutomergeVirtualFileSystem } from "./AutomergeVirtualFileSystem";
-import { createComputed, createMemo, createRoot } from "solid-js";
+import { createComputed, createMemo, createResource, createRoot } from "solid-js";
 import { asyncSuccess, err, ok, Result } from "control-flow-as-value";
 import { useParams } from "@solidjs/router";
 import { untrack } from "solid-js/web";
@@ -240,14 +240,9 @@ export let importFromZip = async (params: {
                         continue;
                     }
                     let { id: nextVfsFolderId } = r.value;
-                    let nextVfsFolderX = await vfsFolder.openFolderByIdNonReactive(nextVfsFolderId);
-                    if (nextVfsFolderX.type == "Err") {
-                        continue;
-                    }
-                    let nextVfsFolderZ = nextVfsFolderX.value;
                     await new Promise<void>((resolve) => {
                         createRoot((dispose) => {
-                            let nextVfsFolder = createMemo(() => asyncSuccess(nextVfsFolderZ));
+                            let nextVfsFolder = vfsFolder.openFolderById(nextVfsFolderId);
                             createComputed(on(
                                 nextVfsFolder,
                                 (nextVfsFolder) => {
