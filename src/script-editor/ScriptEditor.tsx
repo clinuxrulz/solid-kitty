@@ -14,14 +14,19 @@ import typeSchemaTypeDef from "../../types/TypeSchema.d.ts?raw";
 import solidjsTypeDef from "solid-js/types/index.d.ts?raw";
 import solidjsReactiveTypeDef from "solid-js/types/reactive/signal.d.ts?raw";
 
-const pixiTypeDefs = import.meta.glob('../../node_modules/pixi.js/**/*.d.ts', { as: 'raw', eager: true });
+const pixiTypeDefs = import.meta.glob('../../node_modules/pixi.js/**/*.d.ts', { as: 'raw', eager: true, });
 
 let pixiTypeDefs2: Record<string,string> = {};
 for (let path in pixiTypeDefs) {
     pixiTypeDefs2["prelude/" + path.slice("../../node_modules/".length)] = pixiTypeDefs[path];
 }
 
-console.log(pixiTypeDefs2);
+const solidjsStoreTypeDef = import.meta.glob("../../node_modules/solid-js/store/**/*.d.ts", { as: "raw", eager: true, });
+
+let solidjsStoreTypeDef2: Record<string,string> = {};
+for (let path in solidjsStoreTypeDef) {
+    pixiTypeDefs2["prelude/" + path.slice("../../node_modules/".length)] = solidjsStoreTypeDef[path];
+}
 
 const types: Record<string,string> = {
     "prelude/ecs/EcsComponent.d.ts": ecsComponentTypeDef,
@@ -31,6 +36,7 @@ const types: Record<string,string> = {
     "prelude/TypeSchema.d.ts": typeSchemaTypeDef,
     "prelude/solid-js/index.d.ts": solidjsTypeDef,
     "prelude/solid-js/reactive.d.ts": solidjsReactiveTypeDef,
+    ...solidjsStoreTypeDef2,
     ...pixiTypeDefs2,
 };
 
@@ -57,6 +63,7 @@ export function mountAutomergeFolderToMonacoVfsWhileMounted(
         paths: {
             "prelude": ["./prelude/lib.js"],
             "prelude/solid-js": ["./prelude/solid-js/index.js"],
+            "prelude/solid-js/store": ["./prelude/solid-js/store/types/index.js"],
             "prelude/pixi.js": ["./prelude/pixi.js/lib/index.js"],
         }
     });

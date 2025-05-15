@@ -37,6 +37,7 @@ export default defineConfig({
         "src/lib.ts",
         "src/lib/solid-js.ts",
         "src/lib/pixi-js.ts",
+        "src/lib/solid-js-store.ts",
       ],
       output: {
         globals: {
