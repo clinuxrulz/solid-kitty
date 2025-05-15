@@ -1,4 +1,4 @@
-import { Accessor, createMemo, createResource, createRoot, createSignal, mapArray, onCleanup } from "solid-js";
+import { Accessor, createComputed, createMemo, createResource, createRoot, createSignal, mapArray, on, onCleanup } from "solid-js";
 import { EcsWorld } from "./lib";
 import { makeRefCountedMakeReactiveObject } from "./util";
 import { AutomergeVfsFile, AutomergeVfsFolder, AutomergeVirtualFileSystem, AutomergeVirtualFileSystemState } from "solid-fs-automerge";
@@ -12,6 +12,7 @@ import { IMAGES_FOLDER_NAME, LEVELS_FOLDER_NAME, TEXTURE_ATLASES_FOLDER_NAME } f
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { opToArr } from "./kitty-demo/util";
 import { registry } from "./components/registry";
+import { PixiRenderSystem, PixiRenderSystem as X } from "./systems/PixiRenderSystem";
 
 export * from "./ecs/EcsComponent";
 export * from "./ecs/EcsRegistry";
@@ -19,6 +20,31 @@ export * from "./ecs/EcsWorld";
 export * from "./TypeSchema";
 export { PixiRenderSystem, } from "./systems/PixiRenderSystem";
 export * from "solid-js";
+
+let systems = {
+    "PixiRenderSystem": ((params: { world: EcsWorld, }) => {
+        let system = new PixiRenderSystem(params);
+        createComputed(on(
+            system.pixiApp,
+            (pixiApp) => {
+                if (pixiApp == undefined) {
+                    return;
+                }
+                document.body.innerText = "";
+                document.body.appendChild(pixiApp.canvas);
+            },
+        ));
+    }),
+};
+
+export type SystemName = keyof (typeof systems);
+
+export function useSystem(systemName: SystemName): () => void {
+    return createRoot((dispose) => {
+        (systems[systemName])({ world, });
+        return dispose;
+    });
+}
 
 export const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS = () => undefined;
 

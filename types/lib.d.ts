@@ -10,6 +10,13 @@ export * from './ecs/EcsWorld';
 export * from './TypeSchema';
 export { PixiRenderSystem, } from './systems/PixiRenderSystem';
 export * from 'solid-js';
+declare let systems: {
+    PixiRenderSystem: (params: {
+        world: EcsWorld;
+    }) => void;
+};
+export type SystemName = keyof (typeof systems);
+export declare function useSystem(systemName: SystemName): () => void;
 export declare const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS: () => undefined;
 export declare function launch(): void;
 export declare const createAutomergeVfs: () => Accessor<{
