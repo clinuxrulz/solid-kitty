@@ -35,6 +35,7 @@ export default defineConfig({
       input: [
         "index.html",
         "src/lib.ts",
+        "src/lib/solid-js.ts",
       ],
       output: {
         globals: {

@@ -11,6 +11,8 @@ import ecsRegistryTypeDef from "../../types/ecs/EcsRegistry.d.ts?raw";
 import ecsWorldTypeDef from "../../types/ecs/EcsWorld.d.ts?raw";
 import libTypeDef from "../../types/lib.d.ts?raw";
 import typeSchemaTypeDef from "../../types/TypeSchema.d.ts?raw";
+import solidjsTypeDef from "solid-js/types/index.d.ts?raw";
+import solidjsReactiveTypeDef from "solid-js/types/reactive/signal.d.ts?raw";
 
 const types: Record<string,string> = {
     "prelude/ecs/EcsComponent.d.ts": ecsComponentTypeDef,
@@ -18,6 +20,8 @@ const types: Record<string,string> = {
     "prelude/ecs/EcsWorld.d.ts": ecsWorldTypeDef,
     "prelude/lib.d.ts": libTypeDef,
     "prelude/TypeSchema.d.ts": typeSchemaTypeDef,
+    "prelude/solid-js/index.d.ts": solidjsTypeDef,
+    "prelude/solid-js/reactive.d.ts": solidjsReactiveTypeDef,
 };
 
 let monaco = await loader.init();
@@ -42,6 +46,7 @@ export function mountAutomergeFolderToMonacoVfsWhileMounted(
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
         paths: {
             "prelude": ["./prelude/lib.js"],
+            "prelude/solid-js": ["./prelude/solid-js/index.js"],
         }
     });
     let copyFolderContentsToMonocoVfsWhileMounted = (relPathPrefix: string, pathPrefix: string, folder: AutomergeVfsFolder) => {
