@@ -17,6 +17,7 @@ import { SOURCE_FOLDER_NAME } from '../level-builder/LevelBuilder';
 
 import { libUrl as libJsUrl } from '../lib';
 import { solidjsUrl } from '../lib/solid-js';
+import { pixijsUrl } from '../lib/pixi-js';
 
 let lib = await import(libJsUrl);
 console.log(lib);
@@ -40,6 +41,16 @@ function createRepl() {
             }
             if (modulePath == "prelude/solid-js") {
                 let tmp = solidjsUrl;
+                if (tmp.startsWith("http:") || tmp.startsWith("https:")) {
+                    return tmp;
+                }
+                if (tmp.startsWith("/")) {
+                    tmp = tmp.slice(1);
+                }
+                return hostnameWithPath + tmp;
+            }
+            if (modulePath == "prelude/pixi.js") {
+                let tmp = pixijsUrl;
                 if (tmp.startsWith("http:") || tmp.startsWith("https:")) {
                     return tmp;
                 }
