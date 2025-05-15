@@ -32,6 +32,9 @@ let systems = {
                 }
                 document.body.innerText = "";
                 document.body.appendChild(pixiApp.canvas);
+                onCleanup(() => {
+                    document.body.removeChild(pixiApp.canvas);
+                });
             },
         ));
     }),
