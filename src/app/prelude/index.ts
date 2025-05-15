@@ -10,8 +10,7 @@ type ECS = typeof world;
 let sources = new Map<string,{
     url: string,
     code: Promise<{
-        init: (ecsy: Ecs["default"], world: ECS) => void,
-        onCleanup: (ecsy: Ecs["default"], world: ECS) => void,
+        onUnload?: (ecsy: Ecs["default"], world: ECS) => void,
     }>,
 }>();
 
@@ -25,10 +24,6 @@ window.addEventListener("message", (e) => {
             url,
             code,
         });
-        (async () => {
-            let code2 = await code;
-            code2.init(ecs, world);
-        })();
     } else if (msg.type == "DisposeSource") {
         let path = msg.path;
         let node = sources.get(path);
@@ -36,7 +31,7 @@ window.addEventListener("message", (e) => {
             sources.delete(path);
             (async () => {
                 let code2 = await node.code;
-                code2.onCleanup(ecs, world);
+                code2.onUnload?.(ecs, world);
             })();
         }
     }
