@@ -6,11 +6,13 @@ import { AutomergeVfsFile, AutomergeVfsFolder } from "solid-fs-automerge";
 import * as Automerge from "@automerge/automerge-repo";
 import { ReactiveMap } from "@solid-primitives/map";
 
-import ecsComponentTypeDef from "../../types/ecs/EcsComponent.d.ts?raw";
-import ecsRegistryTypeDef from "../../types/ecs/EcsRegistry.d.ts?raw";
-import ecsWorldTypeDef from "../../types/ecs/EcsWorld.d.ts?raw";
-import libTypeDef from "../../types/lib.d.ts?raw";
-import typeSchemaTypeDef from "../../types/TypeSchema.d.ts?raw";
+//
+
+const libTypeDef = import.meta.glob("../../types/**/*.d.ts", { as: "raw", eager: true, });
+const libTypeDef2: Record<string, string> = {};
+for (let path in libTypeDef) {
+    libTypeDef2["prelude/" + path.slice("../../types/".length)] = libTypeDef[path];
+}
 
 //
 
@@ -31,11 +33,7 @@ for (let path in pixiTypeDefs) {
 //
 
 const types: Record<string,string> = {
-    "prelude/ecs/EcsComponent.d.ts": ecsComponentTypeDef,
-    "prelude/ecs/EcsRegistry.d.ts": ecsRegistryTypeDef,
-    "prelude/ecs/EcsWorld.d.ts": ecsWorldTypeDef,
-    "prelude/lib.d.ts": libTypeDef,
-    "prelude/TypeSchema.d.ts": typeSchemaTypeDef,
+    ...libTypeDef2,
     ...solidjsTypeDef2,
     ...pixiTypeDefs2,
 };
