@@ -16,6 +16,7 @@ import { TextureAtlasState } from "../level-builder/components/TextureAtlasCompo
 import { FrameState } from "../level-builder/components/FrameComponent";
 import { AsyncResult } from "control-flow-as-value";
 import { ReactiveCache } from "reactive-cache";
+import { scaleComponentType } from "../components/ScaleComponent";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -309,6 +310,7 @@ export class PixiRenderSystem {
                     (entity) => createComputed(() => {
                         let sprite = world.getComponent(entity, spriteComponentType)?.state;
                         let space = world.getComponent(entity, transform2DComponentType)?.state?.transform;
+                        let scale = createMemo(() => world.getComponent(entity, scaleComponentType)?.state.scale);
                         if (sprite == undefined) {
                             return;
                         }
@@ -342,9 +344,10 @@ export class PixiRenderSystem {
                             let frame2 = frame as Accessor<NonNullable<ReturnType<typeof frame>>>;
                             let sprite = new Sprite();
                             createComputed(() => {
+                                let scale2 = scale() ?? 1.0;
                                 sprite.texture = spriteSheet2().textures[frameId2()];
-                                sprite.width = frame2().size.x;
-                                sprite.height = frame2().size.y;
+                                sprite.width = frame2().size.x * scale2;
+                                sprite.height = frame2().size.y * scale2;
                             });
                             createComputed(() => {
                                 sprite.x = space.origin.x;

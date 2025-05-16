@@ -1,4 +1,5 @@
 import { EcsComponentType } from "../ecs/EcsComponent";
+
 export type SpriteState = {
     textureAtlasFilename: string,
     frameName: string,

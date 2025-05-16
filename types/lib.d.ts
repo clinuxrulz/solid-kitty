@@ -32,6 +32,7 @@ export declare const libUrl: string;
 export declare const world: EcsWorld;
 export { type AnimatedState, animatedComponentType } from './components/AnimatedComponent';
 export { type LevelRefState, levelRefComponentType } from './components/LevelRefComponent';
+export { type ScaleState, scaleComponentType } from './components/ScaleComponent';
 export { type SpriteState, spriteComponentType } from './components/SpriteComponent';
 export { type Transform2DState, transform2DComponentType } from './components/Transform2DComponent';
 export { registry } from './components/registry';
