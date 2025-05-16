@@ -11,22 +11,24 @@ import ecsRegistryTypeDef from "../../types/ecs/EcsRegistry.d.ts?raw";
 import ecsWorldTypeDef from "../../types/ecs/EcsWorld.d.ts?raw";
 import libTypeDef from "../../types/lib.d.ts?raw";
 import typeSchemaTypeDef from "../../types/TypeSchema.d.ts?raw";
-import solidjsTypeDef from "solid-js/types/index.d.ts?raw";
-import solidjsReactiveTypeDef from "solid-js/types/reactive/signal.d.ts?raw";
+
+//
+
+const solidjsTypeDef = import.meta.glob("../../node_modules/solid-js/**/*.d.ts", { as: "raw", eager: true, });
+const solidjsTypeDef2: Record<string, string> = {};
+for (let path in solidjsTypeDef) {
+    solidjsTypeDef2["prelude/" + path.slice("../../node_modules/".length)] = solidjsTypeDef[path];
+}
+
+//
 
 const pixiTypeDefs = import.meta.glob('../../node_modules/pixi.js/**/*.d.ts', { as: 'raw', eager: true, });
-
 let pixiTypeDefs2: Record<string,string> = {};
 for (let path in pixiTypeDefs) {
     pixiTypeDefs2["prelude/" + path.slice("../../node_modules/".length)] = pixiTypeDefs[path];
 }
 
-const solidjsStoreTypeDef = import.meta.glob("../../node_modules/solid-js/store/**/*.d.ts", { as: "raw", eager: true, });
-
-let solidjsStoreTypeDef2: Record<string,string> = {};
-for (let path in solidjsStoreTypeDef) {
-    pixiTypeDefs2["prelude/" + path.slice("../../node_modules/".length)] = solidjsStoreTypeDef[path];
-}
+//
 
 const types: Record<string,string> = {
     "prelude/ecs/EcsComponent.d.ts": ecsComponentTypeDef,
@@ -34,9 +36,7 @@ const types: Record<string,string> = {
     "prelude/ecs/EcsWorld.d.ts": ecsWorldTypeDef,
     "prelude/lib.d.ts": libTypeDef,
     "prelude/TypeSchema.d.ts": typeSchemaTypeDef,
-    "prelude/solid-js/index.d.ts": solidjsTypeDef,
-    "prelude/solid-js/reactive.d.ts": solidjsReactiveTypeDef,
-    ...solidjsStoreTypeDef2,
+    ...solidjsTypeDef2,
     ...pixiTypeDefs2,
 };
 
@@ -62,7 +62,7 @@ export function mountAutomergeFolderToMonacoVfsWhileMounted(
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
         paths: {
             "prelude": ["./prelude/lib.js"],
-            "prelude/solid-js": ["./prelude/solid-js/index.js"],
+            "prelude/solid-js": ["./prelude/solid-js/types/index.js"],
             "prelude/solid-js/store": ["./prelude/solid-js/store/types/index.js"],
             "prelude/pixi.js": ["./prelude/pixi.js/lib/index.js"],
         }
