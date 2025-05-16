@@ -18,8 +18,11 @@ export default defineConfig({
       insertTypesEntry: true,
       copyDtsFiles: false,
       include: [
-        "./src/lib.ts",
+        "./src/components/**/*.ts",
         "./src/ecs/**/*.ts",
+        "./src/math/**/*.ts",
+        "./src/systems/**/*.ts",
+        "./src/lib.ts",
         "./src/TypeSchema.ts",
       ],
       outDir: "./types",
