@@ -8,6 +8,7 @@ import { createStore } from "solid-js/store";
 import { smSpriteAtlasData } from "../kitty-demo/SmSprites";
 import { mmSpriteAtlasData } from "../kitty-demo/MmSprites";
 import { atlasData } from "../kitty-demo/KittySprites";
+import { Transform2D } from "../math/Transform2D";
 import { Text } from "pixi.js";
 import { createGetLevelsFolder, createTextureAtlasWithImageAndFramesList, levelRefComponentType, spriteComponentType, transform2DComponentType } from "../lib";
 import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
@@ -17,6 +18,8 @@ import { FrameState } from "../level-builder/components/FrameComponent";
 import { AsyncResult } from "control-flow-as-value";
 import { ReactiveCache } from "reactive-cache";
 import { scaleComponentType } from "../components/ScaleComponent";
+import { Cont } from "../Cont";
+import { AutomergeVfsFile, AutomergeVfsFolder } from "solid-fs-automerge";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -177,158 +180,168 @@ export class PixiRenderSystem {
                 app.destroy();
             });
         }
-        createComputed(on(
-            [ pixiApp, areAllImagesLoaded, ],
-            ([ pixiApp, areAllImagesLoaded, ]) => {
-                if (pixiApp == undefined) {
-                    return;
-                }
-                if (!areAllImagesLoaded) {
-                    return;
-                }
-                {
-                    let scopeDone = false;
-                    onCleanup(() => {
-                        scopeDone = true;
-                    });
-                    let render = () => {
-                        if (scopeDone) {
+        Cont.of<{
+            pixiApp: Application<Renderer>,
+            levelsFolder: Accessor<AsyncResult<AutomergeVfsFolder>>,
+            lookupSpriteSheetFromTextureAtlasRef: (textureAtlasRef: string) => Spritesheet<{
+                frames: Dict<SpritesheetFrameData>;
+                meta: {
+                    image: string;
+                    scale: number;
+                };
+            }> | undefined,
+        }>
+            ((kontinue) => {
+                createComputed(on(
+                    [ pixiApp, areAllImagesLoaded, ],
+                    ([ pixiApp, areAllImagesLoaded, ]) => {
+                        if (pixiApp == undefined) {
                             return;
                         }
-                        pixiApp.render();
-                        requestAnimationFrame(render);
-                    };
-                    requestAnimationFrame(render);
-                }
-                let spriteSheets = createSpriteSheets({
-                    textureAtlasWithImageAndFramesList,
-                });
-                let lookupSpriteSheetFromTextureAtlasRef = (textureAtlasRef: string) =>
-                    lookupSpriteSheetFromTextureAtlasRef_.cached(
-                        textureAtlasRef,
-                        () => {
-                            for (let entry of spriteSheets()) {
-                                if (entry.textureAtlasRef == textureAtlasRef) {
-                                    return entry.spritesheet;
+                        if (!areAllImagesLoaded) {
+                            return;
+                        }
+                        {
+                            let scopeDone = false;
+                            onCleanup(() => {
+                                scopeDone = true;
+                            });
+                            let render = () => {
+                                if (scopeDone) {
+                                    return;
                                 }
-                            }
-                            return undefined;
-                        },
-                    );
-                let levelsFolder = createGetLevelsFolder();
+                                pixiApp.render();
+                                requestAnimationFrame(render);
+                            };
+                            requestAnimationFrame(render);
+                        }
+                        let spriteSheets = createSpriteSheets({
+                            textureAtlasWithImageAndFramesList,
+                        });
+                        let lookupSpriteSheetFromTextureAtlasRef = (textureAtlasRef: string) =>
+                            lookupSpriteSheetFromTextureAtlasRef_.cached(
+                                textureAtlasRef,
+                                () => {
+                                    for (let entry of spriteSheets()) {
+                                        if (entry.textureAtlasRef == textureAtlasRef) {
+                                            return entry.spritesheet;
+                                        }
+                                    }
+                                    return undefined;
+                                },
+                            );
+                        let levelsFolder = createGetLevelsFolder();
+                        kontinue({
+                            pixiApp,
+                            levelsFolder,
+                            lookupSpriteSheetFromTextureAtlasRef,
+                        });
+                    }
+                ));
+            })
+            .thenCont<{
+                pixiApp: Application<Renderer>,
+                levelsFolder: AutomergeVfsFolder,
+                lookupSpriteSheetFromTextureAtlasRef: (textureAtlasRef: string) => Spritesheet<{
+                    frames: Dict<SpritesheetFrameData>;
+                    meta: {
+                        image: string;
+                        scale: number;
+                    };
+                }> | undefined,
+                levelRefEntities: Accessor<string[]>,
+            }>((
+                {
+                    pixiApp,
+                    levelsFolder,
+                    lookupSpriteSheetFromTextureAtlasRef,
+                },
+                kontinue
+            ) => {
                 createComputed(on(
-                    [ levelsFolder, textureAtlasWithImageAndFramesList, ],
-                    ([ levelsFolder, textureAtlasWithImageAndFramesList, ]) => {
+                    [ levelsFolder, ],
+                    ([ levelsFolder, ]) => {
                         if (levelsFolder.type != "Success") {
                             return;
                         }
                         let levelsFolder2 = levelsFolder.value;
-                        if (textureAtlasWithImageAndFramesList.type != "Success") {
-                            return;
-                        }
-                        let textureAtlasWithImageAndFramesList2 = textureAtlasWithImageAndFramesList.value;
                         let levelRefEntities = () => world.entitiesWithComponentType(levelRefComponentType);
-                        createComputed(mapArray(
+                        kontinue({
+                            pixiApp,
+                            levelsFolder: levelsFolder2,
+                            lookupSpriteSheetFromTextureAtlasRef,
                             levelRefEntities,
-                            (levelRefEntity) => createComputed(() => {
-                                let levelRef = world.getComponent(levelRefEntity, levelRefComponentType)?.state;
-                                if (levelRef == undefined) {
+                        })
+                    }
+                ));
+                Cont.of<{
+                    scale: Accessor<number | undefined>,
+                    space: Accessor<Transform2D | undefined>,
+                    spriteSheet: Accessor<Spritesheet<{
+                        frames: Dict<SpritesheetFrameData>;
+                        meta: {
+                            image: string;
+                            scale: number;
+                        };
+                    }> | undefined>,
+                    frameId: Accessor<string | undefined>,
+                    frame: Accessor<FrameState | undefined>,
+                    hasSpriteSheet: Accessor<boolean>,
+                    hasFrameId: Accessor<boolean>,
+                    hasFrame: Accessor<boolean>,
+                }>
+                    ((kontinue) => {
+                        let spriteEntities = () => world.entitiesWithComponentType(spriteComponentType);
+                        createComputed(mapArray(
+                            spriteEntities,
+                            (entity) => createComputed(() => {
+                                let sprite = world.getComponent(entity, spriteComponentType)?.state;
+                                let space = () => world.getComponent(entity, transform2DComponentType)?.state?.transform;
+                                let scale = createMemo(() => world.getComponent(entity, scaleComponentType)?.state.scale);
+                                if (sprite == undefined) {
                                     return;
                                 }
-                                let levelFileId = createMemo(() => {
-                                    for (let entry of levelsFolder2.contents) {
-                                        if (entry.name == levelRef.levelFilename && entry.type == "File") {
-                                            return entry.id;
-                                        }
+                                if (space == undefined) {
+                                    return;
+                                }
+                                let spriteSheet = () => lookupSpriteSheetFromTextureAtlasRef(sprite.textureAtlasFilename);
+                                let frameId = () => lookupFrameIdByTextureAtlasFilenameAndFrameName(sprite.textureAtlasFilename, sprite.frameName);
+                                let frame = () => {
+                                    let frameId2 = frameId();
+                                    if (frameId2 == undefined) {
+                                        return undefined;
                                     }
-                                    return undefined;
+                                    return lookupFrameById(frameId2);
+                                };
+                                let hasSpriteSheet = createMemo(() => spriteSheet() != undefined);
+                                let hasFrameId = createMemo(() => frameId() != undefined);
+                                let hasFrame = createMemo(() => frame() != undefined);
+                                kontinue({
+                                    scale,
+                                    space,
+                                    spriteSheet,
+                                    frameId,
+                                    frame,
+                                    hasSpriteSheet,
+                                    hasFrameId,
+                                    hasFrame,
                                 });
-                                createComputed(on(
-                                    levelFileId,
-                                    (levelFileId) => {
-                                        if (levelFileId == undefined) {
-                                            return;
-                                        }
-                                        let levelFile = levelsFolder2.openFileById(levelFileId);
-                                        createComputed(on(
-                                            levelFile,
-                                            (levelFile) => {
-                                                if (levelFile.type != "Success") {
-                                                    return;
-                                                }
-                                                let levelFile2 = levelFile.value;
-                                                let r = EcsWorldAutomergeProjection.create(
-                                                    registry,
-                                                    levelFile2.docHandle,
-                                                );
-                                                if (r.type == "Err") {
-                                                    return;
-                                                }
-                                                let world = r.value;
-                                                createComputed(mapArray(
-                                                    () => world.entitiesWithComponentType(levelComponentType),
-                                                    (levelEntity) => createComputed(() => {
-                                                        let levelComponent = world.getComponent(levelEntity, levelComponentType);
-                                                        if (levelComponent == undefined) {
-                                                            return;
-                                                        }
-                                                        let levelComponent2 = levelComponent;
-                                                        let levelState = levelComponent2.state;
-                                                        let container = renderLevel({
-                                                            windowSize: {
-                                                                get width() {
-                                                                    return state.windowWidth;
-                                                                },
-                                                                get height() {
-                                                                    return state.windowHeight;
-                                                                },
-                                                            },
-                                                            cameraX: 0.0,
-                                                            cameraY: 0.0,
-                                                            levelState,
-                                                            lookupSpriteSheetFromTextureAtlasRef,
-                                                            lookupFrameById,
-                                                        });
-                                                        pixiApp.stage.addChild(container);
-                                                        onCleanup(() => {
-                                                            pixiApp.stage.removeChild(container);
-                                                        });
-                                                    }),
-                                                ));
-                                            },
-                                        ));
-                                    },
-                                ));
-                                console.log("Level file id: ", levelFileId());
-                            }),
+                            })
                         ));
-                    },
-                ));
-                let spriteEntities = () => world.entitiesWithComponentType(spriteComponentType);
-                createComputed(mapArray(
-                    spriteEntities,
-                    (entity) => createComputed(() => {
-                        let sprite = world.getComponent(entity, spriteComponentType)?.state;
-                        let space = world.getComponent(entity, transform2DComponentType)?.state?.transform;
-                        let scale = createMemo(() => world.getComponent(entity, scaleComponentType)?.state.scale);
-                        if (sprite == undefined) {
-                            return;
-                        }
-                        if (space == undefined) {
-                            return;
-                        }
-                        let spriteSheet = () => lookupSpriteSheetFromTextureAtlasRef(sprite.textureAtlasFilename);
-                        let frameId = () => lookupFrameIdByTextureAtlasFilenameAndFrameName(sprite.textureAtlasFilename, sprite.frameName);
-                        let frame = () => {
-                            let frameId2 = frameId();
-                            if (frameId2 == undefined) {
-                                return undefined;
-                            }
-                            return lookupFrameById(frameId2);
-                        };
-                        let hasSpriteSheet = createMemo(() => spriteSheet() != undefined);
-                        let hasFrameId = createMemo(() => frameId() != undefined);
-                        let hasFrame = createMemo(() => frame() != undefined);
+                    })
+                    .thenCont((
+                        {
+                            scale,
+                            space,
+                            spriteSheet,
+                            frameId,
+                            frame,
+                            hasSpriteSheet,
+                            hasFrameId,
+                            hasFrame,
+                        },
+                        _kontinue,
+                    ) => {
                         createComputed(() => {
                             if (!hasSpriteSheet()) {
                                 return;
@@ -350,85 +363,178 @@ export class PixiRenderSystem {
                                 sprite.height = frame2().size.y * scale2;
                             });
                             createComputed(() => {
-                                sprite.x = space.origin.x;
-                                sprite.y = space.origin.y;
+                                let space2 = space() ?? Transform2D.identity;
+                                sprite.x = space2.origin.x;
+                                sprite.y = space2.origin.y;
                             });
                             pixiApp.stage.addChild(sprite);
                             onCleanup(() => pixiApp.stage.removeChild(sprite));
                         });
-                    }),
-                ));
-                /*
+                    })
+                    .run();
+            })
+            .thenCont<{
+                pixiApp: Application<Renderer>,
+                levelsFolder: AutomergeVfsFolder,
+                lookupSpriteSheetFromTextureAtlasRef: (textureAtlasRef: string) => Spritesheet<{
+                    frames: Dict<SpritesheetFrameData>;
+                    meta: {
+                        image: string;
+                        scale: number;
+                    };
+                }> | undefined,
+                levelFileId: Accessor<string | undefined>,
+            }>((
                 {
-                    let level = renderLevel({
-                        windowSize: {
-                            get width() {
-                                return state.windowWidth;
-                            },
-                            get height() {
-                                return state.windowHeight;
-                            },
-                        },
-                        tileset,
-                        cameraX: 100.0,
-                        cameraY: 200.0,
-                        level: new Level(level1),
-                    });
-                    pixiApp.stage.addChild(level);
-                    onCleanup(() => {
-                        pixiApp.stage.removeChild(level);
-                    });
-                }
-                createComputed(
-                    levelEntities,
-                    (levelEntity: string) => {
-                        let levelComponent = createMemo(() => world.getComponent(levelEntity, levelComponentType));
-                        createComputed(() => {
-                            let levelComponent2 = levelComponent();
-                            if (levelComponent2 == undefined) {
-                                return;
+                    pixiApp,
+                    levelsFolder,
+                    lookupSpriteSheetFromTextureAtlasRef,
+                    levelRefEntities,
+                },
+                kontinue
+            ) => {
+                createComputed(mapArray(
+                    levelRefEntities,
+                    (levelRefEntity) => createComputed(() => {
+                        let levelRef = world.getComponent(levelRefEntity, levelRefComponentType)?.state;
+                        if (levelRef == undefined) {
+                            return;
+                        }
+                        let levelFileId = createMemo(() => {
+                            for (let entry of levelsFolder.contents) {
+                                if (entry.name == levelRef.levelFilename && entry.type == "File") {
+                                    return entry.id;
+                                }
                             }
-                            let levelComponent3 = levelComponent2;
-                            let levelState = levelComponent3.state;
-                            let level = renderLevel({
-                                windowSize: {
-                                    get width() {
-                                        return state.windowWidth;
-                                    },
-                                    get height() {
-                                        return state.windowHeight;
-                                    },
-                                },
-                                tileset,
-                                cameraX: 100.0,
-                                cameraY: 200.0,
-                                level: new Level(level1),
-                            });
-                            pixiApp.stage.addChild(level);
-                            onCleanup(() => {
-                                pixiApp.stage.removeChild(level);
-                            });
+                            return undefined;
+                        });
+                        kontinue({
+                            pixiApp,
+                            levelsFolder,
+                            lookupSpriteSheetFromTextureAtlasRef,
+                            levelFileId,
+                        });
+                    })
+                ));
+            })
+            .thenCont<{
+                pixiApp: Application<Renderer>,
+                levelFile: Accessor<AsyncResult<AutomergeVfsFile<unknown>>>,
+                lookupSpriteSheetFromTextureAtlasRef: (textureAtlasRef: string) => Spritesheet<{
+                    frames: Dict<SpritesheetFrameData>;
+                    meta: {
+                        image: string;
+                        scale: number;
+                    };
+                }> | undefined,
+            }>((
+                {
+                    pixiApp,
+                    levelsFolder,
+                    lookupSpriteSheetFromTextureAtlasRef,
+                    levelFileId,
+                },
+                kontinue,
+            ) => {
+                createComputed(on(
+                    levelFileId,
+                    (levelFileId) => {
+                        if (levelFileId == undefined) {
+                            return;
+                        }
+                        let levelFile = levelsFolder.openFileById(levelFileId);
+                        kontinue({
+                            pixiApp,
+                            levelFile,
+                            lookupSpriteSheetFromTextureAtlasRef,
                         });
                     },
-                )
-                */
-            }
-        ));
+                ));
+            })
+            .thenCont<{
+                world: EcsWorldAutomergeProjection,
+                pixiApp: Application<Renderer>,
+                lookupSpriteSheetFromTextureAtlasRef: (textureAtlasRef: string) => Spritesheet<{
+                    frames: Dict<SpritesheetFrameData>;
+                    meta: {
+                        image: string;
+                        scale: number;
+                    };
+                }> | undefined,
+            }>((
+                {
+                    pixiApp,
+                    levelFile,
+                    lookupSpriteSheetFromTextureAtlasRef,
+                },
+                kontinue,
+            ) => {
+                createComputed(on(
+                    levelFile,
+                    (levelFile) => {
+                        if (levelFile.type != "Success") {
+                            return;
+                        }
+                        let levelFile2 = levelFile.value;
+                        let r = EcsWorldAutomergeProjection.create(
+                            registry,
+                            levelFile2.docHandle,
+                        );
+                        if (r.type == "Err") {
+                            return;
+                        }
+                        let world = r.value;
+                        kontinue({
+                            world,
+                            pixiApp,
+                            lookupSpriteSheetFromTextureAtlasRef,
+                        });
+                    },
+                ));
+            })
+            .thenCont<{}>((
+                {
+                    world,
+                    pixiApp,
+                    lookupSpriteSheetFromTextureAtlasRef,
+                },
+                _kontinue,
+            ) => {
+                createComputed(mapArray(
+                    () => world.entitiesWithComponentType(levelComponentType),
+                    (levelEntity) => createComputed(() => {
+                        let levelComponent = world.getComponent(levelEntity, levelComponentType);
+                        if (levelComponent == undefined) {
+                            return;
+                        }
+                        let levelComponent2 = levelComponent;
+                        let levelState = levelComponent2.state;
+                        let container = renderLevel({
+                            windowSize: {
+                                get width() {
+                                    return state.windowWidth;
+                                },
+                                get height() {
+                                    return state.windowHeight;
+                                },
+                            },
+                            cameraX: 0.0,
+                            cameraY: 0.0,
+                            levelState,
+                            lookupSpriteSheetFromTextureAtlasRef,
+                            lookupFrameById,
+                        });
+                        pixiApp.stage.addChild(container);
+                        onCleanup(() => {
+                            pixiApp.stage.removeChild(container);
+                        });
+                    }),
+                ));
+            })
+            .run();
         this.pixiApp = () => pixiApp();
     }
 }
-
-/*
-let textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
-    textureAtlasFilename: Accessor<string>;
-    textureAtlas: TextureAtlasState;
-    image: HTMLImageElement;
-    frames: {
-        frameId: string;
-        frame: FrameState;
-    }[];
-}[]>>
-*/
 
 function createSpriteSheets(params: {
     textureAtlasWithImageAndFramesList: Accessor<AsyncResult<{
