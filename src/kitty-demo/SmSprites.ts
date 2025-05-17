@@ -19,110 +19,104 @@ const KOOPA_TROOPA_1_OFFSET_Y = 778;
 const KOOPA_TROOPA_2_OFFSET_Y = 790;
 
 export const smSpriteAtlasData = {
-    frames: {
-        goomba_walking_1: {
-            frame: {
-                x: GOOMBA_1_OFFSET_X,
-                y: GOOMBA_OFFSET_Y,
-                w: GOOMBA_WIDTH,
-                h: GOOMBA_HEIGHT,
-            },
-        },
-        goomba_walking_2: {
-            frame: {
-                x: GOOMBA_2_OFFSET_X,
-                y: GOOMBA_OFFSET_Y,
-                w: GOOMBA_WIDTH,
-                h: GOOMBA_HEIGHT,
-            },
-        },
-        goomba_flat: {
-            frame: {
-                x: GOOMBA_3_OFFSET_X,
-                y: GOOMBA_OFFSET_Y,
-                w: GOOMBA_WIDTH,
-                h: GOOMBA_HEIGHT,
-            },
-        },
-        koopa_troopa_walking_1: {
-            frame: {
-                x: KOOPA_TROOPA_1_OFFSET_X,
-                y: KOOPA_TROOPA_1_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_1_HEIGHT,
-            },
-        },
-        koopa_troopa_walking_2: {
-            frame: {
-                x: KOOPA_TROOPA_2_OFFSET_X,
-                y: KOOPA_TROOPA_1_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_1_HEIGHT,
-            },
-        },
-        koopa_troopa_shell_1: {
-            frame: {
-                x: KOOPA_TROOPA_3_OFFSET_X,
-                y: KOOPA_TROOPA_2_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_2_HEIGHT,
-            },
-        },
-        koopa_troopa_shell_2: {
-            frame: {
-                x: KOOPA_TROOPA_4_OFFSET_X,
-                y: KOOPA_TROOPA_2_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_2_HEIGHT,
-            },
-        },
-        koopa_troopa_shell_3: {
-            frame: {
-                x: KOOPA_TROOPA_5_OFFSET_X,
-                y: KOOPA_TROOPA_2_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_2_HEIGHT,
-            },
-        },
-        koopa_troopa_shell_4: {
-            frame: {
-                x: KOOPA_TROOPA_6_OFFSET_X,
-                y: KOOPA_TROOPA_2_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_2_HEIGHT,
-            },
-        },
-        koopa_troopa_waking_up: {
-            frame: {
-                x: KOOPA_TROOPA_7_OFFSET_X,
-                y: KOOPA_TROOPA_2_OFFSET_Y,
-                w: KOOPA_TROOPA_WIDTH,
-                h: KOOPA_TROOPA_2_HEIGHT,
-            },
-        },
+  frames: {
+    goomba_walking_1: {
+      frame: {
+        x: GOOMBA_1_OFFSET_X,
+        y: GOOMBA_OFFSET_Y,
+        w: GOOMBA_WIDTH,
+        h: GOOMBA_HEIGHT,
+      },
     },
-    meta: {
-        image: SM_SPRITES,
-        format: "RGBA8888",
-        scale: 1.0,
+    goomba_walking_2: {
+      frame: {
+        x: GOOMBA_2_OFFSET_X,
+        y: GOOMBA_OFFSET_Y,
+        w: GOOMBA_WIDTH,
+        h: GOOMBA_HEIGHT,
+      },
     },
-    animations: {
-        goomba_walking: ["goomba_walking_1", "goomba_walking_2"],
-        goomba_flat: ["goomba_flat"],
-        koopa_troopa_walking: [
-            "koopa_troopa_walking_1",
-            "koopa_troopa_walking_2",
-        ],
-        koopa_troopa_shell: ["koopa_troopa_shell_1"],
-        koopa_troopa_shell_spin: [
-            "koopa_troopa_shell_1",
-            "koopa_troopa_shell_2",
-            "koopa_troopa_shell_3",
-            "koopa_troopa_shell_4",
-        ],
-        koopa_troopa_waking_up: [
-            "koopa_troopa_waking_up",
-            "koopa_troopa_shell_1",
-        ],
+    goomba_flat: {
+      frame: {
+        x: GOOMBA_3_OFFSET_X,
+        y: GOOMBA_OFFSET_Y,
+        w: GOOMBA_WIDTH,
+        h: GOOMBA_HEIGHT,
+      },
     },
+    koopa_troopa_walking_1: {
+      frame: {
+        x: KOOPA_TROOPA_1_OFFSET_X,
+        y: KOOPA_TROOPA_1_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_1_HEIGHT,
+      },
+    },
+    koopa_troopa_walking_2: {
+      frame: {
+        x: KOOPA_TROOPA_2_OFFSET_X,
+        y: KOOPA_TROOPA_1_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_1_HEIGHT,
+      },
+    },
+    koopa_troopa_shell_1: {
+      frame: {
+        x: KOOPA_TROOPA_3_OFFSET_X,
+        y: KOOPA_TROOPA_2_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_2_HEIGHT,
+      },
+    },
+    koopa_troopa_shell_2: {
+      frame: {
+        x: KOOPA_TROOPA_4_OFFSET_X,
+        y: KOOPA_TROOPA_2_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_2_HEIGHT,
+      },
+    },
+    koopa_troopa_shell_3: {
+      frame: {
+        x: KOOPA_TROOPA_5_OFFSET_X,
+        y: KOOPA_TROOPA_2_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_2_HEIGHT,
+      },
+    },
+    koopa_troopa_shell_4: {
+      frame: {
+        x: KOOPA_TROOPA_6_OFFSET_X,
+        y: KOOPA_TROOPA_2_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_2_HEIGHT,
+      },
+    },
+    koopa_troopa_waking_up: {
+      frame: {
+        x: KOOPA_TROOPA_7_OFFSET_X,
+        y: KOOPA_TROOPA_2_OFFSET_Y,
+        w: KOOPA_TROOPA_WIDTH,
+        h: KOOPA_TROOPA_2_HEIGHT,
+      },
+    },
+  },
+  meta: {
+    image: SM_SPRITES,
+    format: "RGBA8888",
+    scale: 1.0,
+  },
+  animations: {
+    goomba_walking: ["goomba_walking_1", "goomba_walking_2"],
+    goomba_flat: ["goomba_flat"],
+    koopa_troopa_walking: ["koopa_troopa_walking_1", "koopa_troopa_walking_2"],
+    koopa_troopa_shell: ["koopa_troopa_shell_1"],
+    koopa_troopa_shell_spin: [
+      "koopa_troopa_shell_1",
+      "koopa_troopa_shell_2",
+      "koopa_troopa_shell_3",
+      "koopa_troopa_shell_4",
+    ],
+    koopa_troopa_waking_up: ["koopa_troopa_waking_up", "koopa_troopa_shell_1"],
+  },
 };

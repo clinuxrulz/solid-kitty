@@ -4,7 +4,7 @@ import { parentComponentType } from "./ParentComponent";
 import { sortOrderIndexComponentType } from "./SortOrderIndexComponent";
 
 export const registry = new EcsRegistry([
-    childrenComponentType,
-    parentComponentType,
-    sortOrderIndexComponentType,
+  childrenComponentType,
+  parentComponentType,
+  sortOrderIndexComponentType,
 ]);

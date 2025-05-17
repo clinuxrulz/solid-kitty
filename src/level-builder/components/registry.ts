@@ -5,8 +5,8 @@ import { textureAtlasComponentType } from "./TextureAtlasComponent";
 import { levelComponentType } from "./LevelComponent";
 
 export const registry = new EcsRegistry([
-    ...baseRegistry.componentTypes,
-    frameComponentType,
-    levelComponentType,
-    textureAtlasComponentType,
+  ...baseRegistry.componentTypes,
+  frameComponentType,
+  levelComponentType,
+  textureAtlasComponentType,
 ]);

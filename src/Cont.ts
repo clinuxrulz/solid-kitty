@@ -1,25 +1,25 @@
 export class Cont<A> {
-    private fn: (k: (a: A) => void) => void;
+  private fn: (k: (a: A) => void) => void;
 
-    private constructor(fn: (k: (a: A) => void) => void) {
-        this.fn = fn;
-    }
+  private constructor(fn: (k: (a: A) => void) => void) {
+    this.fn = fn;
+  }
 
-    static of<A>(fn: (k: (a: A) => void) => void): Cont<A> {
-        return new Cont(fn);
-    }
+  static of<A>(fn: (k: (a: A) => void) => void): Cont<A> {
+    return new Cont(fn);
+  }
 
-    then<B>(fn: (a: A) => Cont<B>): Cont<B> {
-        return Cont.of((k) => this.run((a) => fn(a).run(k)));
-    }
+  then<B>(fn: (a: A) => Cont<B>): Cont<B> {
+    return Cont.of((k) => this.run((a) => fn(a).run(k)));
+  }
 
-    thenCont<B>(fn: (a: A, k: (b: B) => void) => void): Cont<B> {
-        return this.then((a) => Cont.of((k) => fn(a, k)));
-    }
+  thenCont<B>(fn: (a: A, k: (b: B) => void) => void): Cont<B> {
+    return this.then((a) => Cont.of((k) => fn(a, k)));
+  }
 
-    run(k?: (a: A) => void) {
-        this.fn(k ?? (() => {}));
-    }
+  run(k?: (a: A) => void) {
+    this.fn(k ?? (() => {}));
+  }
 }
 
 /*

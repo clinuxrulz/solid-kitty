@@ -1,188 +1,194 @@
 import {
-    NetworkAdapter,
-    type Message,
-    type PeerId,
-    type PeerMetadata,
-} from "@automerge/automerge-repo/slim"
-import { DataConnection } from "peerjs"
+  NetworkAdapter,
+  type Message,
+  type PeerId,
+  type PeerMetadata,
+} from "@automerge/automerge-repo/slim";
+import { DataConnection } from "peerjs";
 
 export type PeerJsAutomergeNetworkAdapterOptions = {
-    connection: DataConnection
-}
+  connection: DataConnection;
+};
 
 export class PeerJsAutomergeNetworkAdapter extends NetworkAdapter {
-    #disconnected = false
+  #disconnected = false;
 
-    #options: PeerJsAutomergeNetworkAdapterOptions
-    private connection: DataConnection;
+  #options: PeerJsAutomergeNetworkAdapterOptions;
+  private connection: DataConnection;
 
-    #ready = false
-    #readyResolver?: () => void
-    #readyPromise: Promise<void> = new Promise<void>(resolve => {
-        this.#readyResolver = resolve
-    })
-    #connectedPeers: PeerId[] = []
+  #ready = false;
+  #readyResolver?: () => void;
+  #readyPromise: Promise<void> = new Promise<void>((resolve) => {
+    this.#readyResolver = resolve;
+  });
+  #connectedPeers: PeerId[] = [];
 
-    isReady() {
-        return this.#ready
+  isReady() {
+    return this.#ready;
+  }
+
+  whenReady() {
+    return this.#readyPromise;
+  }
+
+  #forceReady() {
+    if (!this.#ready) {
+      this.#ready = true;
+      this.#readyResolver?.();
     }
+  }
 
-    whenReady() {
-        return this.#readyPromise
+  constructor(options: PeerJsAutomergeNetworkAdapterOptions) {
+    super();
+    this.#options = options;
+    this.connection = options.connection;
+  }
+
+  connect(peerId: PeerId, peerMetadata?: PeerMetadata) {
+    this.peerId = peerId;
+    this.peerMetadata = peerMetadata;
+    this.#disconnected = false;
+
+    this.connection.on("data", (data) => {
+      if (typeof data != "string") {
+        return;
+      }
+      const message = JSON.parse(data) as WebRtcDataChannelMessage;
+      console.log("message in, ", message);
+      if ("targetId" in message && message.targetId !== this.peerId) {
+        return;
+      }
+
+      if (this.#disconnected) {
+        return;
+      }
+
+      const { senderId, type } = message;
+
+      switch (type) {
+        case "arrive":
+          {
+            const { peerMetadata } = message as ArriveMessage;
+            this.connection.send(
+              JSON.stringify({
+                senderId: this.peerId,
+                targetId: senderId,
+                type: "welcome",
+                peerMetadata: this.peerMetadata,
+              }),
+            );
+            this.#announceConnection(senderId, peerMetadata);
+          }
+          break;
+        case "welcome":
+          {
+            const { peerMetadata } = message as WelcomeMessage;
+            this.#announceConnection(senderId, peerMetadata);
+          }
+          break;
+        case "leave":
+          this.#connectedPeers = this.#connectedPeers.filter(
+            (p) => p !== senderId,
+          );
+          this.emit("peer-disconnected", { peerId: senderId });
+          break;
+        default:
+          if (!("data" in message)) {
+            this.emit("message", message);
+          } else {
+            if (!message.data) {
+              throw new Error(
+                "We got a message without data, we can't send this.",
+              );
+            }
+            const data = message.data;
+            this.emit("message", {
+              ...message,
+              data: new Uint8Array(data),
+            });
+          }
+          break;
+      }
+    });
+    this.connection.send(
+      JSON.stringify({
+        senderId: this.peerId,
+        type: "arrive",
+        peerMetadata,
+      }),
+    );
+  }
+
+  #announceConnection(peerId: PeerId, peerMetadata: PeerMetadata) {
+    this.#forceReady();
+    this.#connectedPeers.push(peerId);
+    this.emit("peer-candidate", { peerId, peerMetadata });
+  }
+
+  send(message: Message) {
+    if (this.#disconnected) {
+      return false;
     }
-
-    #forceReady() {
-        if (!this.#ready) {
-            this.#ready = true
-            this.#readyResolver?.()
-        }
+    if ("data" in message) {
+      let data = message.data
+        ? message.data.buffer.slice(
+            message.data.byteOffset,
+            message.data.byteOffset + message.data.byteLength,
+          )
+        : undefined;
+      let data2 =
+        data == undefined ? undefined : Array.from(new Uint8Array(data));
+      this.connection.send(
+        JSON.stringify({
+          ...message,
+          data: data2,
+        }),
+      );
+    } else {
+      this.connection.send(JSON.stringify(message));
     }
+  }
 
-    constructor(options: PeerJsAutomergeNetworkAdapterOptions) {
-        super()
-        this.#options = options;
-        this.connection = options.connection;
+  disconnect() {
+    this.connection.send(
+      JSON.stringify({
+        senderId: this.peerId,
+        type: "leave",
+      }),
+    );
+    for (const peerId of this.#connectedPeers) {
+      this.emit("peer-disconnected", { peerId });
     }
-
-    connect(peerId: PeerId, peerMetadata?: PeerMetadata) {
-        this.peerId = peerId
-        this.peerMetadata = peerMetadata
-        this.#disconnected = false
-
-        this.connection.on(
-            "data",
-            (data) => {
-                if (typeof data != "string") {
-                    return;
-                }
-                const message = JSON.parse(data) as WebRtcDataChannelMessage;
-                console.log("message in, ", message);
-                if ("targetId" in message && message.targetId !== this.peerId) {
-                    return
-                }
-
-                if (this.#disconnected) {
-                    return
-                }
-
-                const { senderId, type } = message
-
-                switch (type) {
-                    case "arrive":
-                        {
-                            const { peerMetadata } = message as ArriveMessage
-                            this.connection.send(JSON.stringify({
-                                senderId: this.peerId,
-                                targetId: senderId,
-                                type: "welcome",
-                                peerMetadata: this.peerMetadata,
-                            }));
-                            this.#announceConnection(senderId, peerMetadata)
-                        }
-                        break
-                    case "welcome":
-                        {
-                            const { peerMetadata } = message as WelcomeMessage
-                            this.#announceConnection(senderId, peerMetadata)
-                        }
-                        break
-                    case "leave":
-                        this.#connectedPeers = this.#connectedPeers.filter(
-                            p => p !== senderId
-                        )
-                        this.emit("peer-disconnected", { peerId: senderId })
-                        break
-                    default:
-                        if (!("data" in message)) {
-                            this.emit("message", message)
-                        } else {
-                            if (!message.data) {
-                                throw new Error(
-                                    "We got a message without data, we can't send this."
-                                )
-                            }
-                            const data = message.data
-                            this.emit("message", {
-                                ...message,
-                                data: new Uint8Array(data),
-                            })
-                        }
-                        break
-                }
-            },
-        );
-        this.connection.send(JSON.stringify({
-            senderId: this.peerId,
-            type: "arrive",
-            peerMetadata,
-        }));
-    }
-
-    #announceConnection(peerId: PeerId, peerMetadata: PeerMetadata) {
-        this.#forceReady()
-        this.#connectedPeers.push(peerId)
-        this.emit("peer-candidate", { peerId, peerMetadata })
-    }
-
-    send(message: Message) {
-        if (this.#disconnected) {
-            return false
-        }
-        if ("data" in message) {
-            let data = message.data
-                ? message.data.buffer.slice(
-                    message.data.byteOffset,
-                    message.data.byteOffset + message.data.byteLength
-                )
-                : undefined;
-            let data2 = data == undefined ? undefined : Array.from(new Uint8Array(data));
-            this.connection.send(JSON.stringify({
-                ...message,
-                data: data2,
-            }));
-        } else {
-            this.connection.send(JSON.stringify(message));
-        }
-    }
-
-    disconnect() {
-        this.connection.send(JSON.stringify({
-            senderId: this.peerId,
-            type: "leave",
-        }));
-        for (const peerId of this.#connectedPeers) {
-            this.emit("peer-disconnected", { peerId });
-        }
-        this.#disconnected = true;
-    }
+    this.#disconnected = true;
+  }
 }
 
 /** Notify the network that we have arrived so everyone knows our peer ID */
 type ArriveMessage = {
-    type: "arrive"
+  type: "arrive";
 
-    /** The peer ID of the sender of this message */
-    senderId: PeerId
+  /** The peer ID of the sender of this message */
+  senderId: PeerId;
 
-    /** The peer metadata of the sender of this message */
-    peerMetadata: PeerMetadata
+  /** The peer metadata of the sender of this message */
+  peerMetadata: PeerMetadata;
 
-    /** Arrive messages don't have a targetId */
-    targetId: never
-}
+  /** Arrive messages don't have a targetId */
+  targetId: never;
+};
 
 /** Respond to an arriving peer with our peer ID */
 type WelcomeMessage = {
-    type: "welcome"
+  type: "welcome";
 
-    /** The peer ID of the recipient sender this message */
-    senderId: PeerId
+  /** The peer ID of the recipient sender this message */
+  senderId: PeerId;
 
-    /** The peer metadata of the sender of this message */
-    peerMetadata: PeerMetadata
+  /** The peer metadata of the sender of this message */
+  peerMetadata: PeerMetadata;
 
-    /** The peer ID of the recipient of this message */
-    targetId: PeerId
-}
+  /** The peer ID of the recipient of this message */
+  targetId: PeerId;
+};
 
 type WebRtcDataChannelMessage = ArriveMessage | WelcomeMessage | Message;
