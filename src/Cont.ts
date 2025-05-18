@@ -1,3 +1,5 @@
+import { Accessor, createMemo, mapArray } from "solid-js";
+
 export class Cont<A> {
   private fn: (k: (a: A) => void) => void;
 
@@ -15,6 +17,15 @@ export class Cont<A> {
 
   thenCont<B>(fn: (a: A, k: (b: B) => void) => void): Cont<B> {
     return this.then((a) => Cont.of((k) => fn(a, k)));
+  }
+
+  thenContCC<B>(fn: (a: A) => Accessor<B[]>): Cont<B> {
+    return this.thenCont((a: A, k: (b: B) => void) =>
+      createMemo(mapArray(
+        fn(a),
+        (b: B) => k(b),
+      ))
+    );
   }
 
   run(k?: (a: A) => void) {
