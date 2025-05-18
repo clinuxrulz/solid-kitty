@@ -11,6 +11,15 @@ export class Cont<A> {
     return new Cont(fn);
   }
 
+  static ofCC<A>(a: Accessor<A[]>): Cont<A> {
+    return Cont.of((k: (a: A) => void) =>
+      createMemo(mapArray(
+        a,
+        (a: A) => k(a),
+      ))
+    );
+  }
+
   then<B>(fn: (a: A) => Cont<B>): Cont<B> {
     return Cont.of((k) => this.run((a) => fn(a).run(k)));
   }
