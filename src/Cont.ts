@@ -17,6 +17,20 @@ export class Cont<A> {
     );
   }
 
+  map<B>(fn: (a: A) => B): Cont<B> {
+    return Cont.of((k: (b: B) => void) => this.fn((a) => k(fn(a))));
+  }
+
+  filterNonNullable(): Cont<NonNullable<A>> {
+    return Cont.of((k: (a: NonNullable<A>) => void) =>
+      this.fn((a) => {
+        if (a !== undefined && a !== null) {
+          k(a);
+        }
+      }),
+    );
+  }
+
   then<B>(fn: (a: A) => Cont<B>): Cont<B> {
     return Cont.of((k) => this.run((a) => fn(a).run(k)));
   }
