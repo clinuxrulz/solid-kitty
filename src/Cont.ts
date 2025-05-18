@@ -13,10 +13,7 @@ export class Cont<A> {
 
   static ofCC<A>(a: Accessor<A[]>): Cont<A> {
     return Cont.of((k: (a: A) => void) =>
-      createMemo(mapArray(
-        a,
-        (a: A) => k(a),
-      ))
+      createMemo(mapArray(a, (a: A) => k(a))),
     );
   }
 
@@ -30,10 +27,17 @@ export class Cont<A> {
 
   thenContCC<B>(fn: (a: A) => Accessor<B[]>): Cont<B> {
     return this.thenCont((a: A, k: (b: B) => void) =>
-      createMemo(mapArray(
-        fn(a),
-        (b: B) => k(b),
-      ))
+      createMemo(mapArray(fn(a), (b: B) => k(b))),
+    );
+  }
+
+  thenContCCCC<B>(fn: (a: A) => Accessor<Accessor<B[]>[]>): Cont<B> {
+    return this.thenCont((a: A, k: (b: B) => void) =>
+      createMemo(
+        mapArray(fn(a), (b: Accessor<B[]>) =>
+          createMemo(mapArray(b, (b2) => k(b2))),
+        ),
+      ),
     );
   }
 
