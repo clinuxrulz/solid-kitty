@@ -52,6 +52,14 @@ export class Cont<A> {
     return Cont.of((k: (b: B) => void) => this.fn((a) => k(fn(a))));
   }
 
+  filter(cond: (a: A) => boolean): Cont<A> {
+    return Cont.of((k) => this.run((a) => {
+      if (cond(a)) {
+        k(a);
+      }
+    }));
+  }
+
   filterNonNullable(): Cont<NonNullable<A>> {
     return Cont.of((k: (a: NonNullable<A>) => void) =>
       this.fn((a) => {
