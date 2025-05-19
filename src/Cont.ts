@@ -1,4 +1,4 @@
-import { Accessor, createMemo, mapArray } from "solid-js";
+import { Accessor, createComputed, createMemo, mapArray } from "solid-js";
 
 export class Cont<A> {
   private fn: (k: (a: A) => void) => void;
@@ -15,6 +15,24 @@ export class Cont<A> {
     return Cont.of((k: (a: A) => void) =>
       createMemo(mapArray(a, (a: A) => k(a))),
     );
+  }
+
+  /**
+   * Creates a computed and lifts it into a Cont.
+   * @param cb the callback to use inside the computed, the callback returns what will be passed to the continuation.
+   * @returns `Cont<A>`
+   */
+  static liftCC<A>(cb: () => A): Cont<A> {
+    return Cont.of((k: (a: A) => void) => createComputed(() => k(cb())));
+  }
+
+  /**
+   * Creates a computed mapArray and lifts it into a Cont.
+   * @param a the accessor of an array to feed to mapArray
+   * @returns `Cont<A>`
+   */
+  static liftCCMAA<A>(a: Accessor<A[]>): Cont<A> {
+    return Cont.of((k: (a: A) => void) => createComputed(mapArray(a, k)));
   }
 
   map<B>(fn: (a: A) => B): Cont<B> {
