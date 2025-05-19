@@ -1,5 +1,11 @@
 import { err, ok, Result } from "control-flow-as-value";
-import { Accessor, createComputed, createMemo, mapArray } from "solid-js";
+import {
+  Accessor,
+  createComputed,
+  createMemo,
+  EffectFunction,
+  mapArray,
+} from "solid-js";
 
 export class Cont<A> {
   private fn: (k: (a: A) => void) => void;
@@ -23,20 +29,23 @@ export class Cont<A> {
    * @param a the promise to lift into a Cont
    * @returns `Cont<A>`
    */
-  static liftPromise<A>(a: Promise<A>): Cont<Result<A,any>> {
-    return Cont.of(
-      (k: (a: Result<A,any>) => void) =>
-        a.then((b) => k(ok(b))).catch((e) => k(err(e)))
+  static liftPromise<A>(a: Promise<A>): Cont<Result<A, any>> {
+    return Cont.of((k: (a: Result<A, any>) => void) =>
+      a.then((b) => k(ok(b))).catch((e) => k(err(e))),
     );
   }
 
   /**
    * Creates a computed and lifts it into a Cont.
-   * @param cb the callback to use inside the computed, the callback returns what will be passed to the continuation.
+   * @param fn the callback to use inside the computed, the callback returns what will be passed to the continuation.
    * @returns `Cont<A>`
    */
-  static liftCC<A>(cb: () => A): Cont<A> {
-    return Cont.of((k: (a: A) => void) => createComputed(() => k(cb())));
+  static liftCC<A>(fn: EffectFunction<undefined | NoInfer<A>, A>): Cont<A> {
+    return Cont.of((k: (a: A) => void) =>
+      createComputed(() => {
+        k(fn(undefined));
+      }),
+    );
   }
 
   /**
@@ -53,11 +62,13 @@ export class Cont<A> {
   }
 
   filter(cond: (a: A) => boolean): Cont<A> {
-    return Cont.of((k) => this.run((a) => {
-      if (cond(a)) {
-        k(a);
-      }
-    }));
+    return Cont.of((k) =>
+      this.run((a) => {
+        if (cond(a)) {
+          k(a);
+        }
+      }),
+    );
   }
 
   filterNonNullable(): Cont<NonNullable<A>> {
