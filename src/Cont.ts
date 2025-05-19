@@ -1,3 +1,4 @@
+import { err, ok, Result } from "control-flow-as-value";
 import { Accessor, createComputed, createMemo, mapArray } from "solid-js";
 
 export class Cont<A> {
@@ -14,6 +15,18 @@ export class Cont<A> {
   static ofCC<A>(a: Accessor<A[]>): Cont<A> {
     return Cont.of((k: (a: A) => void) =>
       createMemo(mapArray(a, (a: A) => k(a))),
+    );
+  }
+
+  /**
+   * Lifts a promise into a Cont.
+   * @param a the promise to lift into a Cont
+   * @returns `Cont<A>`
+   */
+  static liftPromise<A>(a: Promise<A>): Cont<Result<A,any>> {
+    return Cont.of(
+      (k: (a: Result<A,any>) => void) =>
+        a.then((b) => k(ok(b))).catch((e) => k(err(e)))
     );
   }
 
