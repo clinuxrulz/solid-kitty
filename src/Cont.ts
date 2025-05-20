@@ -7,6 +7,9 @@ import {
   mapArray,
 } from "solid-js";
 
+type ResultOkType<A> = A extends { type: "Ok", value: infer A2, } ? A2 : never;
+type ResultErrType<A> = A extends { type: "Err", message: infer E } ? E : never;
+
 export class Cont<A> {
   private fn: (k: (a: A) => void) => void;
 
@@ -27,12 +30,58 @@ export class Cont<A> {
   /**
    * Lifts a promise into a Cont.
    * @param a the promise to lift into a Cont
-   * @returns `Cont<A>`
+   * @returns `Cont<Result<A,any>>`
    */
   static liftPromise<A>(a: Promise<A>): Cont<Result<A, any>> {
     return Cont.of((k: (a: Result<A, any>) => void) =>
       a.then((b) => k(ok(b))).catch((e) => k(err(e))),
     );
+  }
+
+  /**
+   * Lowers a Cont into a promise.
+   * This method expects its generic type
+   * to be a `Result<..>` type.
+   * @returns `Promise<ResultOkType<A>>`
+   */
+  lowerPromise(): Promise<ResultOkType<A>> {
+    return new Promise((resolve, reject) =>
+      this.run((a) => {
+        let a2: Result<ResultOkType<A>,ResultErrType<A>> = a as Result<ResultOkType<A>,ResultErrType<A>>;
+        if (a2.type == "Ok") {
+          resolve(a2.value);
+        } else {
+          reject(a2.message);
+        }
+      })
+    );
+  }
+
+  /**
+   * Lifts an accessor/memo into a Cont.
+   * @param a the accessor/memo to lift into a Cont
+   * @returns `Cont<A>`
+   */
+  static liftAccessor<A>(a: Accessor<A>): Cont<A> {
+    return Cont.of((k) => k(a()));
+  }
+
+  /**
+   * Lowers a Cont into an memo.
+   * @returns `Accessor<A | undefined>`
+   */
+  lowerAccessor(): Accessor<A | undefined>;
+  /**
+   * Lowers a Cont into an memo.
+   * @returns `Accessor<A>`
+   */
+  lowerAccessor(initValue: A): Accessor<A>;
+  lowerAccessor(initValue?: A): Accessor<A | undefined> {
+    let value: A | undefined = initValue;
+    return createMemo(() => {
+      this.run((a) => value = a);
+      return value;
+    });
   }
 
   /**
@@ -53,7 +102,7 @@ export class Cont<A> {
    * @param a the accessor of an array to feed to mapArray
    * @returns `Cont<A>`
    */
-  static liftCCMAA<A>(a: Accessor<A[]>): Cont<A> {
+  static liftCCMA<A>(a: Accessor<A[]>): Cont<A> {
     return Cont.of((k: (a: A) => void) => createComputed(mapArray(a, k)));
   }
 
