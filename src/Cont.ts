@@ -7,8 +7,8 @@ import {
   mapArray,
 } from "solid-js";
 
-type ResultOkType<A> = A extends { type: "Ok", value: infer A2, } ? A2 : never;
-type ResultErrType<A> = A extends { type: "Err", message: infer E } ? E : never;
+type ResultOkType<A> = A extends { type: "Ok"; value: infer A2 } ? A2 : never;
+type ResultErrType<A> = A extends { type: "Err"; message: infer E } ? E : never;
 
 export class Cont<A> {
   private fn: (k: (a: A) => void) => void;
@@ -19,12 +19,6 @@ export class Cont<A> {
 
   static of<A>(fn: (k: (a: A) => void) => void): Cont<A> {
     return new Cont(fn);
-  }
-
-  static ofCC<A>(a: Accessor<A[]>): Cont<A> {
-    return Cont.of((k: (a: A) => void) =>
-      createMemo(mapArray(a, (a: A) => k(a))),
-    );
   }
 
   /**
@@ -47,13 +41,16 @@ export class Cont<A> {
   lowerPromise(): Promise<ResultOkType<A>> {
     return new Promise((resolve, reject) =>
       this.run((a) => {
-        let a2: Result<ResultOkType<A>,ResultErrType<A>> = a as Result<ResultOkType<A>,ResultErrType<A>>;
+        let a2: Result<ResultOkType<A>, ResultErrType<A>> = a as Result<
+          ResultOkType<A>,
+          ResultErrType<A>
+        >;
         if (a2.type == "Ok") {
           resolve(a2.value);
         } else {
           reject(a2.message);
         }
-      })
+      }),
     );
   }
 
@@ -79,7 +76,7 @@ export class Cont<A> {
   lowerAccessor(initValue?: A): Accessor<A | undefined> {
     let value: A | undefined = initValue;
     return createMemo(() => {
-      this.run((a) => value = a);
+      this.run((a) => (value = a));
       return value;
     });
   }
@@ -134,55 +131,27 @@ export class Cont<A> {
     return Cont.of((k) => this.run((a) => fn(a).run(k)));
   }
 
-  thenCont<B>(fn: (a: A, k: (b: B) => void) => void): Cont<B> {
-    return this.then((a) => Cont.of((k) => fn(a, k)));
-  }
-
-  thenContCC<B>(fn: (a: A) => Accessor<B[]>): Cont<B> {
-    return this.thenCont((a: A, k: (b: B) => void) =>
-      createMemo(mapArray(fn(a), (b: B) => k(b))),
-    );
-  }
-
-  thenContCCCC<B>(fn: (a: A) => Accessor<Accessor<B[]>[]>): Cont<B> {
-    return this.thenCont((a: A, k: (b: B) => void) =>
-      createMemo(
-        mapArray(fn(a), (b: Accessor<B[]>) =>
-          createMemo(mapArray(b, (b2) => k(b2))),
-        ),
-      ),
-    );
-  }
-
   run(k?: (a: A) => void) {
     this.fn(k ?? (() => {}));
   }
 }
 
 /*
-Example:
+//Example:
 
 let [ value1, setValue1, ] = createSignal(1);
 let [ value2, setValue2, ] = createSignal(1);
 let [ value3, setValue3, ] = createSignal(1);
 
 function example() {
-    Cont.of<number>
-        ((k) => {
-            createComputed(() =>
-                k(value1() + 5)
-            );
-        })
-        .thenCont<number>((a, k) => {
-            createComputed(() =>
-                k(a + value2() * 2)
-            );
-        })
-        .thenCont<number>((a, k) => {
-            createComputed(() =>
-                k(a + value3() - 1)
-            );
-        })
-        .run();
+    Cont
+      .liftCC(() => value1() + 5)
+      .then((a) => Cont.liftCC(() =>
+        a + value2() * 2
+      ))
+      .then((a) => Cont.liftCC(() =>
+        a + value3() - 1
+      ))
+      .run();
 }
 */
