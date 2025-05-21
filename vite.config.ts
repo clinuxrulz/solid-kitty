@@ -24,6 +24,7 @@ export default defineConfig({
         "./src/systems/**/*.ts",
         "./src/lib.ts",
         "./src/TypeSchema.ts",
+        "./src/Cont.ts",
       ],
       outDir: "./types",
     }),

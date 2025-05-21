@@ -8,14 +8,15 @@ export * from './ecs/EcsComponent';
 export * from './ecs/EcsRegistry';
 export * from './ecs/EcsWorld';
 export * from './TypeSchema';
-export { PixiRenderSystem, } from './systems/PixiRenderSystem';
+export { PixiRenderSystem } from './systems/PixiRenderSystem';
 export * from 'solid-js';
+export * from './Cont';
 declare let systems: {
     PixiRenderSystem: (params: {
         world: EcsWorld;
     }) => void;
 };
-export type SystemName = keyof (typeof systems);
+export type SystemName = keyof typeof systems;
 export declare function useSystem(systemName: SystemName): () => void;
 export declare const REQUIRED_FOR_KEEPING_MANUAL_CHUNKS: () => undefined;
 export declare function launch(): void;
@@ -30,11 +31,11 @@ export declare const createAutomergeVfs: () => Accessor<{
 }>;
 export declare const libUrl: string;
 export declare const world: EcsWorld;
-export { type AnimatedState, animatedComponentType } from './components/AnimatedComponent';
-export { type LevelRefState, levelRefComponentType } from './components/LevelRefComponent';
-export { type ScaleState, scaleComponentType } from './components/ScaleComponent';
-export { type SpriteState, spriteComponentType } from './components/SpriteComponent';
-export { type Transform2DState, transform2DComponentType } from './components/Transform2DComponent';
+export { type AnimatedState, animatedComponentType, } from './components/AnimatedComponent';
+export { type LevelRefState, levelRefComponentType, } from './components/LevelRefComponent';
+export { type ScaleState, scaleComponentType, } from './components/ScaleComponent';
+export { type SpriteState, spriteComponentType, } from './components/SpriteComponent';
+export { type Transform2DState, transform2DComponentType, } from './components/Transform2DComponent';
 export { registry } from './components/registry';
 export { Complex } from './math/Complex';
 export { Transform2D } from './math/Transform2D';

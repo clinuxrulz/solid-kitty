@@ -56,6 +56,7 @@ export * from "./ecs/EcsWorld";
 export * from "./TypeSchema";
 export { PixiRenderSystem } from "./systems/PixiRenderSystem";
 export * from "solid-js";
+export * from "./Cont";
 
 let systems = {
   PixiRenderSystem: (params: { world: EcsWorld }) => {

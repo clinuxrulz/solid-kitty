@@ -103,6 +103,10 @@ export class Cont<A> {
     return Cont.of((k: (a: A) => void) => createComputed(mapArray(a, k)));
   }
 
+  static callCC<A,B>(fn: (k: (a: A) => Cont<B>) => Cont<A>): Cont<A> {
+    return Cont.of((k) => fn((a: A) => Cont.of((_) => k(a))).run(k));
+  }
+
   map<B>(fn: (a: A) => B): Cont<B> {
     return Cont.of((k: (b: B) => void) => this.fn((a) => k(fn(a))));
   }
