@@ -47,13 +47,8 @@ export function read<A>(a: Cont<A>, fn: (a: A) => Cont<void>): void {
  */
 export function execR<A>(instr: Cont<A>): Cont<A> {
     let buffer: A[] = [];
-    let resultK: ((a: A) => void) | undefined = undefined;
     exec(instr.then((a: A) => Cont.of((k) => {
-        if (resultK == undefined) {
-            buffer.push(a);
-        } else {
-            resultK(a);
-        }
+        buffer.push(a);
         k();
     })));
     return Cont.of((k) => {
@@ -61,6 +56,5 @@ export function execR<A>(instr: Cont<A>): Cont<A> {
             k(a);
         }
         buffer = [];
-        resultK = k;
     });
 }
