@@ -22,6 +22,15 @@ export class Cont<A> {
   }
 
   /**
+   * Lifts a plain value into a Cont.
+   * @param a the value to lift into a Cont.
+   * @returns `Cont<A>`
+   */
+  static unit<A>(a: A): Cont<A> {
+    return Cont.of((k) => k(a));
+  }
+
+  /**
    * Lifts a promise into a Cont.
    * @param a the promise to lift into a Cont
    * @returns `Cont<Result<A,any>>`

@@ -9,6 +9,12 @@ export declare class Cont<A> {
     private constructor();
     static of<A>(fn: (k: (a: A) => void) => void): Cont<A>;
     /**
+     * Lifts a plain value into a Cont.
+     * @param a the value to lift into a Cont.
+     * @returns `Cont<A>`
+     */
+    static unit<A>(a: A): Cont<A>;
+    /**
      * Lifts a promise into a Cont.
      * @param a the promise to lift into a Cont
      * @returns `Cont<Result<A,any>>`
