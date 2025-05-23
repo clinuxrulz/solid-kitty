@@ -49,6 +49,7 @@ import {
   PixiRenderSystem,
   PixiRenderSystem as X,
 } from "./systems/PixiRenderSystem";
+import { CollisionSystem } from "./systems/CollisionSystem";
 
 export * from "./ecs/EcsComponent";
 export * from "./ecs/EcsRegistry";
@@ -74,6 +75,9 @@ let systems = {
         });
       }),
     );
+  },
+  CollisionSystem: (params: { world: EcsWorld }) => {
+    let _ = new CollisionSystem(params);
   },
 };
 

@@ -16,6 +16,9 @@ declare let systems: {
     PixiRenderSystem: (params: {
         world: EcsWorld;
     }) => void;
+    CollisionSystem: (params: {
+        world: EcsWorld;
+    }) => void;
 };
 export type SystemName = keyof typeof systems;
 export declare function useSystem(systemName: SystemName): () => void;

@@ -6,7 +6,7 @@ import {
   IsEcsComponent,
   IsEcsComponentType,
 } from "./EcsComponent";
-import { batch, createSignal, Signal, untrack } from "solid-js";
+import { batch, untrack } from "solid-js";
 import { ReactiveSet } from "@solid-primitives/set";
 import { makeRefCountedMakeReactiveObject } from "../util";
 import { err, ok, Result } from "../kitty-demo/Result";
@@ -16,9 +16,12 @@ import {
   saveToJsonViaTypeSchema,
 } from "../TypeSchema";
 import { IEcsWorld } from "./IEcsWorld";
+import { childrenComponentType } from "./components/ChildrenComponent";
+import { produce } from "solid-js/store";
+import { parentComponentType } from "./components/ParentComponent";
 
 export class EcsWorld implements IEcsWorld {
-  private entityMap: ReactiveMap<string, Signal<IsEcsComponent[]>>;
+  private entityMap: ReactiveMap<string, ReactiveMap<string, IsEcsComponent>>;
   private componentTypeEntitiesMap: ReactiveMap<string, ReactiveSet<string>>;
   private componentTypeEntitiesMap_: Map<string, () => string[]> = new Map();
 
@@ -61,7 +64,7 @@ export class EcsWorld implements IEcsWorld {
   createEntityWithId(entityId: string, components: IsEcsComponent[]) {
     untrack(() =>
       batch(() => {
-        this.entityMap.set(entityId, createSignal(components));
+        this.entityMap.set(entityId, new ReactiveMap<string,IsEcsComponent>(components.map((component) => [component.type.typeName, component])));
         for (let component of components) {
           let entitySet = this.componentTypeEntitiesMap.get(
             component.type.typeName,
@@ -90,7 +93,7 @@ export class EcsWorld implements IEcsWorld {
       batch(() => {
         let components = this.entityMap.get(entityId);
         if (components != undefined) {
-          for (let component of components[0]()) {
+          for (let component of components.values()) {
             let entitySet = this.componentTypeEntitiesMap.get(
               component.type.typeName,
             );
@@ -104,21 +107,71 @@ export class EcsWorld implements IEcsWorld {
     );
   }
 
+  attachToParent(entityId: string, parentId: string) {
+    untrack(() => {
+      {
+        let lastParentId = this.getComponent(entityId, parentComponentType)?.state?.parentId;
+        if (lastParentId != undefined) {
+          this.detactFromParent(entityId);
+        }
+      }
+      let childrenComponent = this.getComponent(parentId, childrenComponentType);
+      if (childrenComponent == undefined) {
+        childrenComponent = childrenComponentType.create({
+          childIds: [ entityId, ],
+        });
+        this.setComponent(parentId, childrenComponent);
+      } else {
+        childrenComponent.setState("childIds", produce((childIds) => childIds.push(entityId)));
+      }
+      this.setComponent(
+        entityId, 
+        parentComponentType.create({
+          parentId,
+        })
+      );
+    });
+  }
+
+  detactFromParent(entityId: string) {
+    untrack(() => {
+      let parentComponent = this.getComponent(entityId, parentComponentType);
+      if (parentComponent != undefined) {
+        this.unsetComponent(entityId, parentComponentType);
+        let parentId = parentComponent.state.parentId;
+        let childrenComponent = this.getComponent(parentId, childrenComponentType);
+        if (childrenComponent != undefined) {
+          let newChildIds =
+            childrenComponent
+              .state
+              .childIds
+              .filter((id) => id !== entityId);
+          if (newChildIds.length == 0) {
+            this.unsetComponent(parentId, childrenComponentType);
+          } else {
+            childrenComponent.setState(
+              "childIds",
+              newChildIds
+            );
+          }
+        }
+      }
+    });
+  }
+
   getComponent<A extends object>(
     entityId: string,
     componentType: EcsComponentType<A>,
   ): EcsComponent<A> | undefined {
-    let components = this.entityMap.get(entityId)?.[0]?.();
+    let components = this.entityMap.get(entityId);
     if (components == undefined) {
       return undefined;
     }
-    return components.find(
-      (component) => component.type.typeName === componentType.typeName,
-    ) as EcsComponent<A> | undefined;
+    return components.get(componentType.typeName) as EcsComponent<A> | undefined;
   }
 
   getComponents(entityId: string): IsEcsComponent[] {
-    return this.entityMap.get(entityId)?.[0]?.() ?? [];
+    return Array.from(this.entityMap.get(entityId)?.values() ?? []);
   }
 
   setComponent(entityId: string, component: IsEcsComponent) {
@@ -126,39 +179,34 @@ export class EcsWorld implements IEcsWorld {
   }
 
   setComponents(entityId: string, components: IsEcsComponent[]) {
-    let componentsSignal = this.entityMap.get(entityId);
-    if (componentsSignal == undefined) {
+    let componentsMap = this.entityMap.get(entityId);
+    if (componentsMap == undefined) {
       return;
     }
-    componentsSignal[1]([
-      ...componentsSignal[0]().filter((x) =>
-        components.every((y) => y.type.typeName != x.type.typeName),
-      ),
-      ...components,
-    ]);
+    for (let component of components) {
+      componentsMap.set(
+        component.type.typeName,
+        component,
+      );
+    }
   }
 
   unsetComponent(entityId: string, componentType: IsEcsComponentType) {
-    let componentTypeName = componentType.typeName;
-    let componentsSignal = this.entityMap.get(entityId);
-    if (componentsSignal == undefined) {
+    let componentsMap = this.entityMap.get(entityId);
+    if (componentsMap == undefined) {
       return;
     }
-    componentsSignal[1](
-      componentsSignal[0]().filter((x) => x.type.typeName != componentTypeName),
-    );
+    componentsMap.delete(componentType.typeName);
   }
 
   unsetComponents(entityId: string, componentTypes: IsEcsComponentType[]) {
-    let componentsSignal = this.entityMap.get(entityId);
-    if (componentsSignal == undefined) {
+    let componentsMap = this.entityMap.get(entityId);
+    if (componentsMap == undefined) {
       return;
     }
-    componentsSignal[1](
-      componentsSignal[0]().filter((x) =>
-        componentTypes.every((y) => x.type.typeName != y.typeName),
-      ),
-    );
+    for (let componentType of componentTypes) {
+      componentsMap.delete(componentType.typeName);
+    }
   }
 
   toJson(): any {

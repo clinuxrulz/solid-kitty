@@ -11,6 +11,7 @@ import {
   Texture,
   TextureStyle,
 } from "pixi.js";
+import * as PIXI from "pixi.js";
 import {
   Accessor,
   batch,
@@ -52,6 +53,8 @@ import { ReactiveCache } from "reactive-cache";
 import { scaleComponentType } from "../components/ScaleComponent";
 import { Cont } from "../Cont";
 import { AutomergeVfsFile, AutomergeVfsFolder } from "solid-fs-automerge";
+import { childrenComponentType } from "../ecs/components/ChildrenComponent";
+import { tileCollisionComponentType } from "../components/TileCollisionComponent";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -312,6 +315,7 @@ export class PixiRenderSystem {
                 let hasFrameId = createMemo(() => frameId() != undefined);
                 let hasFrame = createMemo(() => frame() != undefined);
                 return {
+                  spriteEntity: entity,
                   scale,
                   space,
                   spriteSheet,
@@ -326,6 +330,7 @@ export class PixiRenderSystem {
             .filterNonNullable()
             .then(
               ({
+                spriteEntity,
                 scale,
                 space,
                 spriteSheet,
@@ -368,7 +373,55 @@ export class PixiRenderSystem {
                   });
                   pixiApp.stage.addChild(sprite);
                   onCleanup(() => pixiApp.stage.removeChild(sprite));
-                }),
+                  return 
+                }).then(() =>
+                  Cont
+                    .liftCCMA(
+                      () =>
+                        world.getComponent(spriteEntity, childrenComponentType)
+                          ?.state?.childIds ?? [],
+                    )
+                    .filterNonNullable()
+                    .then(
+                      (childId) =>
+                        Cont.liftCC(() => world.getComponent(childId, tileCollisionComponentType)?.state)
+                          .filterNonNullable()
+                          .then((tileCollision) =>
+                            Cont
+                              .liftCC(() =>
+                                world.getComponent(
+                                  childId,
+                                  transform2DComponentType
+                                )?.state?.transform ?? Transform2D.identity,
+                              )
+                              .map((transform) => ({
+                                tileCollision,
+                                transform,
+                              }))
+                          )
+                    )
+                    .then(({
+                      tileCollision,
+                      transform,
+                    }) => Cont.liftCC(() => {
+                      const square = new PIXI.Graphics();
+                      square.beginPath();
+                      square.moveTo(0, 0);
+                      square.lineTo(0, tileCollision.height);
+                      square.lineTo(tileCollision.width, tileCollision.height);
+                      square.lineTo(tileCollision.width, 0);
+                      square.closePath();
+                      square.setFillStyle({ alpha: 0.5, color: new PIXI.Color("red")});
+                      square.fill();
+                      square.x = (space()?.origin?.x ?? 0) + transform.origin.x;
+                      square.y = (space()?.origin?.y ?? 0) + transform.origin.y;
+                      pixiApp.stage.addChild(square);
+                      onCleanup(() => {
+                        pixiApp.stage.removeChild(square);
+                        square.destroy();
+                      });
+                    }))
+                ),
             )
             .run();
           return Cont.liftCC(

@@ -12,6 +12,8 @@ export declare class EcsWorld implements IEcsWorld {
     createEntityWithId(entityId: string, components: IsEcsComponent[]): void;
     createEntity(components: IsEcsComponent[]): string;
     destroyEntity(entityId: string): void;
+    attachToParent(entityId: string, parentId: string): void;
+    detactFromParent(entityId: string): void;
     getComponent<A extends object>(entityId: string, componentType: EcsComponentType<A>): EcsComponent<A> | undefined;
     getComponents(entityId: string): IsEcsComponent[];
     setComponent(entityId: string, component: IsEcsComponent): void;

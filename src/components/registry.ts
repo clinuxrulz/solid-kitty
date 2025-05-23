@@ -4,6 +4,7 @@ import { animatedComponentType } from "./AnimatedComponent";
 import { levelRefComponentType } from "./LevelRefComponent";
 import { scaleComponentType } from "./ScaleComponent";
 import { spriteComponentType } from "./SpriteComponent";
+import { tileCollisionComponentType } from "./TileCollisionComponent";
 import { transform2DComponentType } from "./Transform2DComponent";
 
 export const registry = new EcsRegistry([
@@ -12,5 +13,6 @@ export const registry = new EcsRegistry([
   levelRefComponentType,
   scaleComponentType,
   spriteComponentType,
+  tileCollisionComponentType,
   transform2DComponentType,
 ]);

@@ -1,12 +1,12 @@
-import { createMemo } from "solid-js/types/server/reactive.js";
 import { levelRefComponentType } from "../components/LevelRefComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
-import { createComputed, mapArray, on } from "solid-js";
-import { createGetLevelsFolder } from "../lib";
+import { createMemo, on, onCleanup } from "solid-js";
+import { Complex, createGetLevelsFolder, spriteComponentType, Transform2D, transform2DComponentType, Vec2 } from "../lib";
 import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
 import { registry } from "../level-builder/components/registry";
 import { levelComponentType } from "../level-builder/components/LevelComponent";
 import { Cont } from "../Cont";
+import { tileCollisionComponentType } from "../components/TileCollisionComponent";
 
 export class CollisionSystem {
   constructor(params: { world: EcsWorld }) {
@@ -95,17 +95,105 @@ export class CollisionSystem {
           levelEntity,
         })),
       )
-      .run(({ levelWorld, levelEntity }) => {
-        let levelComponent = levelWorld.getComponent(
-          levelEntity,
-          levelComponentType,
-        );
-        if (levelComponent == undefined) {
-          return;
+      .then(({ levelWorld, levelEntity }) => Cont.liftCC(() =>
+        levelWorld.getComponent(levelEntity, levelComponentType)?.state
+      ))
+      .filterNonNullable()
+      .map((x) => ({ level: x, }))
+      .then(({ level, }) => {
+        let shortIdToTextureAtlasAndFrameIdMap = new Map<number,{
+          textureAtlasFilename: string,
+          frameId: string,
+        }>();
+        for (let { textureAtlasRef, frames, } of level.tileToShortIdTable) {
+          for (let { frameId, shortId, } of frames) {
+            shortIdToTextureAtlasAndFrameIdMap.set(
+              shortId,
+              {
+                textureAtlasFilename: textureAtlasRef,
+                frameId,
+              }
+            );
+          }
         }
-        let levelComponent2 = levelComponent;
-        let levelState = levelComponent2.state;
-        // TODO: Scan level cells for collision against characters
-      });
+        return Cont
+          .liftCCMA(() => world.entitiesWithComponentType(spriteComponentType))
+          .then((spriteEntity) => Cont.liftCC(() => {
+            let sprite = world.getComponent(spriteEntity, spriteComponentType)?.state;
+            if (sprite == undefined) {
+              return undefined;
+            }
+            let transform = world.getComponent(spriteEntity, transform2DComponentType)?.state.transform ?? Transform2D.identity;
+            return {
+              spriteEntity,
+              sprite,
+              transform,
+            };
+          }))
+          .filterNonNullable()
+          .map(({ spriteEntity, sprite, transform, }) => ({
+            level,
+            shortIdToTextureAtlasAndFrameIdMap,
+            spriteEntity,
+            sprite,
+            spriteTransform: transform,
+          }));
+      })
+      .then(({
+          level,
+          shortIdToTextureAtlasAndFrameIdMap,
+          spriteEntity,
+          sprite,
+          spriteTransform,
+      }) => Cont.liftCC(() => {
+        const spritePos = spriteTransform.origin;
+        const tileWidth = 16*3;
+        const tileHeight = 16*3;
+        const minXIdx = Math.floor(spritePos.x / tileWidth);
+        const minYIdx = Math.floor(spritePos.y / tileHeight);
+        // just rough it for now
+        const maxXIdx = minXIdx;
+        const maxYIdx = minYIdx;
+        // TODO:
+        for (let i = minYIdx; i <= maxYIdx; ++i) {
+          let row = level.mapData[i];
+          if (row == undefined) {
+            continue;
+          }
+          for (let j = minXIdx; j <= maxXIdx; ++j) {
+            let cell = row[j];
+            if (cell == undefined) {
+              continue;
+            }
+            let data = shortIdToTextureAtlasAndFrameIdMap.get(cell);
+            if (data == undefined) {
+              continue;
+            }
+            let collisionId = world.createEntity([
+              transform2DComponentType.create({
+                transform: Transform2D.create(
+                  Vec2.create(
+                    j * tileWidth - spritePos.x,
+                    i * tileHeight - spritePos.y,
+                  ),
+                  Complex.rot0,
+                )
+              }),
+              tileCollisionComponentType.create({
+                textureAtlasFilename: data.textureAtlasFilename,
+                frameName: data.frameId,
+                width: tileWidth,
+                height: tileHeight,
+              }),
+            ]);
+            world.attachToParent(collisionId, spriteEntity);
+            onCleanup(() => {
+              world.detactFromParent(collisionId);
+              world.destroyEntity(collisionId);
+            });
+          }
+        }
+      }))
+      .run();
   }
 }
