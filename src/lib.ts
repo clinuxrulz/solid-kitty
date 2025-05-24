@@ -54,6 +54,9 @@ import { CollisionSystem } from "./systems/CollisionSystem";
 export * from "./ecs/EcsComponent";
 export * from "./ecs/EcsRegistry";
 export * from "./ecs/EcsWorld";
+export * from "./ecs/components/ChildrenComponent";
+export * from "./ecs/components/ParentComponent";
+export * from "./ecs/components/SortOrderIndexComponent";
 export * from "./TypeSchema";
 export { PixiRenderSystem } from "./systems/PixiRenderSystem";
 export * from "solid-js";
@@ -187,9 +190,17 @@ export {
   spriteComponentType,
 } from "./components/SpriteComponent";
 export {
+  type TileCollisionState,
+  tileCollisionComponentType,
+} from "./components/TileCollisionComponent";
+export {
   type Transform2DState,
   transform2DComponentType,
 } from "./components/Transform2DComponent";
+export {
+  type Velocity2DState,
+  velocity2DComponentType,
+} from "./components/Velocity2DComponent";
 export { registry } from "./components/registry";
 
 export { Complex } from "./math/Complex";
