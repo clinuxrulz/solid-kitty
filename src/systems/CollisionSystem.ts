@@ -250,7 +250,7 @@ export class CollisionSystem {
               }),
               tileCollisionComponentType.create({
                 textureAtlasFilename: data.textureAtlasFilename,
-                frameName: data.frameId,
+                frameName: frame.name,
                 width: tileWidth,
                 height: tileHeight,
               }),
