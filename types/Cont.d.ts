@@ -8,6 +8,7 @@ export declare class Cont<A> {
     private fn;
     private constructor();
     static of<A>(fn: (k: (a: A) => void) => void): Cont<A>;
+    static readonly nop: Cont<void>;
     /**
      * Lifts a plain value into a Cont.
      * @param a the value to lift into a Cont.
@@ -55,7 +56,7 @@ export declare class Cont<A> {
      * @returns `Cont<A>`
      */
     static liftCCMA<A>(a: Accessor<A[]>): Cont<A>;
-    static callCC<A, B>(fn: (k: (a: A) => Cont<B>) => Cont<A>): Cont<A>;
+    static callCC<A>(fn: (k: (a: A) => Cont<never>) => Cont<A>): Cont<A>;
     map<B>(fn: (a: A) => B): Cont<B>;
     filter(cond: (a: A) => boolean): Cont<A>;
     filterNonNullable(): Cont<NonNullable<A>>;

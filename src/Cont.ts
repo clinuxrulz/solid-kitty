@@ -21,6 +21,8 @@ export class Cont<A> {
     return new Cont(fn);
   }
 
+  static readonly nop: Cont<void> = Cont.of((k) => k());
+
   /**
    * Lifts a plain value into a Cont.
    * @param a the value to lift into a Cont.
@@ -112,7 +114,7 @@ export class Cont<A> {
     return Cont.of((k: (a: A) => void) => createComputed(mapArray(a, k)));
   }
 
-  static callCC<A,B>(fn: (k: (a: A) => Cont<B>) => Cont<A>): Cont<A> {
+  static callCC<A>(fn: (k: (a: A) => Cont<never>) => Cont<A>): Cont<A> {
     return Cont.of((k) => fn((a: A) => Cont.of((_) => k(a))).run(k));
   }
 

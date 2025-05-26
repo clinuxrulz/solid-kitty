@@ -12,9 +12,11 @@ export * from './ecs/components/ParentComponent';
 export * from './ecs/components/SortOrderIndexComponent';
 export * from './TypeSchema';
 export { PixiRenderSystem } from './systems/PixiRenderSystem';
+export { createMonsterLogicSystem } from './systems/MonsterLogicSystem';
 export * from 'solid-js';
 export * from './Cont';
 export * from './cont-do';
+export * from './coroutine-dsl';
 declare let systems: {
     PixiRenderSystem: (params: {
         world: EcsWorld;

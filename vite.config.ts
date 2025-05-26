@@ -26,6 +26,7 @@ export default defineConfig({
         "./src/TypeSchema.ts",
         "./src/Cont.ts",
         "./src/cont-do.ts",
+        "./src/coroutine-dsl.ts",
       ],
       outDir: "./types",
     }),
