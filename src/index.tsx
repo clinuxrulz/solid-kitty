@@ -36,7 +36,7 @@ import {
   AutomergeVirtualFileSystemState,
 } from "solid-fs-automerge";
 import { REQUIRED_FOR_KEEPING_MANUAL_CHUNKS } from "./lib";
-const CodeMirror = lazy(() => import("../code-mirror/CodeMirror"));
+const CodeMirror = lazy(() => import("./code-mirror/CodeMirror"));
 const AppV2 = lazy(() => import("./app/AppV2"));
 const KittyDemoApp = lazy(() => import("./kitty-demo/KittyDemo"));
 const PixelEditor = lazy(() => import("./pixel-editor/PixelEditor"));
