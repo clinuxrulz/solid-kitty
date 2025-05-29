@@ -3,7 +3,15 @@ import * as Comlink from "comlink";
 import { Component, createComputed, createMemo, mapArray, on, onCleanup, onMount, untrack } from "solid-js";
 import { basicSetup, EditorView } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { tsFacetWorker, tsSyncWorker, tsLinterWorker, tsHoverWorker, tsAutocompleteWorker } from "@valtown/codemirror-ts";
+import {
+  tsAutocomplete,
+  tsFacet,
+  tsGoto,
+  tsHover,
+  tsLinterWorker,
+  tsSync,
+  tsTwoslash,
+} from "@valtown/codemirror-ts";
 import { autocompletion } from "@codemirror/autocomplete";
 import { keymap, EditorView as EditorView2 } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -120,13 +128,17 @@ const CodeMirror: Component<{
           jsx: true,
         }),
         oneDark,
-        tsFacetWorker.of({ worker, path }),
-        tsSyncWorker(),
-        tsLinterWorker(),
-        autocompletion({
-          override: [tsAutocompleteWorker()],
+        tsFacet.of({
+          worker: worker,
+          path: path,
         }),
-        tsHoverWorker(), 
+        autocompletion({override: [tsAutocomplete()]}),
+        tsSync(),
+        tsLinterWorker(),
+        tsHover(),
+        tsGoto({
+        }),
+        tsTwoslash(),
         keymap.of([
           {
               key: 'Tab',
@@ -154,7 +166,7 @@ const CodeMirror: Component<{
         if (path == undefined) {
           return;
         }
-        let x = editor.state.facet(tsFacetWorker);
+        let x = editor.state.facet(tsFacet);
         if (x != null) {
           x.path = path;
         }

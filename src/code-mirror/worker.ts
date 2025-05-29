@@ -65,11 +65,11 @@ function createWorker2(fn: () => Promise<VirtualTypeScriptEnvironment>): ReturnT
   deleteFile(path: string): void,
 } {
   let env: VirtualTypeScriptEnvironment | undefined;
-  let result = createWorker(async () => {
+  let result = createWorker((async () => {
     let env2 = await fn();
     env = env2;
-    return env2;
-  });
+    return { env: env2, };
+  })());
   return {
     initialize() {
       return result.initialize();
