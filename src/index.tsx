@@ -175,7 +175,7 @@ render(() => {
         component={() => <LevelBuilder vfs={vfs()} />}
       />
       <Route path="/script-editor" component={() => <ScriptEditor />} />
-      <Route path="/code-mirror" component={CodeMirror}/>
+      <Route path="/code-mirror" component={() => <CodeMirror/>}/>
       <Route
         path="/colour-picker"
         component={() => {

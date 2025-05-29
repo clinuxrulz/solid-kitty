@@ -56,6 +56,7 @@ import {
   exportToZip,
   importFromZip,
 } from "solid-fs-automerge/src/export-import";
+import CodeMirror, { mountAutomergeFolderToCodeMirrorVfsWhileMounted } from "../code-mirror/CodeMirror";
 
 const AppV2: Component<{
   vfsDocUrl: string;
@@ -67,6 +68,7 @@ const AppV2: Component<{
 }> = (props) => {
   let [state, setState] = createStore<{
     showGame: boolean;
+    useCodeMirror: boolean;
     overlayApp:
       | NoTrack<{
           Title: Component;
@@ -75,6 +77,7 @@ const AppV2: Component<{
       | undefined;
   }>({
     showGame: false,
+    useCodeMirror: false,
     overlayApp: undefined,
   });
   let fileSystemExplorer = createFileSystemExplorer({
@@ -180,6 +183,7 @@ const AppV2: Component<{
       }
       let sourceFolder2 = sourceFolder.value;
       mountAutomergeFolderToMonacoVfsWhileMounted(sourceFolder2);
+      mountAutomergeFolderToCodeMirrorVfsWhileMounted(sourceFolder2);
     }),
   );
   let selectedImageFileById = createMemo(() => {
@@ -816,7 +820,16 @@ const AppV2: Component<{
         return LandingApp;
       }
       let sourceFolder3 = sourceFolder2.value;
-      return () => <ScriptEditor path={selectedSourceFileRelPath2} />;
+      return () => (
+        <Switch>
+          <Match when={state.useCodeMirror}>
+            <CodeMirror path={selectedSourceFileRelPath2}/>
+          </Match>
+          <Match when={!state.useCodeMirror}>
+            <ScriptEditor path={selectedSourceFileRelPath2} />
+          </Match>
+        </Switch>
+      );
     }
     if (state.showGame) {
       return () => undefined;
@@ -855,6 +868,18 @@ const AppV2: Component<{
             />
             Show Game
           </label>
+        </li>
+        <li>
+          <select
+            class="select"
+            value={state.useCodeMirror ? "codemirror" : "monaco"}
+            onChange={(e) => {
+              setState("useCodeMirror", e.currentTarget.value == "codemirror");
+            }}
+          >
+            <option value="monaco">Monaco</option>
+            <option value="codemirror">Code Mirror</option>
+          </select>
         </li>
         <Show when={!props.broadcastNetworkAdapterIsEnabled}>
           <li>
