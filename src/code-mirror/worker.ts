@@ -3,7 +3,6 @@ import {
   createVirtualTypeScriptEnvironment,
   VirtualTypeScriptEnvironment,
 } from "@typescript/vfs";
-import ts from "typescript";
 import * as Comlink from "comlink";
 import { createWorker } from "@valtown/codemirror-ts/worker";
 
@@ -97,12 +96,14 @@ function createWorker2(fn: () => Promise<VirtualTypeScriptEnvironment>): ReturnT
 
 Comlink.expose(
   createWorker2(async function () {
+    // @ts-ignore
+    const ts = await import(/* vite-ignore */"https://esm.sh/typescript@5.7.2");
     const fsMap = new Map<string,string>();
     for (let entry of Object.entries(types)) {
       fsMap.set(entry[0], entry[1]);
     }
     const system = createSystem(fsMap);
-    const compilerOpts: ts.CompilerOptions = {
+    const compilerOpts: any = { //ts.CompilerOptions = {
       paths: {
         prelude: ["/node_modules/prelude/lib.js"],
         "prelude/solid-js": ["/node_modules/prelude/solid-js/types/index.js"],
