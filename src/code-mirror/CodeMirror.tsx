@@ -12,7 +12,7 @@ import {
   tsSync,
   tsTwoslash,
 } from "@valtown/codemirror-ts";
-import { autocompletion } from "@codemirror/autocomplete";
+import { acceptCompletion, autocompletion, completionStatus } from "@codemirror/autocomplete";
 import { keymap, EditorView as EditorView2 } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { indentLess, indentMore } from "@codemirror/commands";
@@ -141,14 +141,13 @@ const CodeMirror: Component<{
         tsTwoslash(),
         keymap.of([
           {
-              key: 'Tab',
-              preventDefault: true,
-              run: indentMore,
-          },
-          {
-              key: 'Shift-Tab',
-              preventDefault: true,
-              run: indentLess,
+            key: 'Tab',
+            preventDefault: true,
+            shift: indentLess,
+            run: e => {
+              if (!completionStatus(e.state)) return indentMore(e);
+              return acceptCompletion(e);
+            },
           },
         ]),
         indentUnit.of("  "),
