@@ -24,6 +24,7 @@
     "@types/jest": "^29.5.14",
     "@types/md5": "^2.3.5",
     "@types/pako": "^2.0.3",
+    "@types/xxhashjs": "^0.2.4",
     "ecs-lib": "0.8.0-pre.2",
     "jsdom": "^26.0.0",
     "monaco-editor": "^0.52.2",
@@ -82,7 +83,8 @@
     "tailwindcss": "^4.0.14",
     "unique-username-generator": "^1.4.0",
     "uuid": "^11.0.5",
-    "vite-plugin-wasm": "^3.4.1"
+    "vite-plugin-wasm": "^3.4.1",
+    "xxhashjs": "^0.2.2"
   },
   "packageManager": "pnpm@10.9.0"
 }

@@ -38,6 +38,8 @@ import {
 } from "solid-fs-automerge";
 import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
+import { NoTrack } from "../../util";
+import ImageTileMatcher from "./ImageTileMatcher";
 
 const AUTO_SAVE_TIMEOUT = 2000;
 
@@ -88,6 +90,12 @@ export class Level {
       //
       autoSaving: boolean;
       world: IEcsWorld;
+      overlayApp:
+        | NoTrack<{
+            Title: Component;
+            View: Component;
+          }>
+        | undefined;
     }>({
       mousePos: undefined,
       pan: Vec2.create(-1, -1),
@@ -100,6 +108,7 @@ export class Level {
       autoSaving: false,
       mkMode: undefined,
       world: new EcsWorld(),
+      overlayApp: undefined,
     });
     let undoManager = new UndoManager();
     createEffect(
@@ -346,6 +355,22 @@ export class Level {
     const insertTile = () => {
       setMode(() => new InsertTileMode(modeParams));
     };
+    const launchImageTileMatcher = () => {
+      setState("overlayApp", new NoTrack({
+        Title: () => "Image Tile Matcher",
+        View: () => (
+          <ImageTileMatcher
+            textureAtlases={(() => {
+              let result = textureAtlases();
+              if (result.type != "Success") {
+                return [];
+              }
+              return result.value;
+            })()}
+          />
+        ),
+      }));
+    };
     let mode = createMemo<Mode>(() => {
       if (state.mkMode == undefined) {
         return new IdleMode({ modeParams });
@@ -581,6 +606,7 @@ export class Level {
             {
               display: "flex",
               "flex-direction": "column",
+              "position": "relative",
             },
           )}
         >
@@ -642,6 +668,12 @@ export class Level {
                 );
               })()}
             </button>
+            <button
+              class="btn"
+              onClick={() => launchImageTileMatcher()}
+            >
+              Image Tile Matcher
+            </button>
           </div>
           <div
             style={{
@@ -691,6 +723,69 @@ export class Level {
               <Instructions />
             </div>
           </div>
+          <Show when={state.overlayApp?.value} keyed={true}>
+            {(overlayApp) => (
+              <div
+                style={{
+                  position: "absolute",
+                  left: "0",
+                  top: "0",
+                  bottom: "0",
+                  right: "0",
+                  display: "flex",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    "flex-grow": "1",
+                    margin: "5%",
+                    display: "flex",
+                    "flex-direction": "column",
+                    overflow: "hidden",
+                  }}
+                  class="bg-base-200 rounded-box"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      "flex-direction": "row",
+                      padding: "10px",
+                    }}
+                    class="bg-base-300 rounded-box"
+                  >
+                    <div
+                      style={{
+                        "flex-grow": "1",
+                        display: "flex",
+                        "flex-direction": "row",
+                        "align-items": "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <overlayApp.Title />
+                    </div>
+                    <button
+                      class="btn btn-primary"
+                      onClick={() => setState("overlayApp", undefined)}
+                    >
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      "flex-grow": "1",
+                      display: "flex",
+                      padding: "10px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <overlayApp.View />
+                  </div>
+                </div>
+              </div>
+            )}
+          </Show>
         </div>
       );
     };
