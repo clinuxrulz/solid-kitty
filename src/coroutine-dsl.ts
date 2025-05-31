@@ -24,10 +24,22 @@ export function provideNextFrame(nextFrame: (k: Cont<void>) => void): (cb: () =>
 }
 
 export function nextFrame() {
-  exec(Cont.callCC((k) => {
-    nextFrame_(k());
-    return Cont.of((_) => {});
-  }));
+  let nextFrame2 = nextFrame_;
+  callCC((k) => {
+    nextFrame2(k);
+    exec(Cont.of((_) => {}));
+  });
+}
+
+export function toPerFrameUpdateFn(cb: () => void): () => void {
+  let next = do_(cb);
+  return () => {
+    do_(() => provideNextFrame(
+      (k) => next = do_(() => exec(k))
+    )(
+      () => exec(next)
+    )).run();
+  };
 }
 
 export function makeLabel(): Label {

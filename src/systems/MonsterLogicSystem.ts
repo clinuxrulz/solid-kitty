@@ -1,5 +1,5 @@
 import { Accessor, createComputed, createRoot, mapArray, onCleanup, } from "solid-js";
-import { Cont, do_, EcsComponentType, EcsWorld, IsEcsComponentType, provideNextFrame } from "../lib";
+import { Cont, do_, EcsComponentType, EcsWorld, IsEcsComponentType, provideNextFrame, toPerFrameUpdateFn } from "../lib";
 
 export function createMonsterLogicSystem(params: {
     world: EcsWorld,
@@ -21,13 +21,7 @@ export function createMonsterLogicSystem(params: {
                 createComputed(mapArray(
                     monsterEntities,
                     (monsterEntity) => {
-                        let resume: Cont<void> = Cont.nop;
-                        provideNextFrame((k) => {
-                            resume = k;
-                        })(() => {
-                            resume = do_(() => monsterLogic.logic(monsterEntity));
-                        });
-                        let update = (): void => resume.run();
+                        let update = toPerFrameUpdateFn(() => monsterLogic.logic(monsterEntity));
                         updateSet.add(update);
                         onCleanup(() => updateSet.delete(update));
                     },
