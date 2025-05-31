@@ -1,4 +1,4 @@
-import { Accessor, Component, createMemo, Match, Switch } from "solid-js";
+import { Accessor, Component, createComputed, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
@@ -40,7 +40,22 @@ const ImageTileMatcher: Component<{
     tileHeightText: "16",
     selectedTab: "Image",
     result: undefined,
-  })
+  });
+  let frameIdToImageAndFrameMap = createMemo(() => {
+    let result = new Map<string,{
+      image: HTMLImageElement,
+      frame: FrameState,
+    }>();
+    for (let textureAtlas of props.textureAtlases) {
+      for (let { frameId, frame, } of textureAtlas.frames) {
+        result.set(frameId, {
+          image: textureAtlas.image,
+          frame,
+        });
+      }
+    }
+    return result;
+  });
   let fileInput!: HTMLInputElement;
   let loadImage = (file: File) => {
     setState("image", undefined);
@@ -99,12 +114,13 @@ const ImageTileMatcher: Component<{
       _hashTileBuffer = new Uint8Array(_hashTileBuffer2);
     }
     let dstOffset = 0;
-    for (let i = 0; i < h; ++i) {
-      for (let j = 0; j < w; ++j, srcOffset += 4, dstOffset += 4) {
-        _hashTileBuffer[dstOffset] = imageData[srcOffset];
-        _hashTileBuffer[dstOffset+1] = imageData[srcOffset+1];
-        _hashTileBuffer[dstOffset+2] = imageData[srcOffset+2];
-        _hashTileBuffer[dstOffset+3] = imageData[srcOffset+3];
+    for (let i = 0; i < h; ++i, srcOffset += (imageWidth << 2)) {
+      let srcOffset2 = srcOffset;
+      for (let j = 0; j < w; ++j, srcOffset2 += 4, dstOffset += 4) {
+        _hashTileBuffer[dstOffset] = imageData[srcOffset2];
+        _hashTileBuffer[dstOffset+1] = imageData[srcOffset2+1];
+        _hashTileBuffer[dstOffset+2] = imageData[srcOffset2+2];
+        _hashTileBuffer[dstOffset+3] = imageData[srcOffset2+3];
       }
     }
     return h32(_hashTileBuffer2, 0);
@@ -315,7 +331,76 @@ const ImageTileMatcher: Component<{
           {state.image}
         </Match>
         <Match when={state.selectedTab == "Reconstruction"}>
-          <></>
+          <Show when={state.result?.value}>
+            {(result) => (<>{(() => {
+              let tileWidth2 = tileWidth();
+              if (tileWidth2 == undefined) {
+                return undefined;
+              }
+              let tileHeight2 = tileHeight();
+              if (tileHeight2 == undefined) {
+                return undefined;
+              }
+              let image = state.image;
+              if (image == undefined) {
+                return undefined;
+              }
+              let canvas = document.createElement("canvas");
+              canvas.width = image.naturalWidth;
+              canvas.height = image.naturalHeight;
+              let ctx = canvas.getContext("2d");
+              if (ctx == null) {
+                return undefined;
+              }
+              return untrack(() => (<>
+                {canvas}
+                <For each={result()}>
+                  {(row, yIdx) => (
+                    <For each={row}>
+                      {(cell, xIdx) => {
+                        if (cell == undefined) {
+                          return undefined;
+                        }
+                        let data = createMemo(() => frameIdToImageAndFrameMap().get(cell.frameId));
+                        return (
+                          <Show when={data()}>
+                            {(data2) => {
+                              createComputed(() => {
+                                let tileImage = data2().image;
+                                let frame = data2().frame;
+                                let dstX = xIdx() * tileWidth2;
+                                let dstY = yIdx() * tileHeight2;
+                                ctx.drawImage(
+                                  tileImage,
+                                  frame.pos.x,
+                                  frame.pos.y,
+                                  tileWidth2,
+                                  tileHeight2,
+                                  dstX,
+                                  dstY,
+                                  tileWidth2,
+                                  tileHeight2,
+                                );
+                                onCleanup(() => {
+                                  ctx.fillRect(
+                                    dstX,
+                                    dstY,
+                                    tileWidth2,
+                                    tileHeight2,
+                                  );
+                                });
+                              });
+                              return undefined;
+                            }}
+                          </Show>
+                        );
+                      }}
+                    </For>
+                  )}
+                </For>
+              </>));
+            })()}</>)}
+          </Show>
         </Match>
       </Switch>
     </div>
