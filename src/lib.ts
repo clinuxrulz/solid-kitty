@@ -180,6 +180,10 @@ export {
   animatedComponentType,
 } from "./components/AnimatedComponent";
 export {
+  type CameraState,
+  cameraComponentType,
+} from "./components/CameraComponent";
+export {
   type LevelRefState,
   levelRefComponentType,
 } from "./components/LevelRefComponent";

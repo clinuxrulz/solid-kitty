@@ -41,6 +41,7 @@ export declare const createAutomergeVfs: () => Accessor<{
 export declare const libUrl: string;
 export declare const world: EcsWorld;
 export { type AnimatedState, animatedComponentType, } from './components/AnimatedComponent';
+export { type CameraState, cameraComponentType, } from './components/CameraComponent';
 export { type LevelRefState, levelRefComponentType, } from './components/LevelRefComponent';
 export { type ScaleState, scaleComponentType, } from './components/ScaleComponent';
 export { type SpriteState, spriteComponentType, } from './components/SpriteComponent';

@@ -16,6 +16,7 @@ import {
   Accessor,
   batch,
   createComputed,
+  createEffect,
   createMemo,
   createResource,
   createSignal,
@@ -38,11 +39,14 @@ import { atlasData } from "../kitty-demo/KittySprites";
 import { Transform2D } from "../math/Transform2D";
 import { Text } from "pixi.js";
 import {
+  cameraComponentType,
+  Complex,
   createGetLevelsFolder,
   createTextureAtlasWithImageAndFramesList,
   levelRefComponentType,
   spriteComponentType,
   transform2DComponentType,
+  Vec2,
 } from "../lib";
 import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
 import { registry } from "../level-builder/components/registry";
@@ -226,6 +230,65 @@ export class PixiRenderSystem {
         app.destroy();
       });
     }
+    let cameraPos = createMemo(() => {
+      let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
+      if (cameraEntities.length != 1) {
+        return Vec2.zero();
+      }
+      let cameraEntity = cameraEntities[0];
+      let transform = world.getComponent(cameraEntity, transform2DComponentType)?.state.transform;
+      return transform?.origin ?? Vec2.zero();
+    });
+    createEffect(() => {
+      let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
+      if (cameraEntities.length != 1) {
+        return;
+      }
+      let cameraEntity = cameraEntities[0];
+      let camera = world.getComponent(cameraEntity, cameraComponentType);
+      if (camera == undefined) {
+        return;
+      }
+      let targetEntity = camera.state.targetEntity;
+      if (targetEntity == undefined) {
+        return;
+      }
+      let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero();
+      let cameraPos2 = cameraPos();
+      let minX = cameraPos2.x + 0.25 * state.windowWidth;
+      let maxX = cameraPos2.x + 0.75 * state.windowWidth;
+      let minY = cameraPos2.y + 0.25 * state.windowHeight;
+      let maxY = cameraPos2.y + 0.75 * state.windowHeight;
+      let cameraPosChanged: boolean = false;
+      let newCameraPosX = cameraPos2.x;
+      let newCameraPosY = cameraPos2.y;
+      if (targetPos.x < minX) {
+        newCameraPosX = cameraPos2.x + (targetPos.x - minX);
+        cameraPosChanged = true;
+      } else if (targetPos.x > maxX) {
+        newCameraPosX = cameraPos2.x + (targetPos.x - maxX);
+        cameraPosChanged = true;
+      }
+      if (targetPos.y < minY) {
+        newCameraPosY = cameraPos2.y + (targetPos.y - minY);
+        cameraPosChanged = true;
+      } else if (targetPos.x > maxY) {
+        newCameraPosY = cameraPos2.y + (targetPos.y - maxY);
+        cameraPosChanged = true;
+      }
+      if (cameraPosChanged) {
+        let newCameraTransform = Transform2D.create(Vec2.create(newCameraPosX, newCameraPosY), Complex.rot0);
+        let transformComponent = world.getComponent(cameraEntity, transform2DComponentType);
+        if (transformComponent == undefined) {
+          transformComponent = transform2DComponentType.create({
+            "transform": newCameraTransform,
+          });
+          world.setComponent(cameraEntity, transformComponent);
+        } else {
+          transformComponent.setState("transform", newCameraTransform);
+        }
+      }
+    });
     Cont.liftCC(
       on([pixiApp, areAllImagesLoaded], ([pixiApp, areAllImagesLoaded]) => {
         if (pixiApp == undefined) {
@@ -553,8 +616,12 @@ export class PixiRenderSystem {
                   return state.windowHeight;
                 },
               },
-              cameraX: 0.0,
-              cameraY: 0.0,
+              get cameraX() {
+                return cameraPos().x;
+              },
+              get cameraY() {
+                return cameraPos().y;
+              },
               levelState,
               lookupSpriteSheetFromTextureAtlasRef,
               lookupFrameById,
@@ -828,6 +895,7 @@ function renderLevel(props: {
           });
           rowContainer.addChild(sprite);
           onCleanup(() => {
+            sprite.destroy();
             rowContainer.removeChild(sprite);
           });
           // Debug stuff
