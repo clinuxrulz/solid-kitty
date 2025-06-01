@@ -149,6 +149,7 @@ const RenderCell: Component<{
     return tmp3;
   });
   let posX = j * tileWidth();
+  let showTileIds = () => false;
   return (
     <>
       <rect
@@ -160,14 +161,16 @@ const RenderCell: Component<{
         stroke-width={2}
         fill="none"
       />
-      <text
-        x={posX + 0.5 * tileWidth()}
-        y={posY + 0.5 * tileHeight()}
-        text-anchor="middle"
-        dominant-baseline="middle"
-      >
-        {cell()}
-      </text>
+      <Show when={showTileIds()}>
+        <text
+          x={posX + 0.5 * tileWidth()}
+          y={posY + 0.5 * tileHeight()}
+          text-anchor="middle"
+          dominant-baseline="middle"
+        >
+          {cell()}
+        </text>*
+      </Show>
       <Show when={frame()}>
         {(frame2) => {
           let frame3 = () => frame2().frame;
