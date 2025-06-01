@@ -17,10 +17,14 @@ export class EditDataMode implements Mode {
     let frameComponent = params.frameComponent;
     let [state, setState] = createStore<{
       name: string;
+      frameWidthText: string,
+      frameHeightText: string,
       numCellsWide: number;
       numCellsHigh: number;
     }>({
       name: untrack(() => frameComponent.state.name),
+      frameWidthText: untrack(() => frameComponent.state.size.x.toString()),
+      frameHeightText: untrack(() => frameComponent.state.size.y.toString()),
       numCellsWide: untrack(() => frameComponent.state.numCells.x),
       numCellsHigh: untrack(() => frameComponent.state.numCells.y),
     });
@@ -60,6 +64,36 @@ export class EditDataMode implements Mode {
                     value={state.name}
                     onInput={(e) => {
                       setState("name", e.currentTarget.value);
+                    }}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-right: 10px; white-space: nowrap;">
+                  <b>Frame Width:</b>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="input"
+                    value={state.frameWidthText}
+                    onInput={(e) => {
+                      setState("frameWidthText", e.currentTarget.value);
+                    }}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-right: 10px; white-space: nowrap;">
+                  <b>Frame Width:</b>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="input"
+                    value={state.frameHeightText}
+                    onInput={(e) => {
+                      setState("frameHeightText", e.currentTarget.value);
                     }}
                   />
                 </td>
@@ -114,7 +148,16 @@ export class EditDataMode implements Mode {
               class="btn"
               onClick={() => {
                 batch(() => {
+                  let frameWidth = Number.parseInt(state.frameWidthText);
+                  if (!Number.isFinite(frameWidth)) {
+                    frameWidth = params.frameComponent.state.size.x;
+                  }
+                  let frameHeight = Number.parseInt(state.frameHeightText);
+                  if (!Number.isFinite(frameHeight)) {
+                    frameHeight = params.frameComponent.state.size.y;
+                  }
                   frameComponent.setState("name", state.name);
+                  frameComponent.setState("size", Vec2.create(frameWidth, frameHeight));
                   frameComponent.setState(
                     "numCells",
                     Vec2.create(state.numCellsWide, state.numCellsHigh),
