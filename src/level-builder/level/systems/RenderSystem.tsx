@@ -76,7 +76,7 @@ export class RenderSystem {
     //
     this.Render = () => (
       <Show when={level()}>
-        {(level2) => (
+        {(level2) => (<>
           <Index each={JSON.parse(JSON.stringify(level2().mapData))}>
             {(row, i) => {
               let posY = i * tileHeight();
@@ -97,7 +97,31 @@ export class RenderSystem {
               );
             }}
           </Index>
-        )}
+          <For each={Array(level2().mapData.length+1).fill(undefined).map((_, i) => i * tileHeight())}>
+            {(y) => (
+              <line
+                x1="-1"
+                y1={y}
+                x2={level2().mapData[0].length*tileWidth() + 1}
+                y2={y}
+                stroke="black"
+                stroke-width="2"
+              />
+            )}
+          </For>
+          <For each={Array((level2().mapData?.[0].length ?? -1) + 1).fill(undefined).map((_, j) => j * tileWidth())}>
+            {(x) => (
+              <line
+                x1={x}
+                y1="-1"
+                x2={x}
+                y2={level2().mapData.length*tileHeight() + 1}
+                stroke="black"
+                stroke-width="2"
+              />
+            )}
+          </For>
+        </>)}
       </Show>
     );
     this.RenderOverlay = () => undefined;
@@ -152,15 +176,6 @@ const RenderCell: Component<{
   let showTileIds = () => false;
   return (
     <>
-      <rect
-        x={posX}
-        y={posY}
-        width={tileWidth()}
-        height={tileHeight()}
-        stroke="black"
-        stroke-width={2}
-        fill="none"
-      />
       <Show when={showTileIds()}>
         <text
           x={posX + 0.5 * tileWidth()}
