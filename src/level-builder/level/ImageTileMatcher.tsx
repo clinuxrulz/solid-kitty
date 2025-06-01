@@ -1,9 +1,11 @@
-import { Accessor, Component, createComputed, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js";
-import { createStore } from "solid-js/store";
+import { Accessor, batch, Component, createComputed, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js";
+import { createStore, produce, reconcile } from "solid-js/store";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
 import { h32 } from "xxhashjs";
 import { NoTrack } from "../../util";
+import { LevelState } from "../components/LevelComponent";
+import { EcsComponent } from "../../ecs/EcsComponent";
 
 const ImageTileMatcher: Component<{
   textureAtlases: {
@@ -14,7 +16,8 @@ const ImageTileMatcher: Component<{
         frameId: string;
         frame: FrameState;
     }[];
-  }[]
+  }[],
+  levelComponent: EcsComponent<LevelState> | undefined,
 }> = (props) => {
   const tabs = [
     "Image" as const,
@@ -228,6 +231,77 @@ const ImageTileMatcher: Component<{
     }
     setState("result", new NoTrack(result));
   };
+  let writeToLevel = (levelComponent: EcsComponent<LevelState>) => {
+    if (state.result?.value == undefined) {
+      return;
+    }
+    let result = state.result.value;
+    let nextShortId = 1;
+    let frameIdToShortIdMap = new Map<string,number>();
+    for (let entry of levelComponent.state.tileToShortIdTable) {
+      for (let { frameId, shortId, } of entry.frames) {
+        frameIdToShortIdMap.set(frameId, shortId);
+        nextShortId = Math.max(nextShortId, shortId + 1);
+      }
+    }
+    let newTileToShortIdEntries: {
+      textureAtlasFilename: string,
+      frameId: string,
+      shortId: number,
+    }[] = [];
+    let mapData = result.map((row) =>
+      row.map((cell) => {
+        if (cell == undefined) {
+          return 0;
+        }
+        let shortId = frameIdToShortIdMap.get(cell.frameId);
+        if (shortId == undefined) {
+          shortId = nextShortId++;
+          frameIdToShortIdMap.set(cell.frameId, shortId);
+          newTileToShortIdEntries.push({
+            textureAtlasFilename: cell.textureAtlasFilename,
+            frameId: cell.frameId,
+            shortId,
+          });
+        }
+        return shortId;
+      })
+    );
+    for (let entry of newTileToShortIdEntries) {
+      let idx = levelComponent.state.tileToShortIdTable.findIndex((x) => x.textureAtlasRef == entry.textureAtlasFilename);
+      if (idx == -1) {
+        levelComponent.setState(
+          "tileToShortIdTable",
+          produce((x) => {
+            x.push(
+              {
+                textureAtlasRef: entry.textureAtlasFilename,
+                frames: [{
+                  frameId: entry.frameId,
+                  shortId: entry.shortId,
+                }],
+              }
+            );
+          })
+        );
+      } else {
+        levelComponent.setState(
+          "tileToShortIdTable",
+          idx,
+          "frames",
+          produce((x) => {
+            x.push(
+              {
+                frameId: entry.frameId,
+                shortId: entry.shortId,
+              }
+            );
+          }),
+        );
+      }
+    }
+    levelComponent.setState("mapData", mapData);
+  };
   return (
     <div
       style="width: 100%; height: 100%; overflow: auto;"
@@ -303,6 +377,16 @@ const ImageTileMatcher: Component<{
         >
           Perform Match
         </button>
+        <Show when={props.levelComponent} keyed>
+          {(levelComponent) => (
+            <button
+              class="btn"
+              onClick={() => batch(() => writeToLevel(levelComponent))}
+            >
+              Write to Level
+            </button>
+          )}
+        </Show>
       </div>
       <div role="tablist" class="tabs tabs-box">
         <a

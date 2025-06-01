@@ -367,6 +367,7 @@ export class Level {
               }
               return result.value;
             })()}
+            levelComponent={levelComponent()}
           />
         ),
       }));
