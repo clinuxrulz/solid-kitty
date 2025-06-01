@@ -21,12 +21,14 @@ export class EditDataMode implements Mode {
       frameHeightText: string,
       numCellsWide: number;
       numCellsHigh: number;
+      metaDataText: string;
     }>({
       name: untrack(() => frameComponent.state.name),
       frameWidthText: untrack(() => frameComponent.state.size.x.toString()),
       frameHeightText: untrack(() => frameComponent.state.size.y.toString()),
       numCellsWide: untrack(() => frameComponent.state.numCells.x),
       numCellsHigh: untrack(() => frameComponent.state.numCells.y),
+      metaDataText: untrack(() => JSON.stringify(frameComponent.state.metaData)),
     });
     this.overlayHtmlUI = () => (
       <div
@@ -140,6 +142,21 @@ export class EditDataMode implements Mode {
                   />
                 </td>
               </tr>
+              <tr>
+                <td style="padding-right: 10px;">
+                  <b>Meta Data:</b>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="input"
+                    value={state.metaDataText}
+                    onInput={(e) => {
+                      setState("metaDataText", e.currentTarget.value);
+                    }}
+                  />
+                </td>
+              </tr>
             </tbody>
           </table>
           <br />
@@ -156,12 +173,19 @@ export class EditDataMode implements Mode {
                   if (!Number.isFinite(frameHeight)) {
                     frameHeight = params.frameComponent.state.size.y;
                   }
+                  let metaData: any;
+                  try {
+                    metaData = JSON.parse(state.metaDataText);
+                  } catch (e) {
+                    metaData = params.frameComponent.state.metaData;
+                  }
                   frameComponent.setState("name", state.name);
                   frameComponent.setState("size", Vec2.create(frameWidth, frameHeight));
                   frameComponent.setState(
                     "numCells",
                     Vec2.create(state.numCellsWide, state.numCellsHigh),
                   );
+                  frameComponent.setState("metaData", metaData);
                 });
                 modeParams.onDone();
               }}
