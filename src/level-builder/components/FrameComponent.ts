@@ -1,5 +1,5 @@
 import { EcsComponentType } from "../../ecs/EcsComponent";
-import { TypeSchema, vec2TypeSchema } from "../../TypeSchema";
+import { makeInvariantTypeSchema, TypeSchema, vec2TypeSchema } from "../../TypeSchema";
 import { Vec2 } from "../../math/Vec2";
 
 export type FrameState = {
@@ -7,7 +7,15 @@ export type FrameState = {
   pos: Vec2;
   size: Vec2;
   numCells: Vec2;
+  /** metaData is a json value */
+  metaData: any;
 };
+
+const jsonTypeSchema: TypeSchema<any> = makeInvariantTypeSchema<any,string>(
+  (a: string) => JSON.parse(a),
+  (a: any) => JSON.stringify(a),
+  "String",
+);
 
 export const frameComponentType = new EcsComponentType<FrameState>({
   typeName: "FrameState",
@@ -22,6 +30,11 @@ export const frameComponentType = new EcsComponentType<FrameState>({
         typeSchema: vec2TypeSchema,
         default_: Vec2.create(1, 1),
       } as any as TypeSchema<Vec2>,
+      metaData: {
+        type: "WithDefault",
+        typeSchema: jsonTypeSchema,
+        default_: null,
+      } as any as TypeSchema<any>,
     },
   },
 });

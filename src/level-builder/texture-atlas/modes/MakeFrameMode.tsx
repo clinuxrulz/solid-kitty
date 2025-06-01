@@ -77,6 +77,7 @@ export class MakeFrameMode implements Mode {
           pos: untrack(() => wipFrame2().pos),
           size: untrack(() => wipFrame2().size),
           numCells: Vec2.create(1, 1),
+          metaData: null,
         });
         let world = modeParams.world();
         let entityId = untrack(() => world.createEntity([frameComponent]));

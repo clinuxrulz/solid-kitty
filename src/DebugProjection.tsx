@@ -183,6 +183,7 @@ function runTest2() {
         pos: Vec2.zero(),
         size: Vec2.create(10, 10),
         numCells: Vec2.create(1, 1),
+        metaData: null,
       }),
     ]);
     dispose();
