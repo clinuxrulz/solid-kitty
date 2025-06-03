@@ -34,9 +34,10 @@ import {
 } from "solid-fs-automerge";
 import { makeDocumentProjection } from "solid-automerge";
 import { ok } from "../../kitty-demo/Result";
-import { base64ToUint8Array } from "../../util";
+import { base64ToUint8Array, NoTrack } from "../../util";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
 import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
+import ImageToTilesetCreator from "./ImageToTilesetCreator";
 
 type State = {
   mousePos: Vec2 | undefined;
@@ -57,6 +58,12 @@ type State = {
   //
   autoSaving: boolean;
   world: IEcsWorld;
+  overlayApp:
+        | NoTrack<{
+            Title: Component;
+            View: Component;
+          }>
+        | undefined;
 };
 
 const AUTO_SAVE_TIMEOUT = 2000;
@@ -97,6 +104,7 @@ export class TextureAtlas {
       mkMode: undefined,
       autoSaving: false,
       world: new EcsWorld(),
+      overlayApp: undefined,
     });
     let [imageUrlDispose, setImageUrlDispose] = createSignal<() => void>(
       () => {},
@@ -583,6 +591,29 @@ export class TextureAtlas {
                 );
               })()}
             </button>
+            <button
+              class="btn"
+              onClick={() => {
+                setState(
+                  "overlayApp",
+                  new NoTrack({
+                    Title: () => "Auto Frames",
+                    View: () => (
+                      <Show when={image()} keyed>
+                        {(image) => (
+                          <ImageToTilesetCreator
+                            world={state.world}
+                            image={image}
+                          />
+                        )}
+                      </Show>
+                    ),
+                  }),
+                );
+              }}
+            >
+              Auto Frames
+            </button>
           </div>
           <div
             style={{
@@ -647,6 +678,69 @@ export class TextureAtlas {
               <Instructions />
             </div>
           </div>
+          <Show when={state.overlayApp?.value} keyed={true}>
+            {(overlayApp) => (
+              <div
+                style={{
+                  position: "absolute",
+                  left: "0",
+                  top: "0",
+                  bottom: "0",
+                  right: "0",
+                  display: "flex",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    "flex-grow": "1",
+                    margin: "5%",
+                    display: "flex",
+                    "flex-direction": "column",
+                    overflow: "hidden",
+                  }}
+                  class="bg-base-200 rounded-box"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      "flex-direction": "row",
+                      padding: "10px",
+                    }}
+                    class="bg-base-300 rounded-box"
+                  >
+                    <div
+                      style={{
+                        "flex-grow": "1",
+                        display: "flex",
+                        "flex-direction": "row",
+                        "align-items": "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <overlayApp.Title />
+                    </div>
+                    <button
+                      class="btn btn-primary"
+                      onClick={() => setState("overlayApp", undefined)}
+                    >
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div
+                    style={{
+                      "flex-grow": "1",
+                      display: "flex",
+                      padding: "10px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <overlayApp.View />
+                  </div>
+                </div>
+              </div>
+            )}
+          </Show>
         </div>
       );
     };

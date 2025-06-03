@@ -205,13 +205,13 @@ export class PixiRenderSystem {
       windowWidth: number;
       windowHeight: number;
     }>({
-      windowWidth: window.screen.width,
-      windowHeight: window.screen.height,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
     });
     let onResize = () => {
       batch(() => {
-        setState("windowWidth", window.screen.width);
-        setState("windowHeight", window.screen.height);
+        setState("windowWidth", window.innerWidth);
+        setState("windowHeight", window.innerHeight);
       });
     };
     window.addEventListener("resize", onResize);
@@ -239,56 +239,6 @@ export class PixiRenderSystem {
       let transform = world.getComponent(cameraEntity, transform2DComponentType)?.state.transform;
       return transform?.origin ?? Vec2.zero();
     });
-    createEffect(() => {
-      let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
-      if (cameraEntities.length != 1) {
-        return;
-      }
-      let cameraEntity = cameraEntities[0];
-      let camera = world.getComponent(cameraEntity, cameraComponentType);
-      if (camera == undefined) {
-        return;
-      }
-      let targetEntity = camera.state.targetEntity;
-      if (targetEntity == undefined) {
-        return;
-      }
-      let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero();
-      let cameraPos2 = cameraPos();
-      let minX = cameraPos2.x + 0.25 * state.windowWidth;
-      let maxX = cameraPos2.x + 0.75 * state.windowWidth;
-      let minY = cameraPos2.y + 0.25 * state.windowHeight;
-      let maxY = cameraPos2.y + 0.75 * state.windowHeight;
-      let cameraPosChanged: boolean = false;
-      let newCameraPosX = cameraPos2.x;
-      let newCameraPosY = cameraPos2.y;
-      if (targetPos.x < minX) {
-        newCameraPosX = cameraPos2.x + (targetPos.x - minX);
-        cameraPosChanged = true;
-      } else if (targetPos.x > maxX) {
-        newCameraPosX = cameraPos2.x + (targetPos.x - maxX);
-        cameraPosChanged = true;
-      }
-      if (targetPos.y < minY) {
-        newCameraPosY = cameraPos2.y + (targetPos.y - minY);
-        cameraPosChanged = true;
-      } else if (targetPos.x > maxY) {
-        newCameraPosY = cameraPos2.y + (targetPos.y - maxY);
-        cameraPosChanged = true;
-      }
-      if (cameraPosChanged) {
-        let newCameraTransform = Transform2D.create(Vec2.create(newCameraPosX, newCameraPosY), Complex.rot0);
-        let transformComponent = world.getComponent(cameraEntity, transform2DComponentType);
-        if (transformComponent == undefined) {
-          transformComponent = transform2DComponentType.create({
-            "transform": newCameraTransform,
-          });
-          world.setComponent(cameraEntity, transformComponent);
-        } else {
-          transformComponent.setState("transform", newCameraTransform);
-        }
-      }
-    });
     Cont.liftCC(
       on([pixiApp, areAllImagesLoaded], ([pixiApp, areAllImagesLoaded]) => {
         if (pixiApp == undefined) {
@@ -306,6 +256,58 @@ export class PixiRenderSystem {
             if (scopeDone) {
               return;
             }
+            // Get camera to track entity if target entity set
+            (() => {
+              let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
+              if (cameraEntities.length != 1) {
+                return;
+              }
+              let cameraEntity = cameraEntities[0];
+              let camera = world.getComponent(cameraEntity, cameraComponentType);
+              if (camera == undefined) {
+                return;
+              }
+              let targetEntity = camera.state.targetEntity;
+              if (targetEntity == undefined) {
+                return;
+              }
+              let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero();
+              let cameraPos2 = cameraPos();
+              let minX = cameraPos2.x + 0.25 * state.windowWidth;
+              let maxX = cameraPos2.x + 0.75 * state.windowWidth;
+              let minY = cameraPos2.y + 0.25 * state.windowHeight;
+              let maxY = cameraPos2.y + 0.75 * state.windowHeight;
+              let cameraPosChanged: boolean = false;
+              let newCameraPosX = cameraPos2.x;
+              let newCameraPosY = cameraPos2.y;
+              if (targetPos.x < minX) {
+                newCameraPosX = cameraPos2.x + (targetPos.x - minX);
+                cameraPosChanged = true;
+              } else if (targetPos.x > maxX) {
+                newCameraPosX = cameraPos2.x + (targetPos.x - maxX);
+                cameraPosChanged = true;
+              }
+              if (targetPos.y < minY) {
+                newCameraPosY = cameraPos2.y + (targetPos.y - minY);
+                cameraPosChanged = true;
+              } else if (targetPos.x > maxY) {
+                newCameraPosY = cameraPos2.y + (targetPos.y - maxY);
+                cameraPosChanged = true;
+              }
+              if (cameraPosChanged) {
+                let newCameraTransform = Transform2D.create(Vec2.create(newCameraPosX, newCameraPosY), Complex.rot0);
+                let transformComponent = world.getComponent(cameraEntity, transform2DComponentType);
+                if (transformComponent == undefined) {
+                  transformComponent = transform2DComponentType.create({
+                    "transform": newCameraTransform,
+                  });
+                  world.setComponent(cameraEntity, transformComponent);
+                } else {
+                  transformComponent.setState("transform", newCameraTransform);
+                }
+              }
+            })();
+            //
             pixiApp.render();
             requestAnimationFrame(render);
           };
@@ -431,8 +433,8 @@ export class PixiRenderSystem {
                   });
                   createComputed(() => {
                     let space2 = space() ?? Transform2D.identity;
-                    sprite.x = space2.origin.x;
-                    sprite.y = space2.origin.y;
+                    sprite.x = space2.origin.x - cameraPos().x;
+                    sprite.y = space2.origin.y - cameraPos().y;
                   });
                   pixiApp.stage.addChild(sprite);
                   onCleanup(() => pixiApp.stage.removeChild(sprite));
