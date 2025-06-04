@@ -34,7 +34,7 @@ export class Node {
 
   constructor(params: { initPos?: Vec2 }) {
     let [state, setState] = createStore<State>({
-      position: params.initPos ?? Vec2.zero(),
+      position: params.initPos ?? Vec2.zero,
       sources: [],
       sinks: [],
       flag: "Unknown",
@@ -64,18 +64,15 @@ export class Node {
             });
             let verts = createMemo(() => {
               let u = sink.state.position
-                .clone()
                 .sub(this.state.position)
                 .normalize();
               if (!Number.isFinite(u.x)) {
                 return undefined;
               }
               let v1 = u
-                .clone()
                 .multScalar(NODE_RADIUS)
                 .add(this.state.position);
               let v2 = u
-                .clone()
                 .multScalar(-NODE_RADIUS)
                 .add(sink.state.position);
               return { v1, v2 };
@@ -102,18 +99,15 @@ export class Node {
             });
             let verts = createMemo(() => {
               let u = this.state.position
-                .clone()
                 .sub(source.state.position)
                 .normalize();
               if (!Number.isFinite(u.x)) {
                 return undefined;
               }
               let v1 = u
-                .clone()
                 .multScalar(NODE_RADIUS)
                 .add(source.state.position);
               let v2 = u
-                .clone()
                 .multScalar(-NODE_RADIUS)
                 .add(this.state.position);
               return { v1, v2 };
@@ -146,14 +140,13 @@ const DrawArrowedLine: Component<{
   arrowSize: number;
 }> = (props) => {
   let midArrowV2 = createMemo(() => {
-    let u = props.v2.clone().sub(props.v1).normalize();
+    let u = props.v2.sub(props.v1).normalize();
     if (!Number.isFinite(u.x)) {
-      return props.v1.clone().add(props.v2).multScalar(0.5);
+      return props.v1.add(props.v2).multScalar(0.5);
     }
     return u
-      .clone()
       .multScalar(0.25 * ARROW_SIZE * Math.sqrt(3))
-      .add(props.v1.clone().add(props.v2).multScalar(0.5));
+      .add(props.v1.add(props.v2).multScalar(0.5));
   });
   return (
     <>
@@ -195,7 +188,7 @@ const DrawArrowOnV2OfLine: Component<{
   arrowSize: number;
 }> = (props) => {
   let path = createMemo(() => {
-    let u = props.v2.clone().sub(props.v1).normalize();
+    let u = props.v2.sub(props.v1).normalize();
     if (!Number.isFinite(u.x)) {
       return undefined;
     }
@@ -206,7 +199,7 @@ const DrawArrowOnV2OfLine: Component<{
      */
     let v = Vec2.create(u.y, -u.x);
     let arrowHeight = 0.5 * props.arrowSize * Math.sqrt(3);
-    let pt = u.clone().multScalar(-arrowHeight).add(props.v2);
+    let pt = u.multScalar(-arrowHeight).add(props.v2);
     let transformStr =
       `matrix(` + `${u.x},${u.y},` + `${v.x},${v.y},` + `${pt.x},${pt.y})`;
     let pathStr =
@@ -214,9 +207,6 @@ const DrawArrowOnV2OfLine: Component<{
       `L ${arrowHeight} 0 ` +
       `L 0 ${0.5 * props.arrowSize} ` +
       `Z`;
-    u.dispose();
-    v.dispose();
-    pt.dispose();
     return { transformStr, pathStr };
   });
   return (

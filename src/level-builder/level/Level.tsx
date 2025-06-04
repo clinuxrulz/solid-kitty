@@ -158,12 +158,11 @@ export class Level {
     //
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
       return screenPt
-        .clone()
         .multScalar(1.0 / state.scale)
         .add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
-      return worldPt.clone().sub(state.pan).multScalar(state.scale);
+      return worldPt.sub(state.pan).multScalar(state.scale);
     };
     //
     let levelComponent: Accessor<EcsComponent<LevelState> | undefined>;
@@ -406,8 +405,7 @@ export class Level {
       }
       let newScale = state.scale * factor;
       let newPan = pt
-        .clone()
-        .sub(state.mousePos.clone().multScalar(1.0 / newScale));
+        .sub(state.mousePos.multScalar(1.0 / newScale));
       batch(() => {
         setState("pan", newPan);
         setState("scale", state.scale * factor);
@@ -449,14 +447,13 @@ export class Level {
             gap = undefined;
           } else {
             gap = state.touches[1].pos
-              .clone()
               .sub(state.touches[0].pos)
               .length();
           }
-          let delta = state.touchPanZoomFrom.clone().sub(pt);
+          let delta = state.touchPanZoomFrom.sub(pt);
           let initScale = state.touchPanZoomInitScale;
           batch(() => {
-            setState("pan", (pan) => pan.clone().add(delta));
+            setState("pan", (pan) => pan.add(delta));
             if (state.touchPanZoomInitGap != undefined && gap != undefined) {
               let newScale = (initScale * gap) / state.touchPanZoomInitGap;
               setState("scale", newScale);
@@ -477,7 +474,6 @@ export class Level {
         initGap = undefined;
       } else {
         initGap = state.touches[1].pos
-          .clone()
           .sub(state.touches[0].pos)
           .length();
       }
@@ -568,8 +564,7 @@ export class Level {
       let touchIdx = state.touches.findIndex(({ id: id2 }) => id2 == id);
       let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
       if (touchIdx != -1) {
-        setState("touches", touchIdx, "pos", (oldPos) => {
-          oldPos.dispose();
+        setState("touches", touchIdx, "pos", () => {
           return pos;
         });
       }

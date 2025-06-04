@@ -25,15 +25,15 @@ type State = {
 
 const ReactiveSimulator: Component = () => {
   let [state, setState] = createStore<State>({
-    mousePos: Vec2.zero(),
+    mousePos: Vec2.zero,
     nodes: [],
     mode: "Idle",
   });
   let screenPtToWorldPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
-    return pt.clone();
+    return pt;
   };
   let worldPtToScreenPt: (pt: Vec2) => Vec2 | undefined = (pt) => {
-    return pt.clone();
+    return pt;
   };
   let [svg, setSvg] = createSignal<SVGSVGElement>();
   let keyDownListener = (e: KeyboardEvent) => {
@@ -111,7 +111,6 @@ const ReactiveSimulator: Component = () => {
   let onMouseOut = (e: MouseEvent) => {
     let tmp = state.mousePos;
     setState("mousePos", undefined);
-    tmp?.dispose?.();
   };
   let onClick = (e: MouseEvent) => {
     mode().click?.();

@@ -1,8 +1,6 @@
-let vec2Pool: Vec2[] = [];
-
 export class Vec2 {
-  x: number;
-  y: number;
+  readonly x: number;
+  readonly y: number;
 
   private constructor(x: number, y: number) {
     this.x = x;
@@ -10,50 +8,32 @@ export class Vec2 {
   }
 
   static create(x: number, y: number): Vec2 {
-    let r = vec2Pool.pop();
-    if (r != undefined) {
-      r.x = x;
-      r.y = y;
-      return r;
-    }
-    r = new Vec2(x, y);
-    return r;
+    return new Vec2(x, y);
   }
 
-  static zero(): Vec2 {
-    return Vec2.create(0, 0);
+  static readonly zero: Vec2 = Vec2.create(0, 0);
+  static readonly unitX: Vec2 = Vec2.create(1, 0);
+  static readonly unitY: Vec2 = Vec2.create(0, 1);
+
+  add(other: Vec2): Vec2 {
+    return Vec2.create(
+      this.x + other.x,
+      this.y + other.y,
+    );
   }
 
-  dispose() {
-    vec2Pool.push(this);
+  sub(other: Vec2): Vec2 {
+    return Vec2.create(
+      this.x - other.x,
+      this.y - other.y,
+    );
   }
 
-  clone(): Vec2 {
-    return Vec2.create(this.x, this.y);
-  }
-
-  copy(other: Vec2): this {
-    this.x = other.x;
-    this.y = other.y;
-    return this;
-  }
-
-  add(other: Vec2): this {
-    this.x += other.x;
-    this.y += other.y;
-    return this;
-  }
-
-  sub(other: Vec2): this {
-    this.x -= other.x;
-    this.y -= other.y;
-    return this;
-  }
-
-  multScalar(s: number): this {
-    this.x *= s;
-    this.y *= s;
-    return this;
+  multScalar(s: number): Vec2 {
+    return Vec2.create(
+      this.x * s,
+      this.y * s,
+    );
   }
 
   cross(other: Vec2): number {
@@ -78,7 +58,7 @@ export class Vec2 {
     return Math.sqrt(this.lengthSquared());
   }
 
-  normalize(): this {
+  normalize(): Vec2 {
     return this.multScalar(1.0 / this.length());
   }
 }

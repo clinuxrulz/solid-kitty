@@ -57,50 +57,49 @@ const ThreeBody: Component = () => {
       {
         pos: Vec2.create(200, 0),
         vel: Vec2.create(0, -2),
-        acc: Vec2.zero(),
+        acc: Vec2.zero,
         lastPositions: [],
       },
       {
         pos: Vec2.create(-200, 0),
         vel: Vec2.create(0, 2),
-        acc: Vec2.zero(),
+        acc: Vec2.zero,
         lastPositions: [],
       },
       {
         pos: Vec2.create(0, 150),
         vel: Vec2.create(2, 0),
-        acc: Vec2.zero(),
+        acc: Vec2.zero,
         lastPositions: [],
       },
     ],
   });
   let updateThreeBody = () => {
-    let dummy1 = Vec2.zero();
+    let dummy1 = Vec2.zero;
     for (let i = 0; i < state.objects.length; ++i) {
       let objectI = state.objects[i];
-      let acc = Vec2.zero();
+      let acc = Vec2.zero;
       for (let j = 0; j < state.objects.length; ++j) {
         if (j == i) {
           continue;
         }
         let objectJ = state.objects[j];
-        dummy1.copy(objectJ.pos).sub(objectI.pos);
+        dummy1 = objectJ.pos.sub(objectI.pos);
         let mag = dummy1.length();
-        dummy1.multScalar(1000.0 / (mag * mag * mag));
-        acc.add(dummy1);
+        dummy1 = dummy1.multScalar(1000.0 / (mag * mag * mag));
+        acc = acc.add(dummy1);
       }
-      objectI.acc.dispose();
       setState("objects", i, "acc", acc);
     }
     for (let i = 0; i < state.objects.length; ++i) {
       let objectI = state.objects[i];
-      dummy1.copy(objectI.acc).multScalar(0.5);
+      dummy1 = objectI.acc.multScalar(0.5);
       let tmp = objectI.pos;
       setState(
         "objects",
         i,
         "pos",
-        objectI.pos.clone().add(objectI.vel).add(dummy1),
+        objectI.pos.add(objectI.vel).add(dummy1),
       );
       setState(
         "objects",
@@ -110,10 +109,8 @@ const ThreeBody: Component = () => {
       );
       //tmp.dispose();
       tmp = objectI.vel;
-      setState("objects", i, "vel", objectI.vel.clone().add(objectI.acc));
-      tmp.dispose();
+      setState("objects", i, "vel", objectI.vel.add(objectI.acc));
     }
-    dummy1.dispose();
   };
   {
     let first = true;
@@ -143,18 +140,19 @@ const ThreeBody: Component = () => {
   }
   let svg: SVGSVGElement | undefined;
   let pan = createMemo((last: Vec2 | undefined) => {
-    let result = Vec2.zero();
-    if (last != undefined) {
-      last.dispose();
-    }
+    let result = Vec2.zero;
     for (let object of state.objects) {
-      result.add(object.pos);
+      result = result.add(object.pos);
     }
-    result.multScalar(1.0 / state.objects.length);
+    result = result.multScalar(1.0 / state.objects.length);
     if (svg != undefined) {
       let rect = svg.getBoundingClientRect();
-      result.x -= 0.5 * rect.width;
-      result.y -= 0.5 * rect.height;
+      result = result.sub(
+        Vec2.create(
+          0.5 * rect.width,
+          0.5 * rect.height,
+        )
+      );
     }
     return result;
   });

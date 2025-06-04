@@ -180,7 +180,7 @@ function runTest2() {
     world1.createEntity([
       frameComponentType.create({
         name: "aaa",
-        pos: Vec2.zero(),
+        pos: Vec2.zero,
         size: Vec2.create(10, 10),
         numCells: Vec2.create(1, 1),
         metaData: null,

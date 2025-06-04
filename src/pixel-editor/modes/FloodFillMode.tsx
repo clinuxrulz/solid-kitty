@@ -38,7 +38,7 @@ export class FloodFillMode implements Mode {
         return;
       }
       let sourceColour = modeParams.readPixel(pt) ?? new Colour(0, 0, 0, 0);
-      let dummy1 = Vec2.zero();
+      let dummy1 = Vec2.zero;
       let dummy2 = new Colour(0, 0, 0, 0);
       let fillColour = modeParams.currentColour();
       if (
@@ -54,8 +54,7 @@ export class FloodFillMode implements Mode {
         pt.x,
         pt.y,
         (x, y) => {
-          dummy1.x = x;
-          dummy1.y = y;
+          dummy1 = Vec2.create(x, y);
           if (!modeParams.isInBounds(dummy1)) {
             return false;
           }
@@ -68,9 +67,8 @@ export class FloodFillMode implements Mode {
           );
         },
         (x, y) => {
-          dummy1.x = x;
-          dummy1.y = y;
-          undoStack.push(dummy1.clone());
+          dummy1 = Vec2.create(x, y);
+          undoStack.push(dummy1);
           modeParams.writePixel(dummy1, fillColour);
         },
       );

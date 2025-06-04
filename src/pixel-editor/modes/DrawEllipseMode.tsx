@@ -120,8 +120,8 @@ export class DrawEllipseMode implements Mode {
         >;
         let undoStack: Colour[] = [];
         let posAndSize = createMemo(() => ({
-          pos: pos().clone(),
-          size: size().clone(),
+          pos: pos(),
+          size: size(),
         }));
         createComputed(() => {
           let newColour = modeParams.currentColour();
@@ -130,12 +130,10 @@ export class DrawEllipseMode implements Mode {
             let pos = Vec2.create(x, y);
             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
             undoStack.push(oldColour);
-            pos.dispose();
           });
           drawEllipse(pos2.x, pos2.y, size2.x, size2.y, (x, y) => {
             let pos = Vec2.create(x, y);
             modeParams.writePixel(pos, newColour);
-            pos.dispose();
           });
           let keepIt = false;
           doLine = () => {
@@ -150,13 +148,11 @@ export class DrawEllipseMode implements Mode {
                   drawEllipse(pos2.x, pos2.y, size2.x, size2.y, (x, y) => {
                     let pos = Vec2.create(x, y);
                     modeParams.writePixel(pos, undoStack2[atI++]);
-                    pos.dispose();
                   });
                 } else {
                   drawEllipse(pos2.x, pos2.y, size2.x, size2.y, (x, y) => {
                     let pos = Vec2.create(x, y);
                     modeParams.writePixel(pos, colour);
-                    pos.dispose();
                   });
                 }
               },
@@ -176,7 +172,6 @@ export class DrawEllipseMode implements Mode {
             drawEllipse(pos2.x, pos2.y, size2.x, size2.y, (x, y) => {
               let pos = Vec2.create(x, y);
               modeParams.writePixel(pos, undoStack[atI++]);
-              pos.dispose();
             });
             undoStack.splice(0, undoStack.length);
           });

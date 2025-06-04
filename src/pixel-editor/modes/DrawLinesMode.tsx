@@ -82,7 +82,6 @@ export class DrawLinesMode implements Mode {
             let oldColour = modeParams.readPixel(pos) ?? new Colour(0, 0, 0, 0);
             modeParams.writePixel(pos, newColour);
             undoStack.push(oldColour);
-            pos.dispose();
           });
           let keepIt = false;
           doLine = () => {
@@ -101,13 +100,11 @@ export class DrawLinesMode implements Mode {
                   drawLine(lineX1, lineY1, lineX2, lineY2, (x, y) => {
                     let pos = Vec2.create(x, y);
                     modeParams.writePixel(pos, undoStack2[atI++]);
-                    pos.dispose();
                   });
                 } else {
                   drawLine(lineX1, lineY1, lineX2, lineY2, (x, y) => {
                     let pos = Vec2.create(x, y);
                     modeParams.writePixel(pos, colour);
-                    pos.dispose();
                   });
                 }
               },
@@ -123,7 +120,6 @@ export class DrawLinesMode implements Mode {
             drawLine(line.pt1.x, line.pt1.y, line.pt2.x, line.pt2.y, (x, y) => {
               let pos = Vec2.create(x, y);
               modeParams.writePixel(pos, undoStack[atI++]);
-              pos.dispose();
             });
             undoStack.splice(0, undoStack.length);
           });

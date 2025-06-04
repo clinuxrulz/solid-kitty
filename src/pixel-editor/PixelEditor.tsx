@@ -77,7 +77,7 @@ const PixelEditor: Component<{
     isLoading: boolean;
     autoSaving: boolean;
   }>({
-    minPt: Vec2.zero(),
+    minPt: Vec2.zero,
     size: Vec2.create(10, 10),
     //
     mousePos: undefined,
@@ -156,12 +156,11 @@ const PixelEditor: Component<{
   }
   let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
     return screenPt
-      .clone()
       .multScalar(1.0 / state.scale)
       .add(state.pan);
   };
   let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
-    return worldPt.clone().sub(state.pan).multScalar(state.scale);
+    return worldPt.sub(state.pan).multScalar(state.scale);
   };
   let [colourPickerButton, setColourPickerButton] =
     createSignal<HTMLButtonElement>();
@@ -262,7 +261,7 @@ const PixelEditor: Component<{
       let initImage = props.initImage;
       untrack(() => {
         let x = resizeImage({
-          minPt: Vec2.zero(),
+          minPt: Vec2.zero,
           size: Vec2.create(initImage.width, initImage.height),
         });
         if (x == undefined) {
@@ -315,7 +314,7 @@ const PixelEditor: Component<{
       image3.onload = () => {
         setState("isLoading", false);
         let x = resizeImage({
-          minPt: Vec2.zero(),
+          minPt: Vec2.zero,
           size: Vec2.create(image3.width, image3.height),
         });
         if (x == undefined) {
@@ -539,8 +538,7 @@ const PixelEditor: Component<{
     }
     let newScale = state.scale * factor;
     let newPan = pt
-      .clone()
-      .sub(state.mousePos.clone().multScalar(1.0 / newScale));
+      .sub(state.mousePos.multScalar(1.0 / newScale));
     batch(() => {
       setState("pan", newPan);
       setState("scale", state.scale * factor);
@@ -581,12 +579,12 @@ const PixelEditor: Component<{
         if (state.touches.length != 2) {
           gap = undefined;
         } else {
-          gap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+          gap = state.touches[1].pos.sub(state.touches[0].pos).length();
         }
-        let delta = state.touchPanZoomFrom.clone().sub(pt);
+        let delta = state.touchPanZoomFrom.sub(pt);
         let initScale = state.touchPanZoomInitScale;
         batch(() => {
-          setState("pan", (pan) => pan.clone().add(delta));
+          setState("pan", (pan) => pan.add(delta));
           if (state.touchPanZoomInitGap != undefined && gap != undefined) {
             let newScale = (initScale * gap) / state.touchPanZoomInitGap;
             setState("scale", newScale);
@@ -606,7 +604,7 @@ const PixelEditor: Component<{
     if (state.touches.length != 2) {
       initGap = undefined;
     } else {
-      initGap = state.touches[1].pos.clone().sub(state.touches[0].pos).length();
+      initGap = state.touches[1].pos.sub(state.touches[0].pos).length();
     }
     let pt = screenPtToWorldPt(state.mousePos);
     if (pt == undefined) {
@@ -695,8 +693,7 @@ const PixelEditor: Component<{
     let touchIdx = state.touches.findIndex(({ id: id2 }) => id2 == id);
     let pos = Vec2.create(e.clientX - rect.left, e.clientY - rect.top);
     if (touchIdx != -1) {
-      setState("touches", touchIdx, "pos", (oldPos) => {
-        oldPos.dispose();
+      setState("touches", touchIdx, "pos", () => {
         return pos;
       });
     }
@@ -828,7 +825,7 @@ const PixelEditor: Component<{
                     };
                     image2.onload = () => {
                       let x = resizeImage({
-                        minPt: Vec2.zero(),
+                        minPt: Vec2.zero,
                         size: Vec2.create(image2.width, image2.height),
                       });
                       if (x == undefined) {
@@ -1139,7 +1136,7 @@ const PixelEditor: Component<{
               });
               let pt1 = createMemo(() => worldPtToScreenPt(state.minPt));
               let pt2 = createMemo(() =>
-                worldPtToScreenPt(state.minPt.clone().add(state.size)),
+                worldPtToScreenPt(state.minPt.add(state.size)),
               );
               let rect = createMemo(() => {
                 let pt12 = pt1();
@@ -1152,7 +1149,7 @@ const PixelEditor: Component<{
                 }
                 return {
                   pt: pt12,
-                  size: pt22.clone().sub(pt12),
+                  size: pt22.sub(pt12),
                 };
               });
               return (

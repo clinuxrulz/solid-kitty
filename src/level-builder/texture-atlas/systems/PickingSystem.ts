@@ -91,14 +91,6 @@ export class PickingSystem {
           if (dist > SNAP_DIST_SQUARED) {
             continue;
           }
-          pt1.dispose();
-          pt2.dispose();
-          pt3.dispose();
-          pt4.dispose();
-          pt5.dispose();
-          pt6.dispose();
-          pt7.dispose();
-          pt8.dispose();
           if (closestDist == undefined || dist < closestDist) {
             closestDist = dist;
             closest = entity;

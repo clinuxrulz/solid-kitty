@@ -74,7 +74,7 @@ const RenderFrame: Component<{
       return undefined;
     }
     let pt2 = props.renderParams.worldPtToScreenPt(
-      props.state.pos.clone().add(props.state.size),
+      props.state.pos.add(props.state.size),
     );
     if (pt2 == undefined) {
       return undefined;

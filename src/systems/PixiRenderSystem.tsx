@@ -233,11 +233,11 @@ export class PixiRenderSystem {
     let cameraPos = createMemo(() => {
       let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
       if (cameraEntities.length != 1) {
-        return Vec2.zero();
+        return Vec2.zero;
       }
       let cameraEntity = cameraEntities[0];
       let transform = world.getComponent(cameraEntity, transform2DComponentType)?.state.transform;
-      return transform?.origin ?? Vec2.zero();
+      return transform?.origin ?? Vec2.zero;
     });
     Cont.liftCC(
       on([pixiApp, areAllImagesLoaded], ([pixiApp, areAllImagesLoaded]) => {
@@ -271,7 +271,7 @@ export class PixiRenderSystem {
               if (targetEntity == undefined) {
                 return;
               }
-              let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero();
+              let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero;
               let cameraPos2 = cameraPos();
               let minX = cameraPos2.x + 0.25 * state.windowWidth;
               let maxX = cameraPos2.x + 0.75 * state.windowWidth;

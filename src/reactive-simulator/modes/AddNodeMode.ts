@@ -42,7 +42,7 @@ export class AddNodeMode implements Mode {
         let node = untrack(
           () =>
             new Node({
-              initPos: workingPt2().clone(),
+              initPos: workingPt2(),
             }),
         );
         untrack(() => {
@@ -64,7 +64,7 @@ export class AddNodeMode implements Mode {
           on(
             workingPt2,
             () => {
-              node.setState("position", workingPt2().clone());
+              node.setState("position", workingPt2());
             },
             { defer: true },
           ),

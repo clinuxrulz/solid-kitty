@@ -35,7 +35,7 @@ const ColourPicker: Component<{
     userBlueText: string | undefined;
     userAlphaText: string | undefined;
   }>({
-    cursorPos: Vec2.zero(),
+    cursorPos: Vec2.zero,
     chartMousePos: undefined,
     chartMouseDown: false,
     brightness: 255,
@@ -61,9 +61,6 @@ const ColourPicker: Component<{
       let rect = div.getBoundingClientRect();
       let tmp = colourChartSize();
       setColourChartSize(Vec2.create(rect.width, rect.height));
-      if (tmp != undefined) {
-        tmp.dispose();
-      }
     });
     resizeObserver.observe(div);
     onCleanup(() => {

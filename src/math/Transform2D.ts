@@ -5,8 +5,8 @@ export class Transform2D {
   readonly origin: Vec2;
   readonly orientation: Complex;
 
-  public static identity: Transform2D = new Transform2D(
-    Vec2.zero(),
+  public static readonly identity: Transform2D = new Transform2D(
+    Vec2.zero,
     Complex.rot0,
   );
 

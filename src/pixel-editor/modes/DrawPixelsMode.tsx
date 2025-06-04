@@ -105,7 +105,6 @@ export class DrawPixelsMode implements Mode {
                 drawFilledCircle(pt.x, pt.y, strokeThickness, (x, y) => {
                   let dummy = Vec2.create(x, y);
                   params.writePixel(dummy, params.currentColour());
-                  dummy.dispose();
                 });
                 lastPos = pt;
               } else {
@@ -116,7 +115,6 @@ export class DrawPixelsMode implements Mode {
                   drawLine(fromX, fromY, x, y, (x, y) => {
                     let dummy = Vec2.create(x, y);
                     params.writePixel(dummy, params.currentColour());
-                    dummy.dispose();
                   });
                 });
                 lastPos = pt;
@@ -132,11 +130,10 @@ export class DrawPixelsMode implements Mode {
               lastPos = pt;
             } else {
               let lastPixels: Colour[] = [];
-              let dummy = Vec2.zero();
+              let dummy = Vec2.zero;
               let colour = untrack(() => params.currentColour());
               drawLine(lastPos.x, lastPos.y, pt.x, pt.y, (x, y) => {
-                dummy.x = x;
-                dummy.y = y;
+                dummy = Vec2.create(x, y);
                 lastPixels.push(
                   params.readPixel(dummy) ?? new Colour(0, 0, 0, 0),
                 );
@@ -150,14 +147,12 @@ export class DrawPixelsMode implements Mode {
                   if (isUndo) {
                     let idx = 0;
                     drawLine(from.x, from.y, pt.x, pt.y, (x, y) => {
-                      dummy.x = x;
-                      dummy.y = y;
+                      dummy = Vec2.create(x, y);
                       params.writePixel(dummy, lastPixels[idx++]);
                     });
                   } else {
                     drawLine(from.x, from.y, pt.x, pt.y, (x, y) => {
-                      dummy.x = x;
-                      dummy.y = y;
+                      dummy = Vec2.create(x, y);
                       params.writePixel(dummy, colour);
                     });
                   }

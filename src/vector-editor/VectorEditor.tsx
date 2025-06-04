@@ -17,8 +17,8 @@ const VectorEditor: Component = () => {
     mousePos: undefined,
     mode: "Idle",
   });
-  let screenPtToWorldPt = (pt: Vec2) => pt.clone();
-  let worldPtToScreenPt = (pt: Vec2) => pt.clone();
+  let screenPtToWorldPt = (pt: Vec2) => pt;
+  let worldPtToScreenPt = (pt: Vec2) => pt;
   let world = new EcsWorld();
   let renderSystem = new RenderSystem({
     world,
