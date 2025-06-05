@@ -157,7 +157,7 @@ function projectMutableOverAutomergeDocArray<T extends any[]>(
         }
         return v.value;
       }
-      return (doc as any)[p];
+      return Reflect.get(doc, p, result);
     },
     set(target, p, newValue, receiver) {
       if (typeof p == "symbol") {
@@ -174,7 +174,7 @@ function projectMutableOverAutomergeDocArray<T extends any[]>(
         changeDoc((doc2) => ((doc2 as any)[p] = v));
         return true;
       }
-      return false;
+      return Reflect.set(doc, p, newValue, result);
     },
   });
   arrayProxiesMap.set(doc, result);

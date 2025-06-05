@@ -7,6 +7,7 @@ import {
   TypeSchema,
 } from "../TypeSchema";
 import { Accessor, createComputed, createMemo, on, untrack } from "solid-js";
+import { projectMutableOverAutomergeDoc } from "../automerge-doc-mutable-proxy";
 
 export interface IsEcsComponentType {
   readonly typeName: string;
@@ -32,6 +33,25 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
       state,
       setState,
     });
+  }
+
+  createJsonProjectionV3(
+    json: any,
+    changeJson: (callback: (json: any) => void) => void,
+  ): Result<EcsComponent<S>> {
+    let projection = projectMutableOverAutomergeDoc(
+      json,
+      changeJson,
+      this.typeSchema,
+    );
+    let [state, setState] = untrack(() => createStore(projection));
+    return ok(
+      new EcsComponent({
+        type: this,
+        state,
+        setState,
+      }),
+    );
   }
 
   createJsonProjectionV2(

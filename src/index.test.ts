@@ -250,22 +250,24 @@ describe("new projection", () => {
       },
     };
     let repo = new Repo();
-    let docHandle = repo.create<State>({
-      a: 1,
-      b: 2,
-      c: 3,
-      d: [4, 5],
-      e: Vec2.create(6, 7),
-      f: [
-        {
-          g: [Vec2.create(8, 9)],
-        },
-        {
-          g: [Vec2.create(10, 11)],
-        },
-      ],
-      g: [Vec2.create(1, 1), Vec2.create(2, 2), Vec2.create(3, 3)],
-    });
+    let docHandle = repo.create(
+      saveToJsonViaTypeSchema(stateTypeSchema, {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: [4, 5],
+        e: Vec2.create(6, 7),
+        f: [
+          {
+            g: [Vec2.create(8, 9)],
+          },
+          {
+            g: [Vec2.create(10, 11)],
+          },
+        ],
+        g: [Vec2.create(1, 1), Vec2.create(2, 2), Vec2.create(3, 3)],
+      }),
+    );
     createRoot((dispose) => {
       let doc = makeDocumentProjection(docHandle);
       let changeDoc = docHandle.change.bind(docHandle);
@@ -277,7 +279,7 @@ describe("new projection", () => {
       expect(s.b).toBe(2);
       s.b = 7;
       expect(doc.b).toBe(7);
-      let [_state, setState] = createStore(s);
+      let [state, setState] = createStore(s);
       setState("b", 42);
       expect(doc.b).toBe(42);
       expect(s.d[0]).toBe(4);
