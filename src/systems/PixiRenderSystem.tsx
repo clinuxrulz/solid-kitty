@@ -230,15 +230,16 @@ export class PixiRenderSystem {
         app.destroy();
       });
     }
-    let cameraPos = createMemo(() => {
+    let cameraTransform = createMemo(() => {
       let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
       if (cameraEntities.length != 1) {
-        return Vec2.zero;
+        return Transform2D.identity;
       }
       let cameraEntity = cameraEntities[0];
       let transform = world.getComponent(cameraEntity, transform2DComponentType)?.state.transform;
-      return transform?.origin ?? Vec2.zero;
+      return transform ?? Transform2D.identity;
     });
+    let cameraPos = () => cameraTransform().origin;
     Cont.liftCC(
       on([pixiApp, areAllImagesLoaded], ([pixiApp, areAllImagesLoaded]) => {
         if (pixiApp == undefined) {
@@ -432,9 +433,10 @@ export class PixiRenderSystem {
                     sprite.height = frame2().size.y * scale2;
                   });
                   createComputed(() => {
-                    let space2 = space() ?? Transform2D.identity;
-                    sprite.x = space2.origin.x - cameraPos().x;
-                    sprite.y = space2.origin.y - cameraPos().y;
+                    let space2 = cameraTransform().transformToSpace(space() ?? Transform2D.identity);
+                    sprite.x = space2.origin.x;
+                    sprite.y = space2.origin.y;
+                    sprite.angle = space2.orientation.getAngle();
                   });
                   pixiApp.stage.addChild(sprite);
                   onCleanup(() => pixiApp.stage.removeChild(sprite));
@@ -478,8 +480,11 @@ export class PixiRenderSystem {
                       square.closePath();
                       square.setFillStyle({ alpha: 0.5, color: new PIXI.Color("red")});
                       square.fill();
-                      square.x = (space()?.origin?.x ?? 0) + transform.origin.x;
-                      square.y = (space()?.origin?.y ?? 0) + transform.origin.y;
+                      let collisionSpace = cameraTransform().transformToSpace(
+                        (space() ?? Transform2D.identity).transformFromSpace(transform)
+                      );
+                      square.x = collisionSpace.origin.x;
+                      square.y = collisionSpace.origin.y;
                       pixiApp.stage.addChild(square);
                       onCleanup(() => {
                         pixiApp.stage.removeChild(square);
