@@ -155,9 +155,7 @@ const PixelEditor: Component<{
     };
   }
   let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-    return screenPt
-      .multScalar(1.0 / state.scale)
-      .add(state.pan);
+    return screenPt.multScalar(1.0 / state.scale).add(state.pan);
   };
   let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
     return worldPt.sub(state.pan).multScalar(state.scale);
@@ -537,8 +535,7 @@ const PixelEditor: Component<{
       return;
     }
     let newScale = state.scale * factor;
-    let newPan = pt
-      .sub(state.mousePos.multScalar(1.0 / newScale));
+    let newPan = pt.sub(state.mousePos.multScalar(1.0 / newScale));
     batch(() => {
       setState("pan", newPan);
       setState("scale", state.scale * factor);

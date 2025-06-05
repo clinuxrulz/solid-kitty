@@ -1,4 +1,16 @@
-import { Accessor, batch, Component, createComputed, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js";
+import {
+  Accessor,
+  batch,
+  Component,
+  createComputed,
+  createMemo,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+  untrack,
+} from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { FrameState } from "../components/FrameComponent";
@@ -13,28 +25,32 @@ const ImageTileMatcher: Component<{
     textureAtlas: TextureAtlasState;
     image: HTMLImageElement;
     frames: {
-        frameId: string;
-        frame: FrameState;
+      frameId: string;
+      frame: FrameState;
     }[];
-  }[],
-  levelComponent: EcsComponent<LevelState> | undefined,
+  }[];
+  levelComponent: EcsComponent<LevelState> | undefined;
 }> = (props) => {
-  const tabs = [
-    "Image" as const,
-    "Reconstruction" as const,
-  ];
+  const tabs = ["Image" as const, "Reconstruction" as const];
   type Tab = (typeof tabs)[number];
-  let [state, setState,] = createStore<{
-    image: HTMLImageElement | undefined,
-    offsetXText: string,
-    offsetYText: string,
-    tileWidthText: string,
-    tileHeightText: string,
-    selectedTab: Tab,
-    result: NoTrack<({
-      textureAtlasFilename: string,
-      frameId: string,
-    } | undefined)[][]> | undefined,
+  let [state, setState] = createStore<{
+    image: HTMLImageElement | undefined;
+    offsetXText: string;
+    offsetYText: string;
+    tileWidthText: string;
+    tileHeightText: string;
+    selectedTab: Tab;
+    result:
+      | NoTrack<
+          (
+            | {
+                textureAtlasFilename: string;
+                frameId: string;
+              }
+            | undefined
+          )[][]
+        >
+      | undefined;
   }>({
     image: undefined,
     offsetXText: "0",
@@ -45,12 +61,15 @@ const ImageTileMatcher: Component<{
     result: undefined,
   });
   let frameIdToImageAndFrameMap = createMemo(() => {
-    let result = new Map<string,{
-      image: HTMLImageElement,
-      frame: FrameState,
-    }>();
+    let result = new Map<
+      string,
+      {
+        image: HTMLImageElement;
+        frame: FrameState;
+      }
+    >();
     for (let textureAtlas of props.textureAtlases) {
-      for (let { frameId, frame, } of textureAtlas.frames) {
+      for (let { frameId, frame } of textureAtlas.frames) {
         result.set(frameId, {
           image: textureAtlas.image,
           frame,
@@ -112,18 +131,22 @@ const ImageTileMatcher: Component<{
     h: number,
   ) => {
     let srcOffset = (y * imageWidth + x) << 2;
-    if (_hashTileBuffer == undefined || _hashTileBuffer2 == undefined || _hashTileBuffer.length != ((w * h) << 2)) {
+    if (
+      _hashTileBuffer == undefined ||
+      _hashTileBuffer2 == undefined ||
+      _hashTileBuffer.length != (w * h) << 2
+    ) {
       _hashTileBuffer2 = new ArrayBuffer((w * h) << 2);
       _hashTileBuffer = new Uint8Array(_hashTileBuffer2);
     }
     let dstOffset = 0;
-    for (let i = 0; i < h; ++i, srcOffset += (imageWidth << 2)) {
+    for (let i = 0; i < h; ++i, srcOffset += imageWidth << 2) {
       let srcOffset2 = srcOffset;
       for (let j = 0; j < w; ++j, srcOffset2 += 4, dstOffset += 4) {
         _hashTileBuffer[dstOffset] = imageData[srcOffset2];
-        _hashTileBuffer[dstOffset+1] = imageData[srcOffset2+1];
-        _hashTileBuffer[dstOffset+2] = imageData[srcOffset2+2];
-        _hashTileBuffer[dstOffset+3] = imageData[srcOffset2+3];
+        _hashTileBuffer[dstOffset + 1] = imageData[srcOffset2 + 1];
+        _hashTileBuffer[dstOffset + 2] = imageData[srcOffset2 + 2];
+        _hashTileBuffer[dstOffset + 3] = imageData[srcOffset2 + 3];
       }
     }
     return h32(_hashTileBuffer2, 0);
@@ -150,10 +173,13 @@ const ImageTileMatcher: Component<{
     if (tileHeight2 == undefined) {
       return;
     }
-    let hashToTileMap = new Map<string,{
-      textureAtlasFilename: string,
-      frameId: string,
-    }>();
+    let hashToTileMap = new Map<
+      string,
+      {
+        textureAtlasFilename: string;
+        frameId: string;
+      }
+    >();
     for (let textureAtlas of props.textureAtlases) {
       let textureAtlasFilename = textureAtlas.textureAtlasFilename();
       let canvas = document.createElement("canvas");
@@ -166,7 +192,7 @@ const ImageTileMatcher: Component<{
       ctx.drawImage(textureAtlas.image, 0, 0);
       let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       let imageData2 = imageData.data;
-      for (let { frameId, frame, } of textureAtlas.frames) {
+      for (let { frameId, frame } of textureAtlas.frames) {
         if (frame.size.x != tileWidth2 || frame.size.y != tileHeight2) {
           continue;
         }
@@ -178,13 +204,10 @@ const ImageTileMatcher: Component<{
           tileWidth2,
           tileHeight2,
         );
-        hashToTileMap.set(
-          hash.toString(),
-          {
-            textureAtlasFilename,
-            frameId,
-          },
-        );
+        hashToTileMap.set(hash.toString(), {
+          textureAtlasFilename,
+          frameId,
+        });
       }
     }
     let canvas = document.createElement("canvas");
@@ -198,17 +221,23 @@ const ImageTileMatcher: Component<{
     let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     let imageData2 = imageData.data;
     //
-    let result: ({
-      textureAtlasFilename: string,
-      frameId: string,
-    } | undefined)[][] = [];
+    let result: (
+      | {
+          textureAtlasFilename: string;
+          frameId: string;
+        }
+      | undefined
+    )[][] = [];
     let yIdx = 0;
     let atY = offsetY2;
     while (atY + tileHeight2 <= canvas.height) {
-      let resultRow: ({
-        textureAtlasFilename: string,
-        frameId: string,
-      } | undefined)[] = [];
+      let resultRow: (
+        | {
+            textureAtlasFilename: string;
+            frameId: string;
+          }
+        | undefined
+      )[] = [];
       let xIdx = 0;
       let atX = offsetX2;
       while (atX + tileWidth2 <= canvas.width) {
@@ -237,17 +266,17 @@ const ImageTileMatcher: Component<{
     }
     let result = state.result.value;
     let nextShortId = 1;
-    let frameIdToShortIdMap = new Map<string,number>();
+    let frameIdToShortIdMap = new Map<string, number>();
     for (let entry of levelComponent.state.tileToShortIdTable) {
-      for (let { frameId, shortId, } of entry.frames) {
+      for (let { frameId, shortId } of entry.frames) {
         frameIdToShortIdMap.set(frameId, shortId);
         nextShortId = Math.max(nextShortId, shortId + 1);
       }
     }
     let newTileToShortIdEntries: {
-      textureAtlasFilename: string,
-      frameId: string,
-      shortId: number,
+      textureAtlasFilename: string;
+      frameId: string;
+      shortId: number;
     }[] = [];
     let mapData = result.map((row) =>
       row.map((cell) => {
@@ -265,24 +294,26 @@ const ImageTileMatcher: Component<{
           });
         }
         return shortId;
-      })
+      }),
     );
     for (let entry of newTileToShortIdEntries) {
-      let idx = levelComponent.state.tileToShortIdTable.findIndex((x) => x.textureAtlasRef == entry.textureAtlasFilename);
+      let idx = levelComponent.state.tileToShortIdTable.findIndex(
+        (x) => x.textureAtlasRef == entry.textureAtlasFilename,
+      );
       if (idx == -1) {
         levelComponent.setState(
           "tileToShortIdTable",
           produce((x) => {
-            x.push(
-              {
-                textureAtlasRef: entry.textureAtlasFilename,
-                frames: [{
+            x.push({
+              textureAtlasRef: entry.textureAtlasFilename,
+              frames: [
+                {
                   frameId: entry.frameId,
                   shortId: entry.shortId,
-                }],
-              }
-            );
-          })
+                },
+              ],
+            });
+          }),
         );
       } else {
         levelComponent.setState(
@@ -290,12 +321,10 @@ const ImageTileMatcher: Component<{
           idx,
           "frames",
           produce((x) => {
-            x.push(
-              {
-                frameId: entry.frameId,
-                shortId: entry.shortId,
-              }
-            );
+            x.push({
+              frameId: entry.frameId,
+              shortId: entry.shortId,
+            });
           }),
         );
       }
@@ -303,14 +332,9 @@ const ImageTileMatcher: Component<{
     levelComponent.setState("mapData", mapData);
   };
   return (
-    <div
-      style="width: 100%; height: 100%; overflow: auto;"
-    >
+    <div style="width: 100%; height: 100%; overflow: auto;">
       <div>
-        <button
-          class="btn"
-          onClick={() => fileInput.click()}
-        >
+        <button class="btn" onClick={() => fileInput.click()}>
           Load Image...
           <input
             ref={fileInput}
@@ -370,11 +394,8 @@ const ImageTileMatcher: Component<{
             size={4}
           />
         </label>
-        <br/>
-        <button
-          class="btn"
-          onClick={() => performMatch()}
-        >
+        <br />
+        <button class="btn" onClick={() => performMatch()}>
           Perform Match
         </button>
         <Show when={props.levelComponent} keyed>
@@ -392,7 +413,7 @@ const ImageTileMatcher: Component<{
         <a
           role="tab"
           classList={{
-            "tab": true,
+            tab: true,
             "tab-active": state.selectedTab == "Image",
           }}
           onClick={() => setState("selectedTab", "Image")}
@@ -402,8 +423,8 @@ const ImageTileMatcher: Component<{
         <a
           role="tab"
           classList={{
-            "tab": true,
-            "tab-active": state.selectedTab == "Reconstruction"
+            tab: true,
+            "tab-active": state.selectedTab == "Reconstruction",
           }}
           onClick={() => setState("selectedTab", "Reconstruction")}
         >
@@ -411,79 +432,85 @@ const ImageTileMatcher: Component<{
         </a>
       </div>
       <Switch>
-        <Match when={state.selectedTab == "Image"}>
-          {state.image}
-        </Match>
+        <Match when={state.selectedTab == "Image"}>{state.image}</Match>
         <Match when={state.selectedTab == "Reconstruction"}>
           <Show when={state.result?.value}>
-            {(result) => (<>{(() => {
-              let tileWidth2 = tileWidth();
-              if (tileWidth2 == undefined) {
-                return undefined;
-              }
-              let tileHeight2 = tileHeight();
-              if (tileHeight2 == undefined) {
-                return undefined;
-              }
-              let image = state.image;
-              if (image == undefined) {
-                return undefined;
-              }
-              let canvas = document.createElement("canvas");
-              canvas.width = image.naturalWidth;
-              canvas.height = image.naturalHeight;
-              let ctx = canvas.getContext("2d");
-              if (ctx == null) {
-                return undefined;
-              }
-              return untrack(() => (<>
-                {canvas}
-                <For each={result()}>
-                  {(row, yIdx) => (
-                    <For each={row}>
-                      {(cell, xIdx) => {
-                        if (cell == undefined) {
-                          return undefined;
-                        }
-                        let data = createMemo(() => frameIdToImageAndFrameMap().get(cell.frameId));
-                        return (
-                          <Show when={data()}>
-                            {(data2) => {
-                              createComputed(() => {
-                                let tileImage = data2().image;
-                                let frame = data2().frame;
-                                let dstX = xIdx() * tileWidth2;
-                                let dstY = yIdx() * tileHeight2;
-                                ctx.drawImage(
-                                  tileImage,
-                                  frame.pos.x,
-                                  frame.pos.y,
-                                  tileWidth2,
-                                  tileHeight2,
-                                  dstX,
-                                  dstY,
-                                  tileWidth2,
-                                  tileHeight2,
-                                );
-                                onCleanup(() => {
-                                  ctx.fillRect(
-                                    dstX,
-                                    dstY,
-                                    tileWidth2,
-                                    tileHeight2,
-                                  );
-                                });
-                              });
-                              return undefined;
+            {(result) => (
+              <>
+                {(() => {
+                  let tileWidth2 = tileWidth();
+                  if (tileWidth2 == undefined) {
+                    return undefined;
+                  }
+                  let tileHeight2 = tileHeight();
+                  if (tileHeight2 == undefined) {
+                    return undefined;
+                  }
+                  let image = state.image;
+                  if (image == undefined) {
+                    return undefined;
+                  }
+                  let canvas = document.createElement("canvas");
+                  canvas.width = image.naturalWidth;
+                  canvas.height = image.naturalHeight;
+                  let ctx = canvas.getContext("2d");
+                  if (ctx == null) {
+                    return undefined;
+                  }
+                  return untrack(() => (
+                    <>
+                      {canvas}
+                      <For each={result()}>
+                        {(row, yIdx) => (
+                          <For each={row}>
+                            {(cell, xIdx) => {
+                              if (cell == undefined) {
+                                return undefined;
+                              }
+                              let data = createMemo(() =>
+                                frameIdToImageAndFrameMap().get(cell.frameId),
+                              );
+                              return (
+                                <Show when={data()}>
+                                  {(data2) => {
+                                    createComputed(() => {
+                                      let tileImage = data2().image;
+                                      let frame = data2().frame;
+                                      let dstX = xIdx() * tileWidth2;
+                                      let dstY = yIdx() * tileHeight2;
+                                      ctx.drawImage(
+                                        tileImage,
+                                        frame.pos.x,
+                                        frame.pos.y,
+                                        tileWidth2,
+                                        tileHeight2,
+                                        dstX,
+                                        dstY,
+                                        tileWidth2,
+                                        tileHeight2,
+                                      );
+                                      onCleanup(() => {
+                                        ctx.fillRect(
+                                          dstX,
+                                          dstY,
+                                          tileWidth2,
+                                          tileHeight2,
+                                        );
+                                      });
+                                    });
+                                    return undefined;
+                                  }}
+                                </Show>
+                              );
                             }}
-                          </Show>
-                        );
-                      }}
-                    </For>
-                  )}
-                </For>
-              </>));
-            })()}</>)}
+                          </For>
+                        )}
+                      </For>
+                    </>
+                  ));
+                })()}
+              </>
+            )}
           </Show>
         </Match>
       </Switch>

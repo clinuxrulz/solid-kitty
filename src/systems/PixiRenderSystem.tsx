@@ -236,7 +236,8 @@ export class PixiRenderSystem {
         return Transform2D.identity;
       }
       let cameraEntity = cameraEntities[0];
-      let transform = world.getComponent(cameraEntity, transform2DComponentType)?.state.transform;
+      let transform = world.getComponent(cameraEntity, transform2DComponentType)
+        ?.state.transform;
       return transform ?? Transform2D.identity;
     });
     let cameraPos = () => cameraTransform().origin;
@@ -259,12 +260,16 @@ export class PixiRenderSystem {
             }
             // Get camera to track entity if target entity set
             (() => {
-              let cameraEntities = world.entitiesWithComponentType(cameraComponentType);
+              let cameraEntities =
+                world.entitiesWithComponentType(cameraComponentType);
               if (cameraEntities.length != 1) {
                 return;
               }
               let cameraEntity = cameraEntities[0];
-              let camera = world.getComponent(cameraEntity, cameraComponentType);
+              let camera = world.getComponent(
+                cameraEntity,
+                cameraComponentType,
+              );
               if (camera == undefined) {
                 return;
               }
@@ -272,7 +277,9 @@ export class PixiRenderSystem {
               if (targetEntity == undefined) {
                 return;
               }
-              let targetPos = world.getComponent(targetEntity, transform2DComponentType)?.state.transform.origin ?? Vec2.zero;
+              let targetPos =
+                world.getComponent(targetEntity, transform2DComponentType)
+                  ?.state.transform.origin ?? Vec2.zero;
               let cameraPos2 = cameraPos();
               let minX = cameraPos2.x + 0.25 * state.windowWidth;
               let maxX = cameraPos2.x + 0.75 * state.windowWidth;
@@ -296,11 +303,17 @@ export class PixiRenderSystem {
                 cameraPosChanged = true;
               }
               if (cameraPosChanged) {
-                let newCameraTransform = Transform2D.create(Vec2.create(newCameraPosX, newCameraPosY), Complex.rot0);
-                let transformComponent = world.getComponent(cameraEntity, transform2DComponentType);
+                let newCameraTransform = Transform2D.create(
+                  Vec2.create(newCameraPosX, newCameraPosY),
+                  Complex.rot0,
+                );
+                let transformComponent = world.getComponent(
+                  cameraEntity,
+                  transform2DComponentType,
+                );
                 if (transformComponent == undefined) {
                   transformComponent = transform2DComponentType.create({
-                    "transform": newCameraTransform,
+                    transform: newCameraTransform,
                   });
                   world.setComponent(cameraEntity, transformComponent);
                 } else {
@@ -433,64 +446,76 @@ export class PixiRenderSystem {
                     sprite.height = frame2().size.y * scale2;
                   });
                   createComputed(() => {
-                    let space2 = cameraTransform().transformToSpace(space() ?? Transform2D.identity);
+                    let space2 = cameraTransform().transformToSpace(
+                      space() ?? Transform2D.identity,
+                    );
                     sprite.x = space2.origin.x;
                     sprite.y = space2.origin.y;
                     sprite.angle = space2.orientation.getAngle();
                   });
                   pixiApp.stage.addChild(sprite);
                   onCleanup(() => pixiApp.stage.removeChild(sprite));
-                  return 
+                  return;
                 }).then(() =>
-                  Cont
-                    .liftCCMA(
-                      () =>
-                        world.getComponent(spriteEntity, childrenComponentType)
-                          ?.state?.childIds ?? [],
-                    )
+                  Cont.liftCCMA(
+                    () =>
+                      world.getComponent(spriteEntity, childrenComponentType)
+                        ?.state?.childIds ?? [],
+                  )
                     .filterNonNullable()
-                    .then(
-                      (childId) =>
-                        Cont.liftCC(() => world.getComponent(childId, tileCollisionComponentType)?.state)
-                          .filterNonNullable()
-                          .then((tileCollision) =>
-                            Cont
-                              .liftCC(() =>
-                                world.getComponent(
-                                  childId,
-                                  transform2DComponentType
-                                )?.state?.transform ?? Transform2D.identity,
-                              )
-                              .map((transform) => ({
-                                tileCollision,
-                                transform,
-                              }))
-                          )
+                    .then((childId) =>
+                      Cont.liftCC(
+                        () =>
+                          world.getComponent(
+                            childId,
+                            tileCollisionComponentType,
+                          )?.state,
+                      )
+                        .filterNonNullable()
+                        .then((tileCollision) =>
+                          Cont.liftCC(
+                            () =>
+                              world.getComponent(
+                                childId,
+                                transform2DComponentType,
+                              )?.state?.transform ?? Transform2D.identity,
+                          ).map((transform) => ({
+                            tileCollision,
+                            transform,
+                          })),
+                        ),
                     )
-                    .then(({
-                      tileCollision,
-                      transform,
-                    }) => Cont.liftCC(() => {
-                      const square = new PIXI.Graphics();
-                      square.beginPath();
-                      square.moveTo(0, 0);
-                      square.lineTo(0, tileCollision.height);
-                      square.lineTo(tileCollision.width, tileCollision.height);
-                      square.lineTo(tileCollision.width, 0);
-                      square.closePath();
-                      square.setFillStyle({ alpha: 0.5, color: new PIXI.Color("red")});
-                      square.fill();
-                      let collisionSpace = cameraTransform().transformToSpace(
-                        (space() ?? Transform2D.identity).transformFromSpace(transform)
-                      );
-                      square.x = collisionSpace.origin.x;
-                      square.y = collisionSpace.origin.y;
-                      pixiApp.stage.addChild(square);
-                      onCleanup(() => {
-                        pixiApp.stage.removeChild(square);
-                        square.destroy();
-                      });
-                    }))
+                    .then(({ tileCollision, transform }) =>
+                      Cont.liftCC(() => {
+                        const square = new PIXI.Graphics();
+                        square.beginPath();
+                        square.moveTo(0, 0);
+                        square.lineTo(0, tileCollision.height);
+                        square.lineTo(
+                          tileCollision.width,
+                          tileCollision.height,
+                        );
+                        square.lineTo(tileCollision.width, 0);
+                        square.closePath();
+                        square.setFillStyle({
+                          alpha: 0.5,
+                          color: new PIXI.Color("red"),
+                        });
+                        square.fill();
+                        let collisionSpace = cameraTransform().transformToSpace(
+                          (space() ?? Transform2D.identity).transformFromSpace(
+                            transform,
+                          ),
+                        );
+                        square.x = collisionSpace.origin.x;
+                        square.y = collisionSpace.origin.y;
+                        pixiApp.stage.addChild(square);
+                        onCleanup(() => {
+                          pixiApp.stage.removeChild(square);
+                          square.destroy();
+                        });
+                      }),
+                    ),
                 ),
             )
             .run();

@@ -210,14 +210,15 @@ describe("TypeSchema json projection for automerge", () => {
 describe("new projection", () => {
   test("test 1", () => {
     type State = {
-      a: number,
-      b: number,
-      c: number,
-      d: number[],
-      e: Vec2,
+      a: number;
+      b: number;
+      c: number;
+      d: number[];
+      e: Vec2;
       f: {
-        g: Vec2[],
-      }[],
+        g: Vec2[];
+      }[];
+      g: Vec2[];
     };
     let stateTypeSchema: TypeSchema<State> = {
       type: "Object",
@@ -242,6 +243,10 @@ describe("new projection", () => {
             },
           },
         },
+        g: {
+          type: "Array",
+          element: vec2TypeSchema,
+        },
       },
     };
     let repo = new Repo();
@@ -253,12 +258,13 @@ describe("new projection", () => {
       e: Vec2.create(6, 7),
       f: [
         {
-          g: [ Vec2.create(8, 9), ],
+          g: [Vec2.create(8, 9)],
         },
         {
-          g: [ Vec2.create(10, 11), ],
+          g: [Vec2.create(10, 11)],
         },
       ],
+      g: [Vec2.create(1, 1), Vec2.create(2, 2), Vec2.create(3, 3)],
     });
     createRoot((dispose) => {
       let doc = makeDocumentProjection(docHandle);
@@ -271,7 +277,7 @@ describe("new projection", () => {
       expect(s.b).toBe(2);
       s.b = 7;
       expect(doc.b).toBe(7);
-      let [ _state, setState, ] = createStore(s);
+      let [_state, setState] = createStore(s);
       setState("b", 42);
       expect(doc.b).toBe(42);
       expect(s.d[0]).toBe(4);
@@ -284,16 +290,19 @@ describe("new projection", () => {
       setState("f", 0, "g", 0, Vec2.create(42, 42));
       expect(doc.f[0].g[0].x).toBe(42);
       setState("f", [
-        { g: [], },
+        { g: [] },
         {
-          g: [
-            Vec2.create(77,77),
-          ],
+          g: [Vec2.create(77, 77)],
         },
-        { g: [], },
+        { g: [] },
       ]);
       expect(doc.f.length).toBe(3);
       expect(doc.f[1].g[0].x).toBe(77);
+      setState("g", (g) => [...g, Vec2.create(4, 4)]);
+      expect(doc.g[0].x).toBe(1);
+      expect(doc.g[1].x).toBe(2);
+      expect(doc.g[2].x).toBe(3);
+      expect(doc.g[3].x).toBe(4);
       dispose();
     });
   });

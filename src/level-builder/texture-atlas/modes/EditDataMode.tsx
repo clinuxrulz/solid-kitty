@@ -17,8 +17,8 @@ export class EditDataMode implements Mode {
     let frameComponent = params.frameComponent;
     let [state, setState] = createStore<{
       name: string;
-      frameWidthText: string,
-      frameHeightText: string,
+      frameWidthText: string;
+      frameHeightText: string;
       numCellsWide: number;
       numCellsHigh: number;
       metaDataText: string;
@@ -28,7 +28,9 @@ export class EditDataMode implements Mode {
       frameHeightText: untrack(() => frameComponent.state.size.y.toString()),
       numCellsWide: untrack(() => frameComponent.state.numCells.x),
       numCellsHigh: untrack(() => frameComponent.state.numCells.y),
-      metaDataText: untrack(() => JSON.stringify(frameComponent.state.metaData)),
+      metaDataText: untrack(() =>
+        JSON.stringify(frameComponent.state.metaData),
+      ),
     });
     this.overlayHtmlUI = () => (
       <div
@@ -180,7 +182,10 @@ export class EditDataMode implements Mode {
                     metaData = params.frameComponent.state.metaData;
                   }
                   frameComponent.setState("name", state.name);
-                  frameComponent.setState("size", Vec2.create(frameWidth, frameHeight));
+                  frameComponent.setState(
+                    "size",
+                    Vec2.create(frameWidth, frameHeight),
+                  );
                   frameComponent.setState(
                     "numCells",
                     Vec2.create(state.numCellsWide, state.numCellsHigh),

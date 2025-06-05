@@ -95,12 +95,7 @@ const ThreeBody: Component = () => {
       let objectI = state.objects[i];
       dummy1 = objectI.acc.multScalar(0.5);
       let tmp = objectI.pos;
-      setState(
-        "objects",
-        i,
-        "pos",
-        objectI.pos.add(objectI.vel).add(dummy1),
-      );
+      setState("objects", i, "pos", objectI.pos.add(objectI.vel).add(dummy1));
       setState(
         "objects",
         i,
@@ -147,12 +142,7 @@ const ThreeBody: Component = () => {
     result = result.multScalar(1.0 / state.objects.length);
     if (svg != undefined) {
       let rect = svg.getBoundingClientRect();
-      result = result.sub(
-        Vec2.create(
-          0.5 * rect.width,
-          0.5 * rect.height,
-        )
-      );
+      result = result.sub(Vec2.create(0.5 * rect.width, 0.5 * rect.height));
     }
     return result;
   });

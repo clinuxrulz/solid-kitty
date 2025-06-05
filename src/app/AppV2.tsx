@@ -56,7 +56,9 @@ import {
   exportToZip,
   importFromZip,
 } from "solid-fs-automerge/src/export-import";
-import CodeMirror, { mountAutomergeFolderToCodeMirrorVfsWhileMounted } from "../code-mirror/CodeMirror";
+import CodeMirror, {
+  mountAutomergeFolderToCodeMirrorVfsWhileMounted,
+} from "../code-mirror/CodeMirror";
 
 const AppV2: Component<{
   vfsDocUrl: string;
@@ -823,7 +825,7 @@ const AppV2: Component<{
       return () => (
         <Switch>
           <Match when={state.useCodeMirror}>
-            <CodeMirror path={selectedSourceFileRelPath2}/>
+            <CodeMirror path={selectedSourceFileRelPath2} />
           </Match>
           <Match when={!state.useCodeMirror}>
             <ScriptEditor path={selectedSourceFileRelPath2} />

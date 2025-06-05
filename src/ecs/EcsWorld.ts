@@ -64,7 +64,12 @@ export class EcsWorld implements IEcsWorld {
   createEntityWithId(entityId: string, components: IsEcsComponent[]) {
     untrack(() =>
       batch(() => {
-        this.entityMap.set(entityId, new ReactiveMap<string,IsEcsComponent>(components.map((component) => [component.type.typeName, component])));
+        this.entityMap.set(
+          entityId,
+          new ReactiveMap<string, IsEcsComponent>(
+            components.map((component) => [component.type.typeName, component]),
+          ),
+        );
         for (let component of components) {
           let entitySet = this.componentTypeEntitiesMap.get(
             component.type.typeName,
@@ -110,25 +115,32 @@ export class EcsWorld implements IEcsWorld {
   attachToParent(entityId: string, parentId: string) {
     untrack(() => {
       {
-        let lastParentId = this.getComponent(entityId, parentComponentType)?.state?.parentId;
+        let lastParentId = this.getComponent(entityId, parentComponentType)
+          ?.state?.parentId;
         if (lastParentId != undefined) {
           this.detactFromParent(entityId);
         }
       }
-      let childrenComponent = this.getComponent(parentId, childrenComponentType);
+      let childrenComponent = this.getComponent(
+        parentId,
+        childrenComponentType,
+      );
       if (childrenComponent == undefined) {
         childrenComponent = childrenComponentType.create({
-          childIds: [ entityId, ],
+          childIds: [entityId],
         });
         this.setComponent(parentId, childrenComponent);
       } else {
-        childrenComponent.setState("childIds", produce((childIds) => childIds.push(entityId)));
+        childrenComponent.setState(
+          "childIds",
+          produce((childIds) => childIds.push(entityId)),
+        );
       }
       this.setComponent(
-        entityId, 
+        entityId,
         parentComponentType.create({
           parentId,
-        })
+        }),
       );
     });
   }
@@ -139,20 +151,18 @@ export class EcsWorld implements IEcsWorld {
       if (parentComponent != undefined) {
         this.unsetComponent(entityId, parentComponentType);
         let parentId = parentComponent.state.parentId;
-        let childrenComponent = this.getComponent(parentId, childrenComponentType);
+        let childrenComponent = this.getComponent(
+          parentId,
+          childrenComponentType,
+        );
         if (childrenComponent != undefined) {
-          let newChildIds =
-            childrenComponent
-              .state
-              .childIds
-              .filter((id) => id !== entityId);
+          let newChildIds = childrenComponent.state.childIds.filter(
+            (id) => id !== entityId,
+          );
           if (newChildIds.length == 0) {
             this.unsetComponent(parentId, childrenComponentType);
           } else {
-            childrenComponent.setState(
-              "childIds",
-              newChildIds
-            );
+            childrenComponent.setState("childIds", newChildIds);
           }
         }
       }
@@ -167,7 +177,9 @@ export class EcsWorld implements IEcsWorld {
     if (components == undefined) {
       return undefined;
     }
-    return components.get(componentType.typeName) as EcsComponent<A> | undefined;
+    return components.get(componentType.typeName) as
+      | EcsComponent<A>
+      | undefined;
   }
 
   getComponents(entityId: string): IsEcsComponent[] {
@@ -184,10 +196,7 @@ export class EcsWorld implements IEcsWorld {
       return;
     }
     for (let component of components) {
-      componentsMap.set(
-        component.type.typeName,
-        component,
-      );
+      componentsMap.set(component.type.typeName, component);
     }
   }
 

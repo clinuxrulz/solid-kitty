@@ -1,7 +1,16 @@
 import { levelRefComponentType } from "../components/LevelRefComponent";
 import { EcsWorld } from "../ecs/EcsWorld";
 import { createMemo, on, onCleanup } from "solid-js";
-import { Complex, createGetLevelsFolder, createTextureAtlasWithImageAndFramesList, scaleComponentType, spriteComponentType, Transform2D, transform2DComponentType, Vec2 } from "../lib";
+import {
+  Complex,
+  createGetLevelsFolder,
+  createTextureAtlasWithImageAndFramesList,
+  scaleComponentType,
+  spriteComponentType,
+  Transform2D,
+  transform2DComponentType,
+  Vec2,
+} from "../lib";
 import { EcsWorldAutomergeProjection } from "../ecs/EcsWorldAutomergeProjection";
 import { registry } from "../level-builder/components/registry";
 import { levelComponentType } from "../level-builder/components/LevelComponent";
@@ -151,45 +160,57 @@ export class CollisionSystem {
           levelEntity,
         })),
       )
-      .then(({ levelWorld, levelEntity }) => Cont.liftCC(() =>
-        levelWorld.getComponent(levelEntity, levelComponentType)?.state
-      ))
+      .then(({ levelWorld, levelEntity }) =>
+        Cont.liftCC(
+          () => levelWorld.getComponent(levelEntity, levelComponentType)?.state,
+        ),
+      )
       .filterNonNullable()
-      .map((x) => ({ level: x, }))
-      .then(({ level, }) => {
-        let shortIdToTextureAtlasAndFrameIdMap = new Map<number,{
-          textureAtlasFilename: string,
-          frameId: string,
-        }>();
-        for (let { textureAtlasRef, frames, } of level.tileToShortIdTable) {
-          for (let { frameId, shortId, } of frames) {
-            shortIdToTextureAtlasAndFrameIdMap.set(
-              shortId,
-              {
-                textureAtlasFilename: textureAtlasRef,
-                frameId,
-              }
-            );
+      .map((x) => ({ level: x }))
+      .then(({ level }) => {
+        let shortIdToTextureAtlasAndFrameIdMap = new Map<
+          number,
+          {
+            textureAtlasFilename: string;
+            frameId: string;
+          }
+        >();
+        for (let { textureAtlasRef, frames } of level.tileToShortIdTable) {
+          for (let { frameId, shortId } of frames) {
+            shortIdToTextureAtlasAndFrameIdMap.set(shortId, {
+              textureAtlasFilename: textureAtlasRef,
+              frameId,
+            });
           }
         }
-        return Cont
-          .liftCCMA(() => world.entitiesWithComponentType(spriteComponentType))
-          .then((spriteEntity) => Cont.liftCC(() => {
-            let sprite = world.getComponent(spriteEntity, spriteComponentType)?.state;
-            if (sprite == undefined) {
-              return undefined;
-            }
-            let transform = world.getComponent(spriteEntity, transform2DComponentType)?.state.transform ?? Transform2D.identity;
-            let scale = world.getComponent(spriteEntity, scaleComponentType)?.state?.scale ?? 1.0;
-            return {
-              spriteEntity,
-              sprite,
-              transform,
-              scale,
-            };
-          }))
+        return Cont.liftCCMA(() =>
+          world.entitiesWithComponentType(spriteComponentType),
+        )
+          .then((spriteEntity) =>
+            Cont.liftCC(() => {
+              let sprite = world.getComponent(
+                spriteEntity,
+                spriteComponentType,
+              )?.state;
+              if (sprite == undefined) {
+                return undefined;
+              }
+              let transform =
+                world.getComponent(spriteEntity, transform2DComponentType)
+                  ?.state.transform ?? Transform2D.identity;
+              let scale =
+                world.getComponent(spriteEntity, scaleComponentType)?.state
+                  ?.scale ?? 1.0;
+              return {
+                spriteEntity,
+                sprite,
+                transform,
+                scale,
+              };
+            }),
+          )
           .filterNonNullable()
-          .map(({ spriteEntity, sprite, transform, scale, }) => ({
+          .map(({ spriteEntity, sprite, transform, scale }) => ({
             level,
             shortIdToTextureAtlasAndFrameIdMap,
             spriteEntity,
@@ -198,71 +219,84 @@ export class CollisionSystem {
             spriteScale: scale,
           }));
       })
-      .then(({
+      .then(
+        ({
           level,
           shortIdToTextureAtlasAndFrameIdMap,
           spriteEntity,
           sprite,
           spriteTransform,
           spriteScale,
-      }) => Cont.liftCC(() => {
-        const spritePos = spriteTransform.origin;
-        const tileWidth = 16*3;
-        const tileHeight = 16*3;
-        let frameId = lookupFrameIdByTextureAtlasFilenameAndFrameName(
-          sprite.textureAtlasFilename,
-          sprite.frameName,
-        );
-        if (frameId == undefined) {
-          return;
-        }
-        let frame = lookupFrameById(frameId);
-        if (frame == undefined) {
-          return;
-        }
-        const minXIdx = Math.floor(spritePos.x / tileWidth);
-        const minYIdx = Math.floor(spritePos.y / tileHeight);
-        const maxXIdx = Math.max(minXIdx, Math.ceil((spritePos.x + frame.size.x * spriteScale) / tileWidth) - 1);
-        const maxYIdx = Math.max(minYIdx, Math.ceil((spritePos.y + frame.size.y * spriteScale) / tileHeight) - 1);
-        for (let i = minYIdx; i <= maxYIdx; ++i) {
-          let row = level.mapData[i];
-          if (row == undefined) {
-            continue;
-          }
-          for (let j = minXIdx; j <= maxXIdx; ++j) {
-            let cell = row[j];
-            if (cell == undefined) {
-              continue;
+        }) =>
+          Cont.liftCC(() => {
+            const spritePos = spriteTransform.origin;
+            const tileWidth = 16 * 3;
+            const tileHeight = 16 * 3;
+            let frameId = lookupFrameIdByTextureAtlasFilenameAndFrameName(
+              sprite.textureAtlasFilename,
+              sprite.frameName,
+            );
+            if (frameId == undefined) {
+              return;
             }
-            let data = shortIdToTextureAtlasAndFrameIdMap.get(cell);
-            if (data == undefined) {
-              continue;
+            let frame = lookupFrameById(frameId);
+            if (frame == undefined) {
+              return;
             }
-            let collisionId = world.createEntity([
-              transform2DComponentType.create({
-                transform: Transform2D.create(
-                  Vec2.create(
-                    j * tileWidth - spritePos.x,
-                    i * tileHeight - spritePos.y,
-                  ),
-                  Complex.rot0,
-                )
-              }),
-              tileCollisionComponentType.create({
-                textureAtlasFilename: data.textureAtlasFilename,
-                frameName: frame.name,
-                width: tileWidth,
-                height: tileHeight,
-              }),
-            ]);
-            world.attachToParent(collisionId, spriteEntity);
-            onCleanup(() => {
-              world.detactFromParent(collisionId);
-              world.destroyEntity(collisionId);
-            });
-          }
-        }
-      }))
+            const minXIdx = Math.floor(spritePos.x / tileWidth);
+            const minYIdx = Math.floor(spritePos.y / tileHeight);
+            const maxXIdx = Math.max(
+              minXIdx,
+              Math.ceil(
+                (spritePos.x + frame.size.x * spriteScale) / tileWidth,
+              ) - 1,
+            );
+            const maxYIdx = Math.max(
+              minYIdx,
+              Math.ceil(
+                (spritePos.y + frame.size.y * spriteScale) / tileHeight,
+              ) - 1,
+            );
+            for (let i = minYIdx; i <= maxYIdx; ++i) {
+              let row = level.mapData[i];
+              if (row == undefined) {
+                continue;
+              }
+              for (let j = minXIdx; j <= maxXIdx; ++j) {
+                let cell = row[j];
+                if (cell == undefined) {
+                  continue;
+                }
+                let data = shortIdToTextureAtlasAndFrameIdMap.get(cell);
+                if (data == undefined) {
+                  continue;
+                }
+                let collisionId = world.createEntity([
+                  transform2DComponentType.create({
+                    transform: Transform2D.create(
+                      Vec2.create(
+                        j * tileWidth - spritePos.x,
+                        i * tileHeight - spritePos.y,
+                      ),
+                      Complex.rot0,
+                    ),
+                  }),
+                  tileCollisionComponentType.create({
+                    textureAtlasFilename: data.textureAtlasFilename,
+                    frameName: frame.name,
+                    width: tileWidth,
+                    height: tileHeight,
+                  }),
+                ]);
+                world.attachToParent(collisionId, spriteEntity);
+                onCleanup(() => {
+                  world.detactFromParent(collisionId);
+                  world.destroyEntity(collisionId);
+                });
+              }
+            }
+          }),
+      )
       .run();
   }
 }

@@ -1,4 +1,16 @@
-import { Accessor, batch, Component, createComputed, createMemo, For, Match, onCleanup, Show, Switch, untrack } from "solid-js";
+import {
+  Accessor,
+  batch,
+  Component,
+  createComputed,
+  createMemo,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+  untrack,
+} from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 import { TextureAtlasState } from "../components/TextureAtlasComponent";
 import { frameComponentType, FrameState } from "../components/FrameComponent";
@@ -13,17 +25,17 @@ const ImageToTilesetCreator: Component<{
   /**
    * The texture atlas ecs world
    */
-  world: IEcsWorld,
+  world: IEcsWorld;
   /**
    * The image being used by the texture atlas
    */
-  image: HTMLImageElement,
+  image: HTMLImageElement;
 }> = (props) => {
-  let [state, setState,] = createStore<{
-    offsetXText: string,
-    offsetYText: string,
-    tileWidthText: string,
-    tileHeightText: string,
+  let [state, setState] = createStore<{
+    offsetXText: string;
+    offsetYText: string;
+    tileWidthText: string;
+    tileHeightText: string;
   }>({
     offsetXText: "0",
     offsetYText: "0",
@@ -69,18 +81,22 @@ const ImageToTilesetCreator: Component<{
     h: number,
   ) => {
     let srcOffset = (y * imageWidth + x) << 2;
-    if (_hashTileBuffer == undefined || _hashTileBuffer2 == undefined || _hashTileBuffer.length != ((w * h) << 2)) {
+    if (
+      _hashTileBuffer == undefined ||
+      _hashTileBuffer2 == undefined ||
+      _hashTileBuffer.length != (w * h) << 2
+    ) {
       _hashTileBuffer2 = new ArrayBuffer((w * h) << 2);
       _hashTileBuffer = new Uint8Array(_hashTileBuffer2);
     }
     let dstOffset = 0;
-    for (let i = 0; i < h; ++i, srcOffset += (imageWidth << 2)) {
+    for (let i = 0; i < h; ++i, srcOffset += imageWidth << 2) {
       let srcOffset2 = srcOffset;
       for (let j = 0; j < w; ++j, srcOffset2 += 4, dstOffset += 4) {
         _hashTileBuffer[dstOffset] = imageData[srcOffset2];
-        _hashTileBuffer[dstOffset+1] = imageData[srcOffset2+1];
-        _hashTileBuffer[dstOffset+2] = imageData[srcOffset2+2];
-        _hashTileBuffer[dstOffset+3] = imageData[srcOffset2+3];
+        _hashTileBuffer[dstOffset + 1] = imageData[srcOffset2 + 1];
+        _hashTileBuffer[dstOffset + 2] = imageData[srcOffset2 + 2];
+        _hashTileBuffer[dstOffset + 3] = imageData[srcOffset2 + 3];
       }
     }
     return h32(_hashTileBuffer2, 0);
@@ -150,9 +166,7 @@ const ImageToTilesetCreator: Component<{
     }
   };
   return (
-    <div
-      style="width: 100%; height: 100%; overflow: auto;"
-    >
+    <div style="width: 100%; height: 100%; overflow: auto;">
       <div>
         <label class="input w-fit">
           <span class="label">Offset X:</span>
@@ -198,11 +212,8 @@ const ImageToTilesetCreator: Component<{
             size={4}
           />
         </label>
-        <br/>
-        <button
-          class="btn"
-          onClick={() => performMatch()}
-        >
+        <br />
+        <button class="btn" onClick={() => performMatch()}>
           Find Unique Tiles
         </button>
       </div>

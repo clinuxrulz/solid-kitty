@@ -157,9 +157,7 @@ export class Level {
     );
     //
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-      return screenPt
-        .multScalar(1.0 / state.scale)
-        .add(state.pan);
+      return screenPt.multScalar(1.0 / state.scale).add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
       return worldPt.sub(state.pan).multScalar(state.scale);
@@ -355,21 +353,24 @@ export class Level {
       setMode(() => new InsertTileMode(modeParams));
     };
     const launchImageTileMatcher = () => {
-      setState("overlayApp", new NoTrack({
-        Title: () => "Image Tile Matcher",
-        View: () => (
-          <ImageTileMatcher
-            textureAtlases={(() => {
-              let result = textureAtlases();
-              if (result.type != "Success") {
-                return [];
-              }
-              return result.value;
-            })()}
-            levelComponent={levelComponent()}
-          />
-        ),
-      }));
+      setState(
+        "overlayApp",
+        new NoTrack({
+          Title: () => "Image Tile Matcher",
+          View: () => (
+            <ImageTileMatcher
+              textureAtlases={(() => {
+                let result = textureAtlases();
+                if (result.type != "Success") {
+                  return [];
+                }
+                return result.value;
+              })()}
+              levelComponent={levelComponent()}
+            />
+          ),
+        }),
+      );
     };
     let mode = createMemo<Mode>(() => {
       if (state.mkMode == undefined) {
@@ -404,8 +405,7 @@ export class Level {
         return;
       }
       let newScale = state.scale * factor;
-      let newPan = pt
-        .sub(state.mousePos.multScalar(1.0 / newScale));
+      let newPan = pt.sub(state.mousePos.multScalar(1.0 / newScale));
       batch(() => {
         setState("pan", newPan);
         setState("scale", state.scale * factor);
@@ -446,9 +446,7 @@ export class Level {
           if (state.touches.length != 2) {
             gap = undefined;
           } else {
-            gap = state.touches[1].pos
-              .sub(state.touches[0].pos)
-              .length();
+            gap = state.touches[1].pos.sub(state.touches[0].pos).length();
           }
           let delta = state.touchPanZoomFrom.sub(pt);
           let initScale = state.touchPanZoomInitScale;
@@ -473,9 +471,7 @@ export class Level {
       if (state.touches.length != 2) {
         initGap = undefined;
       } else {
-        initGap = state.touches[1].pos
-          .sub(state.touches[0].pos)
-          .length();
+        initGap = state.touches[1].pos.sub(state.touches[0].pos).length();
       }
       let pt = screenPtToWorldPt(state.mousePos);
       if (pt == undefined) {
@@ -602,7 +598,7 @@ export class Level {
             {
               display: "flex",
               "flex-direction": "column",
-              "position": "relative",
+              position: "relative",
             },
           )}
         >
@@ -664,10 +660,7 @@ export class Level {
                 );
               })()}
             </button>
-            <button
-              class="btn"
-              onClick={() => launchImageTileMatcher()}
-            >
+            <button class="btn" onClick={() => launchImageTileMatcher()}>
               Image Tile Matcher
             </button>
           </div>

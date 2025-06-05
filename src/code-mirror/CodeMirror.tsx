@@ -1,6 +1,15 @@
 import { type WorkerShape } from "@valtown/codemirror-ts/worker";
 import * as Comlink from "comlink";
-import { Component, createComputed, createMemo, mapArray, on, onCleanup, onMount, untrack } from "solid-js";
+import {
+  Component,
+  createComputed,
+  createMemo,
+  mapArray,
+  on,
+  onCleanup,
+  onMount,
+  untrack,
+} from "solid-js";
 import { basicSetup, EditorView } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import {
@@ -12,7 +21,11 @@ import {
   tsSync,
   tsTwoslash,
 } from "@valtown/codemirror-ts";
-import { acceptCompletion, autocompletion, completionStatus } from "@codemirror/autocomplete";
+import {
+  acceptCompletion,
+  autocompletion,
+  completionStatus,
+} from "@codemirror/autocomplete";
 import { keymap, EditorView as EditorView2 } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { indentLess, indentMore } from "@codemirror/commands";
@@ -24,7 +37,9 @@ import * as Automerge from "@automerge/automerge-repo";
 const innerWorker = new Worker(new URL("./worker.ts", import.meta.url), {
   type: "module",
 });
-const worker = Comlink.wrap<WorkerShape & { deleteFile: (path: string) => void, }>(innerWorker);
+const worker = Comlink.wrap<
+  WorkerShape & { deleteFile: (path: string) => void }
+>(innerWorker);
 await worker.initialize();
 
 let relPathToModelAndFileMap = new ReactiveMap<
@@ -132,19 +147,18 @@ const CodeMirror: Component<{
           worker: worker,
           path: path,
         }),
-        autocompletion({override: [tsAutocomplete()]}),
+        autocompletion({ override: [tsAutocomplete()] }),
         tsSync(),
         tsLinterWorker(),
         tsHover(),
-        tsGoto({
-        }),
+        tsGoto({}),
         tsTwoslash(),
         keymap.of([
           {
-            key: 'Tab',
+            key: "Tab",
             preventDefault: true,
             shift: indentLess,
-            run: e => {
+            run: (e) => {
               if (!completionStatus(e.state)) return indentMore(e);
               return acceptCompletion(e);
             },
@@ -159,18 +173,20 @@ const CodeMirror: Component<{
       ],
       parent: div,
     });
-    createComputed(on(
-      () => props.path,
-      (path) => {
-        if (path == undefined) {
-          return;
-        }
-        let x = editor.state.facet(tsFacet);
-        if (x != null) {
-          x.path = path;
-        }
-      }
-    ));
+    createComputed(
+      on(
+        () => props.path,
+        (path) => {
+          if (path == undefined) {
+            return;
+          }
+          let x = editor.state.facet(tsFacet);
+          if (x != null) {
+            x.path = path;
+          }
+        },
+      ),
+    );
     let modelAndFile = createMemo(() => {
       if (props.path == undefined) {
         return undefined;
@@ -183,11 +199,13 @@ const CodeMirror: Component<{
           return;
         }
         let file = modelAndFile.file;
-        editor.dispatch({changes: {
-          from: 0,
-          to: editor.state.doc.length,
-          insert: untrack(() => file.doc.source),
-        }});
+        editor.dispatch({
+          changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: untrack(() => file.doc.source),
+          },
+        });
         let skipIt = false;
         let skipIt2 = false;
         changeHandler = () => {
@@ -196,7 +214,7 @@ const CodeMirror: Component<{
           }
           skipIt2 = true;
           try {
-            let source =  editor.state.doc.toString();
+            let source = editor.state.doc.toString();
             if (source == undefined) {
               return;
             }
@@ -216,11 +234,13 @@ const CodeMirror: Component<{
               }
               skipIt = true;
               try {
-                editor.dispatch({changes: {
-                  from: 0,
-                  to: editor.state.doc.length,
-                  insert: source,
-                }});
+                editor.dispatch({
+                  changes: {
+                    from: 0,
+                    to: editor.state.doc.length,
+                    insert: source,
+                  },
+                });
               } finally {
                 skipIt = false;
               }
@@ -235,10 +255,9 @@ const CodeMirror: Component<{
       ref={div}
       style="all: initial; width: 100%; height: 100%; overflow: auto;"
     >
-      <div ref={div}/>
+      <div ref={div} />
     </div>
   );
 };
 
 export default CodeMirror;
-

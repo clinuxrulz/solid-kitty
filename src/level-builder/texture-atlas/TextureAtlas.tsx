@@ -59,11 +59,11 @@ type State = {
   autoSaving: boolean;
   world: IEcsWorld;
   overlayApp:
-        | NoTrack<{
-            Title: Component;
-            View: Component;
-          }>
-        | undefined;
+    | NoTrack<{
+        Title: Component;
+        View: Component;
+      }>
+    | undefined;
 };
 
 const AUTO_SAVE_TIMEOUT = 2000;
@@ -240,9 +240,7 @@ export class TextureAtlas {
     );
     //
     let screenPtToWorldPt = (screenPt: Vec2): Vec2 | undefined => {
-      return screenPt
-        .multScalar(1.0 / state.scale)
-        .add(state.pan);
+      return screenPt.multScalar(1.0 / state.scale).add(state.pan);
     };
     let worldPtToScreenPt = (worldPt: Vec2): Vec2 | undefined => {
       return worldPt.sub(state.pan).multScalar(state.scale);
@@ -327,8 +325,7 @@ export class TextureAtlas {
           return;
         }
         let newScale = state.scale * factor;
-        let newPan = pt
-          .sub(state.mousePos.multScalar(1.0 / newScale));
+        let newPan = pt.sub(state.mousePos.multScalar(1.0 / newScale));
         batch(() => {
           setState("pan", newPan);
           setState("scale", state.scale * factor);
@@ -369,9 +366,7 @@ export class TextureAtlas {
             if (state.touches.length != 2) {
               gap = undefined;
             } else {
-              gap = state.touches[1].pos
-                .sub(state.touches[0].pos)
-                .length();
+              gap = state.touches[1].pos.sub(state.touches[0].pos).length();
             }
             let delta = state.touchPanZoomFrom.sub(pt);
             let initScale = state.touchPanZoomInitScale;
@@ -396,9 +391,7 @@ export class TextureAtlas {
         if (state.touches.length != 2) {
           initGap = undefined;
         } else {
-          initGap = state.touches[1].pos
-            .sub(state.touches[0].pos)
-            .length();
+          initGap = state.touches[1].pos.sub(state.touches[0].pos).length();
         }
         let pt = screenPtToWorldPt(state.mousePos);
         if (pt == undefined) {

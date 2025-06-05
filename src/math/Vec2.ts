@@ -16,24 +16,15 @@ export class Vec2 {
   static readonly unitY: Vec2 = Vec2.create(0, 1);
 
   add(other: Vec2): Vec2 {
-    return Vec2.create(
-      this.x + other.x,
-      this.y + other.y,
-    );
+    return Vec2.create(this.x + other.x, this.y + other.y);
   }
 
   sub(other: Vec2): Vec2 {
-    return Vec2.create(
-      this.x - other.x,
-      this.y - other.y,
-    );
+    return Vec2.create(this.x - other.x, this.y - other.y);
   }
 
   multScalar(s: number): Vec2 {
-    return Vec2.create(
-      this.x * s,
-      this.y * s,
-    );
+    return Vec2.create(this.x * s, this.y * s);
   }
 
   cross(other: Vec2): number {
