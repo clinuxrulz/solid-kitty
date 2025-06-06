@@ -23,6 +23,7 @@ import {
   createMemo,
   createRoot,
   getListener,
+  getOwner,
   mapArray,
   on,
   onCleanup,
@@ -41,7 +42,7 @@ class ReactiveCache<A> {
   >();
 
   cached(key: string, mkValue: () => A): Accessor<A> {
-    if (getListener() == null) {
+    if (getOwner() == null) {
       let result = this.map.get(key);
       if (result != undefined) {
         return result.cache;

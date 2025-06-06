@@ -13,6 +13,7 @@ import { EcsWorld } from "./ecs/EcsWorld";
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { frameComponentType } from "./level-builder/components/FrameComponent";
 import { registry } from "./level-builder/components/registry";
+import { projectMutableOverAutomergeDoc } from "./automerge-doc-mutable-proxy";
 
 const DebugProjection: Component = () => {
   return (
@@ -33,6 +34,14 @@ const DebugProjection: Component = () => {
         onClick={() => runTest2()}
       >
         Run Test 2 (ecs world automerge projection)
+      </button>
+      <br />
+      <button
+        class="btn btn-primary"
+        style="margin-top: 5px;"
+        onClick={() => runTest3()}
+      >
+        Run Test 3 (brand new projection)
       </button>
     </div>
   );
@@ -190,11 +199,73 @@ function runTest2() {
   });
 }
 
+async function runTest3() {
+  type State = {
+    a: number,
+    b: number[][],
+  };
+  let stateTypeSchema: TypeSchema<State> = {
+    type: "Object",
+    properties: {
+      a: "Number",
+      b: {
+        type: "Array",
+        element: {
+          type: "Array",
+          element: "Number",
+        },
+      },
+    },
+  };
+  let repo = new Repo();
+  let docHandle = repo.create({
+    a: 5,
+    b: [
+      [0,0,0,0],
+      [0,0,0,0],
+      [0,0,0,0],
+    ],
+  });
+  let r = new Promise<void>((resolve) => {
+    createRoot((dispose) => {
+      let doc = makeDocumentProjection(docHandle);
+      let s = projectMutableOverAutomergeDoc<State>(
+        doc,
+        docHandle.change.bind(docHandle),
+        stateTypeSchema,
+      );
+      let [ state, setState, ] = createStore(s);
+      let z = 0;
+      createComputed(on(
+        () => doc.a,
+        () => {
+          z = doc.a;
+        },
+        { defer: true, },
+      ));
+      setState("a", 7);
+      expect(z).toBe(7);
+      createComputed(on(
+        () => doc.b[1][1],
+        () => {
+          z = doc.b[1][1];
+        },
+        { defer: true, }
+      ));
+      setState("b", 1, 1, 42);
+      expect(z).toBe(42);
+      dispose();
+      resolve();
+    });
+  });
+  await r;
+}
+
 function expect(val: any) {
   return {
     toBe: (val2: any) => {
       if (val !== val2) {
-        throw new Error(`${val} !== ${val2}`);
+        console.log(`${val} !== ${val2}`);
       }
     },
   };

@@ -4,6 +4,7 @@ import {
   createMemo,
   createRoot,
   getListener,
+  getOwner,
   on,
   onCleanup,
 } from "solid-js";
@@ -18,6 +19,13 @@ export function makeRefCountedMakeReactiveObject<A>(
   let dispose: () => void = () => {};
   let refCount = 0;
   return () => {
+    if (getOwner() == null) {
+      if (cache != undefined) {
+        return cache();
+      } else {
+        return fn();
+      }
+    }
     if (cache == undefined) {
       let { cache: cache2, dispose: dispose2 } = createRoot((dispose) => {
         return {
