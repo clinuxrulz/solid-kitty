@@ -7,7 +7,7 @@ import {
   TypeSchema,
 } from "../TypeSchema";
 import { Accessor, createComputed, createMemo, on, untrack } from "solid-js";
-import { projectMutableOverAutomergeDoc } from "../automerge-doc-mutable-proxy";
+import { projectMutableOverAutomergeDoc, projectMutableOverAutomergeDocV2 } from "../automerge-doc-mutable-proxy";
 
 export interface IsEcsComponentType {
   readonly typeName: string;
@@ -39,7 +39,7 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
     json: any,
     changeJson: (callback: (json: any) => void) => void,
   ): Result<EcsComponent<S>> {
-    let projection = projectMutableOverAutomergeDoc(
+    let projection = projectMutableOverAutomergeDocV2(
       json,
       changeJson,
       this.typeSchema,

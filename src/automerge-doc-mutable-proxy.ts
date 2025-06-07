@@ -6,7 +6,7 @@ import {
   TypeSchema,
 } from "./TypeSchema";
 
-function test<T extends object>(
+export function projectMutableOverAutomergeDocV2<T extends object>(
   json: any,
   updateJson: (cb: (json: any) => any) => void,
   typeSchema: TypeSchema<T>
