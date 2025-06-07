@@ -18,6 +18,42 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
   return new Proxy<T>(
     {} as T,
     {
+      defineProperty(target, property, attributes) {
+        debugger;
+        return Reflect.defineProperty(target, property, attributes);
+      },
+      deleteProperty(target, p) {
+        debugger;
+        return Reflect.deleteProperty(target, p);
+      },
+      getOwnPropertyDescriptor(target, p) {
+        debugger;
+        return Reflect.getOwnPropertyDescriptor(target, p);
+      },
+      getPrototypeOf(target) {
+        debugger;
+        return Reflect.getPrototypeOf(target);
+      },
+      has(target, p) {
+        debugger;
+        return Reflect.has(target, p);
+      },
+      isExtensible(target) {
+        debugger;
+        return Reflect.isExtensible(target);
+      },
+      ownKeys(target) {
+        debugger;
+        return Reflect.ownKeys(target);
+      },
+      preventExtensions(target) {
+        debugger;
+        return Reflect.preventExtensions(target);
+      },
+      setPrototypeOf(target, v) {
+        debugger;
+        return Reflect.setPrototypeOf(target, v);
+      },
       get(target, p, receiver) {
         if (typeof p == "symbol") {
           return (target as any)[p];
