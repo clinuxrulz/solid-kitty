@@ -44,7 +44,7 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
       },
       ownKeys(target) {
         debugger;
-        return Reflect.ownKeys(target);
+        return Reflect.ownKeys(properties);
       },
       preventExtensions(target) {
         debugger;
