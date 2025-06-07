@@ -50,7 +50,10 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
       },
       ownKeys(target) {
         console.log("ownKeys", target);
-        return Reflect.ownKeys(properties);
+        return [
+          ...Reflect.ownKeys(properties),
+          ...Reflect.ownKeys(target),
+        ];
       },
       preventExtensions(target) {
         console.log("preventExtensions", target);
