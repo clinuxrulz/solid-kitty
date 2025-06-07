@@ -204,6 +204,39 @@ export function projectMutableOverAutomergeDocArrayV2<T extends object>(
         if (typeof p == "symbol") {
           return (target as any)[p];
         }
+        if (p === "findIndex") {
+          return function(predicate: (value: any, index: number, obj: any[]) => boolean, thisArg?: any) {
+            console.log("Intercepted findIndex call!");
+
+            const tempArray = [];
+            for (let i = 0; i < json.length; i++) {
+              if ((elementSchema as any).type == "Object") {
+                tempArray.push(projectMutableOverAutomergeDocV2(
+                  json[i],
+                  (cb) => updateJson((json2) => cb(json2[i])),
+                  elementSchema as any,
+                ));
+              } else if ((elementSchema as any).type == "Array") {
+                tempArray.push(projectMutableOverAutomergeDocArrayV2(
+                  json[i],
+                  (cb) => updateJson((json2) => cb(json2[i])),
+                  elementSchema as any,
+                ));
+              } else {
+                let r = loadFromJsonViaTypeSchema(
+                  elementSchema as any,
+                  json[i]
+                );
+                if (r.type == "Err") {
+                  tempArray.push(makeDefaultViaTypeSchema(elementSchema as any));
+                } else {
+                  tempArray.push(r.value);
+                }
+              }
+            }
+            return Array.prototype.findIndex.call(tempArray, predicate, thisArg);
+          };
+        }
         if (typeof p == "string") {
           let idx = (typeof p == "string") ? Number.parseInt(p) : undefined;
           if (Number.isNaN(idx)) {
