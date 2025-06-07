@@ -15,7 +15,7 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
     throw new Error("Expected object.");
   }
   let properties = typeSchema.properties;
-  return new Proxy<T>(
+  let result = new Proxy<T>(
     {} as T,
     {
       defineProperty(target, property, attributes) {
@@ -29,7 +29,13 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
       getOwnPropertyDescriptor(target, p) {
         console.log("getOwnPropertyDescriptor", target, p);
         if ((properties as any)[p] != undefined) {
-          return Reflect.getOwnPropertyDescriptor(properties, p);
+          let r = Reflect.getOwnPropertyDescriptor(properties, p);
+          if (r == undefined) {
+            return;
+          }
+          r = { ...r, };
+          r.value = (result as any)[p];
+          return r;
         }
         return Reflect.getOwnPropertyDescriptor(target, p);
       },
@@ -99,6 +105,7 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
       },
     },
   );
+  return result;
 }
 
 let wrappedMap = new WeakMap<any, any>();
