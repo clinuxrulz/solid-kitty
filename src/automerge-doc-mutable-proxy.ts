@@ -19,42 +19,45 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
     {} as T,
     {
       defineProperty(target, property, attributes) {
-        debugger;
+        console.log("defineProperty", target, property, attributes);
         return Reflect.defineProperty(target, property, attributes);
       },
       deleteProperty(target, p) {
-        debugger;
+        console.log("deleteProperty", target, p);
         return Reflect.deleteProperty(target, p);
       },
       getOwnPropertyDescriptor(target, p) {
-        debugger;
+        console.log("getOwnPropertyDescriptor", target, p);
         if ((properties as any)[p] != undefined) {
           return Reflect.getOwnPropertyDescriptor(properties, p);
         }
         return Reflect.getOwnPropertyDescriptor(target, p);
       },
       getPrototypeOf(target) {
-        debugger;
+        console.log("getPrototypeOf", target);
         return Reflect.getPrototypeOf(target);
       },
       has(target, p) {
-        debugger;
+        console.log("has", target);
+        if ((properties as any)[p] != undefined) {
+          return true;
+        }
         return Reflect.has(target, p);
       },
       isExtensible(target) {
-        debugger;
+        console.log("isExtendable", target);
         return Reflect.isExtensible(target);
       },
       ownKeys(target) {
-        debugger;
+        console.log("ownKeys", target);
         return Reflect.ownKeys(properties);
       },
       preventExtensions(target) {
-        debugger;
+        console.log("preventExtensions", target);
         return Reflect.preventExtensions(target);
       },
       setPrototypeOf(target, v) {
-        debugger;
+        console.log("setPrototypeOf", target, v);
         return Reflect.setPrototypeOf(target, v);
       },
       get(target, p, receiver) {
