@@ -71,6 +71,7 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
             if (r.type == "Err") {
               return makeDefaultViaTypeSchema(propertySchema as any);
             }
+            return r.value;
           }
         }
         return Reflect.get(target, p, receiver);
