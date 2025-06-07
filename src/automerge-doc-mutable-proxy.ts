@@ -1,6 +1,7 @@
 import {
   equalsViaTypeSchema,
   loadFromJsonViaTypeSchema,
+  makeDefaultViaTypeSchema,
   saveToJsonViaTypeSchema,
   TypeSchema,
 } from "./TypeSchema";
@@ -20,7 +21,16 @@ function test<T extends object>(
     {
       get(target, p, receiver) {
         if (typeof p == "string") {
-          let property = (properties as any)[p];
+          let propertySchema = (properties as any)[p] as TypeSchema<any>;
+          if (propertySchema != undefined) {
+            let r = loadFromJsonViaTypeSchema(
+              propertySchema as any,
+              json[p]
+            );
+            if (r.type == "Err") {
+              return makeDefaultViaTypeSchema(propertySchema as any);
+            }
+          }
         }
         return Reflect.get(target, p, receiver);
       },
