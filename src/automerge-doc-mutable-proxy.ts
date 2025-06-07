@@ -35,6 +35,13 @@ function test<T extends object>(
         return Reflect.get(target, p, receiver);
       },
       set(target, p, newValue, receiver) {
+        if (typeof p == "string") {
+          let propertySchema = (properties as any)[p] as TypeSchema<any>;
+          if (propertySchema != undefined) {
+            let r = saveToJsonViaTypeSchema(propertySchema, newValue);
+            updateJson((json2) => json2[p] = r);
+          }
+        }
         return Reflect.set(target, p, newValue, receiver);
       },
     },
