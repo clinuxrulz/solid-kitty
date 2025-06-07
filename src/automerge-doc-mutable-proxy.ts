@@ -5,6 +5,32 @@ import {
   TypeSchema,
 } from "./TypeSchema";
 
+function test<T extends object>(
+  json: any,
+  updateJson: (cb: (json: any) => any) => void,
+  typeSchema: TypeSchema<T>
+): T {
+  if (typeof typeSchema != "object" || typeSchema.type != "Object") {
+    throw new Error("Expected object.");
+  }
+  let properties = typeSchema.properties;
+  let dummy: T = {} as T;
+  return new Proxy<T>(
+    dummy,
+    {
+      get(target, p, receiver) {
+        if (typeof p == "string") {
+          let property = (properties as any)[p];
+        }
+        return Reflect.get(target, p, receiver);
+      },
+      set(target, p, newValue, receiver) {
+        return Reflect.set(target, p, newValue, receiver);
+      },
+    },
+  );
+}
+
 let wrappedMap = new WeakMap<any, any>();
 
 function isWrapped(x: any): boolean {
