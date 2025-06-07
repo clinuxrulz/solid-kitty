@@ -28,6 +28,9 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
       },
       getOwnPropertyDescriptor(target, p) {
         debugger;
+        if ((properties as any)[p] != undefined) {
+          return Reflect.getOwnPropertyDescriptor(properties, p);
+        }
         return Reflect.getOwnPropertyDescriptor(target, p);
       },
       getPrototypeOf(target) {
