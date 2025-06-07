@@ -202,6 +202,19 @@ export function projectMutableOverAutomergeDocArrayV2<T extends object>(
             idx = undefined;
           }
           if (idx != undefined && 0 <= idx && idx < json.length) {
+            if ((elementSchema as any).type == "Object") {
+              return projectMutableOverAutomergeDocV2(
+                json[idx],
+                (cb) => updateJson((json2) => cb(json2[p])),
+                elementSchema as any,
+              );
+            } else if ((elementSchema as any).type == "Array") {
+              return projectMutableOverAutomergeDocArrayV2(
+                json[idx],
+                (cb) => updateJson((json2) => cb(json2[p])),
+                elementSchema as any,
+              );
+            }
             let r = loadFromJsonViaTypeSchema(
               elementSchema as any,
               json[idx]
