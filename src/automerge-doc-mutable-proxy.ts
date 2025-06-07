@@ -269,6 +269,7 @@ export function projectMutableOverAutomergeDocArrayV2<T extends object>(
         return Reflect.get(target, p, receiver);
       },
       set(target, p, newValue, receiver) {
+        console.log("set", target, p, newValue, receiver);
         if (typeof p == "symbol") {
           (target as any)[p] = newValue;
           return true;
