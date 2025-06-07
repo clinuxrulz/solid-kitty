@@ -130,6 +130,11 @@ export function projectMutableOverAutomergeDocArrayV2<T extends object>(
     throw new Error("Expected object.");
   }
   let elementSchema = typeSchema.element;
+  let iterator = function*() {
+    for (let i = 0; i < json.length; ++i) {
+      yield (result as any)[i];
+    }
+  };
   let result = new Proxy<T>(
     [undefined] as T,
     {
@@ -193,6 +198,9 @@ export function projectMutableOverAutomergeDocArrayV2<T extends object>(
         return Reflect.setPrototypeOf(target, v);
       },
       get(target, p, receiver) {
+        if (p == Symbol.iterator) {
+          return iterator;
+        }
         if (typeof p == "symbol") {
           return (target as any)[p];
         }
