@@ -13,7 +13,7 @@ import { EcsWorld } from "./ecs/EcsWorld";
 import { EcsWorldAutomergeProjection } from "./ecs/EcsWorldAutomergeProjection";
 import { frameComponentType } from "./level-builder/components/FrameComponent";
 import { registry } from "./level-builder/components/registry";
-import { projectMutableOverAutomergeDoc } from "./automerge-doc-mutable-proxy";
+import { projectMutableOverAutomergeDoc, projectMutableOverAutomergeDocV2 } from "./automerge-doc-mutable-proxy";
 
 const DebugProjection: Component = () => {
   return (
@@ -229,7 +229,7 @@ async function runTest3() {
   let r = new Promise<void>((resolve) => {
     createRoot((dispose) => {
       let doc = makeDocumentProjection(docHandle);
-      let s = projectMutableOverAutomergeDoc<State>(
+      let s = projectMutableOverAutomergeDocV2<State>(
         doc,
         docHandle.change.bind(docHandle),
         stateTypeSchema,
