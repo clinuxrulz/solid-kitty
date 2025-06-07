@@ -76,6 +76,19 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
         if (typeof p == "string") {
           let propertySchema = (properties as any)[p] as TypeSchema<any>;
           if (propertySchema != undefined) {
+            if ((propertySchema as any).type == "Object") {
+              return projectMutableOverAutomergeDocV2(
+                json[p],
+                (cb) => updateJson((json2) => cb(json2[p])),
+                propertySchema,
+              );
+            } else if ((propertySchema as any).type == "Array") {
+              return projectMutableOverAutomergeDocArrayV2(
+                json[p],
+                (cb) => updateJson((json2) => cb(json2[p])),
+                propertySchema,
+              );
+            }
             let r = loadFromJsonViaTypeSchema(
               propertySchema as any,
               json[p]
