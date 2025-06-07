@@ -15,11 +15,13 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
     throw new Error("Expected object.");
   }
   let properties = typeSchema.properties;
-  let dummy: T = {} as T;
   return new Proxy<T>(
-    dummy,
+    {} as T,
     {
       get(target, p, receiver) {
+        if (typeof p == "symbol") {
+          return (target as any)[p];
+        }
         if (typeof p == "string") {
           let propertySchema = (properties as any)[p] as TypeSchema<any>;
           if (propertySchema != undefined) {
@@ -35,11 +37,16 @@ export function projectMutableOverAutomergeDocV2<T extends object>(
         return Reflect.get(target, p, receiver);
       },
       set(target, p, newValue, receiver) {
+        if (typeof p == "symbol") {
+          (target as any)[p] = newValue;
+          return true;
+        }
         if (typeof p == "string") {
           let propertySchema = (properties as any)[p] as TypeSchema<any>;
           if (propertySchema != undefined) {
             let r = saveToJsonViaTypeSchema(propertySchema, newValue);
             updateJson((json2) => json2[p] = r);
+            return true;
           }
         }
         return Reflect.set(target, p, newValue, receiver);
