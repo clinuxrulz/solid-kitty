@@ -22,6 +22,7 @@ export default defineConfig({
         "./src/ecs/**/*.ts",
         "./src/math/**/*.ts",
         "./src/systems/**/*.ts",
+        "./src/systems/**/*.tsx",
         "./src/lib.ts",
         "./src/TypeSchema.ts",
         "./src/Cont.ts",
