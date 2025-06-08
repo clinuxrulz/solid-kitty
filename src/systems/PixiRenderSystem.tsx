@@ -298,7 +298,7 @@ export class PixiRenderSystem {
               if (targetPos.y < minY) {
                 newCameraPosY = cameraPos2.y + (targetPos.y - minY);
                 cameraPosChanged = true;
-              } else if (targetPos.x > maxY) {
+              } else if (targetPos.y > maxY) {
                 newCameraPosY = cameraPos2.y + (targetPos.y - maxY);
                 cameraPosChanged = true;
               }
