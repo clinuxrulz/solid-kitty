@@ -16,6 +16,7 @@ export declare class EcsComponentType<S extends object> implements IsEcsComponen
         typeSchema: TypeSchema<S>;
     });
     create(s: S): EcsComponent<S>;
+    createJsonProjectionV3(json: any, changeJson: (callback: (json: any) => void) => void): Result<EcsComponent<S>>;
     createJsonProjectionV2(json: any, changeJson: (callback: (json: any) => void) => void): Result<EcsComponent<S>>;
     createJsonProjection(json: Accessor<any>, setJson: (x: any) => void): Accessor<Result<EcsComponent<S>>>;
 }

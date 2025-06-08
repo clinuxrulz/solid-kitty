@@ -3,7 +3,7 @@ import { Complex } from './Complex';
 export declare class Transform2D {
     readonly origin: Vec2;
     readonly orientation: Complex;
-    static identity: Transform2D;
+    static readonly identity: Transform2D;
     constructor(origin: Vec2, orientation: Complex);
     static create(origin: Vec2, orientation: Complex): Transform2D;
     get u(): Vec2;
