@@ -271,6 +271,10 @@ export class CollisionSystem {
                 if (data == undefined) {
                   continue;
                 }
+                let cellFrame = lookupFrameById(data.frameId);
+                if (cellFrame == undefined) {
+                  continue;
+                }
                 let collisionId = world.createEntity([
                   transform2DComponentType.create({
                     transform: Transform2D.create(
@@ -283,9 +287,10 @@ export class CollisionSystem {
                   }),
                   tileCollisionComponentType.create({
                     textureAtlasFilename: data.textureAtlasFilename,
-                    frameName: frame.name,
+                    frameName: cellFrame.name,
                     width: tileWidth,
                     height: tileHeight,
+                    metaData: cellFrame.metaData,
                   }),
                 ]);
                 world.attachToParent(collisionId, spriteEntity);
