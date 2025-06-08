@@ -249,6 +249,7 @@ export class PixiRenderSystem {
         if (!areAllImagesLoaded) {
           return undefined;
         }
+        pixiApp.stage.sortableChildren = true;
         {
           let scopeDone = false;
           onCleanup(() => {
@@ -439,6 +440,7 @@ export class PixiRenderSystem {
                     NonNullable<ReturnType<typeof frame>>
                   >;
                   let sprite = new Sprite();
+                  sprite.zIndex = 1;
                   createComputed(() => {
                     let scale2 = scale() ?? 1.0;
                     sprite.texture = spriteSheet2().textures[frameId2()];
