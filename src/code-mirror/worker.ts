@@ -109,6 +109,7 @@ Comlink.expose(
   createWorker2(async function () {
     // @ts-ignore
     const ts = await import(
+      // @ts-ignore
       /* vite-ignore */ "https://esm.sh/typescript@5.7.2"
     );
     const fsMap = new Map<string, string>();

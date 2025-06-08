@@ -44,11 +44,11 @@ export class EcsComponentType<S extends object> implements IsEcsComponentType {
       changeJson,
       this.typeSchema,
     );
-    let [state, setState] = untrack(() => createStore(projection));
+    let [_state, setState] = untrack(() => createStore(projection));
     return ok(
       new EcsComponent({
         type: this,
-        state,
+        state: projection,
         setState,
       }),
     );

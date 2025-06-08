@@ -5,7 +5,7 @@ import {
   TypeSchema,
   vec2TypeSchema,
 } from "./TypeSchema";
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { createComputed } from "solid-js";
 import { Repo } from "@automerge/automerge-repo";
 import { makeDocumentProjection } from "solid-automerge";
@@ -254,6 +254,10 @@ async function runTest3() {
       ));
       setState("b", 1, 1, 42);
       expect(z).toBe(42);
+      setState("b", 1, produce((x) => {
+        x.push(42);
+      }));
+      expect(doc.b[1][4]).toBe(42);
       dispose();
       resolve();
     });

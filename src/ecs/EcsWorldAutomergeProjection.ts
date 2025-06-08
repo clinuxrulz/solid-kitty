@@ -142,7 +142,7 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
     for (let component of components) {
       let component2 = component as EcsComponent<object>;
       let componentTypeName = component2.type.typeName;
-      let component3 = component2.type.createJsonProjectionV2(
+      let component3 = component2.type.createJsonProjectionV3(
         untrack(() => this.doc[entityId][componentTypeName]),
         (callback: (json: any) => void) =>
           this.docHandle.change((doc2) =>
@@ -182,7 +182,7 @@ export class EcsWorldAutomergeProjection implements IEcsWorld {
     if (component == undefined) {
       return undefined;
     }
-    let r = componentType.createJsonProjectionV2(component, (callback) => {
+    let r = componentType.createJsonProjectionV3(component, (callback) => {
       this.docHandle.change((doc) => {
         let component = doc?.[entityId]?.[componentType.typeName];
         if (component == undefined) {
