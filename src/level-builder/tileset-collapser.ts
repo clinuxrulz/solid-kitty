@@ -163,11 +163,11 @@ export function collapseTileset(
         return entropy;
     };
     let writeResultCell = (xIdx: number, yIdx: number, tile: number) => {
-        while (result.length < yIdx) {
+        while (result.length <= yIdx) {
             result.push([]);
         }
         let row = result[yIdx];
-        while (row.length < xIdx) {
+        while (row.length <= xIdx) {
             row.push(0);
         }
         row[xIdx] = tile;
@@ -178,6 +178,9 @@ export function collapseTileset(
         let maxEntropyAtXIdx: number | undefined = undefined;
         for (let yIdx = 0; yIdx <= result.length+1; ++yIdx) {
             for (let xIdx = 0; xIdx < numTilesPerRow; ++xIdx) {
+                if ((result[yIdx]?.[xIdx] ?? 0) != 0) {
+                    continue;
+                }
                 let entropy = getEntropyAt(xIdx, yIdx);
                 if (maxEntropy == undefined || entropy > maxEntropy) {
                     maxEntropy = entropy;
@@ -203,7 +206,7 @@ export function collapseTileset(
                 continue;
             }
             if (maxProbability == undefined || p > maxProbability) {
-                maxProbability == p;
+                maxProbability = p;
                 maxProbabilityTile = i;
             }
         }

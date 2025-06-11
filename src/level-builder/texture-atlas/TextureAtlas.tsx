@@ -592,6 +592,10 @@ export class TextureAtlas {
                           <ImageToTilesetCreator
                             world={state.world}
                             image={image}
+                            overwriteImage={(newImage) => {
+                              // TODO: save over the current image in automerge
+                              setImage(newImage);
+                            }}
                           />
                         )}
                       </Show>

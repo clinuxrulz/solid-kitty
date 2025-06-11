@@ -20,6 +20,7 @@ import { LevelState } from "../components/LevelComponent";
 import { EcsComponent } from "../../ecs/EcsComponent";
 import { EcsWorld, Vec2 } from "../../lib";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
+import { collapseTileset } from "../tileset-collapser";
 
 const ImageToTilesetCreator: Component<{
   /**
@@ -30,6 +31,10 @@ const ImageToTilesetCreator: Component<{
    * The image being used by the texture atlas
    */
   image: HTMLImageElement;
+  /**
+   * A callback to write to the image
+   */
+  overwriteImage: (x: HTMLImageElement) => void,
 }> = (props) => {
   let [state, setState] = createStore<{
     offsetXText: string;
@@ -165,6 +170,149 @@ const ImageToTilesetCreator: Component<{
       atY += tileHeight2;
     }
   };
+  let collapseTiles = () => {
+    let nextId = 1;
+    let tileHashToIdMap = new Map<string,number>();
+    let tileIdToHashMap = new Map<number,string>();
+    let tileHashToXY = new Map<string, { x: number, y: number, }>();
+    for (let tileHash of hasTileByHashSet) {
+      let tileId = nextId++;
+      tileHashToIdMap.set(tileHash, tileId);
+      tileIdToHashMap.set(tileId, tileHash);
+    }
+    let image = props.image;
+    let offsetX2 = offsetX();
+    if (offsetX2 == undefined) {
+      return;
+    }
+    let offsetY2 = offsetY();
+    if (offsetY2 == undefined) {
+      return;
+    }
+    let tileWidth2 = tileWidth();
+    if (tileWidth2 == undefined) {
+      return;
+    }
+    let tileHeight2 = tileHeight();
+    if (tileHeight2 == undefined) {
+      return;
+    }
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+    if (ctx == null) {
+      return;
+    }
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    ctx.drawImage(image, 0, 0);
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let imageData2 = imageData.data;
+    //
+    let map: number[][] = [];
+    {
+      let yIdx = 0;
+      let atY = offsetY2;
+      while (atY + tileHeight2 <= canvas.height) {
+        let xIdx = 0;
+        let atX = offsetX2;
+        let mapRow: number[] = [];
+        map.push(mapRow);
+        while (atX + tileWidth2 <= canvas.width) {
+          let hash = hashTile(
+            imageData2,
+            canvas.width,
+            atX,
+            atY,
+            tileWidth2,
+            tileHeight2,
+          );
+          let hash2 = hash.toString();
+          let tileId = tileHashToIdMap.get(hash2) ?? 0;
+          tileHashToXY.set(hash2, {
+            x: atX,
+            y: atY,
+          });
+          mapRow.push(tileId);
+          ++xIdx;
+          atX += tileWidth2;
+        }
+        ++yIdx;
+        atY += tileHeight2;
+      }
+    }
+    let numTilesPerRow = Math.ceil(Math.sqrt(nextId));
+    let result = collapseTileset(
+      numTilesPerRow,
+      map,
+    );
+    if (result.length == 0) {
+      return;
+    }
+    let resultCanvas = document.createElement("canvas");
+    resultCanvas.width = result[0].length * tileWidth2;
+    resultCanvas.height = result.length * tileHeight2;
+    let resultCtx = resultCanvas.getContext("2d");
+    if (resultCtx == undefined) {
+      return;
+    }
+    {
+      let atY = 0;
+      for (let yIdx = 0; yIdx < result.length; ++yIdx) {
+        let atX = 0;
+        let row = result[yIdx];
+        for (let xIdx = 0; xIdx < row.length; ++xIdx) {
+          let tileId = row[xIdx];
+          if (tileId == 0) {
+            continue;
+          }
+          let tileHash = tileIdToHashMap.get(tileId);
+          if (tileHash == undefined) {
+            continue;
+          }
+          let xy = tileHashToXY.get(tileHash);
+          if (xy == undefined) {
+            continue;
+          }
+          resultCtx.drawImage(
+            image,
+            xy.x,
+            xy.y,
+            tileWidth2,
+            tileHeight2,
+            atX,
+            atY,
+            tileWidth2,
+            tileHeight2,
+          );
+          atX += tileWidth2;
+        }
+        atY += tileHeight2;
+      }
+    }
+    resultCanvas.toBlob(
+      (blob) => {
+        if (blob == null) {
+          return;
+        }
+        let url = URL.createObjectURL(blob);
+        let resultImage = new Image(
+          resultCanvas.width,
+          resultCanvas.height
+        );
+        resultImage.src = url;
+        resultImage.onload = () => {
+          URL.revokeObjectURL(url);
+          console.log(resultImage);
+          props.overwriteImage(resultImage);
+        };
+        resultImage.onerror = () => {
+          URL.revokeObjectURL(url);
+        };
+      },
+      "image/png",
+    );
+    console.log(result);
+  };
   return (
     <div style="width: 100%; height: 100%; overflow: auto;">
       <div>
@@ -215,6 +363,9 @@ const ImageToTilesetCreator: Component<{
         <br />
         <button class="btn" onClick={() => performMatch()}>
           Find Unique Tiles
+        </button>
+        <button class="btn" onClick={() => collapseTiles()}>
+          Collapse Tiles
         </button>
       </div>
     </div>
