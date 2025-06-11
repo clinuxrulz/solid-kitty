@@ -211,6 +211,7 @@ export function collapseTileset(
             break;
         }
         writeResultCell(xIdx, yIdx, maxProbabilityTile);
+        finishedTiles.add(maxProbabilityTile);
     }
     return result;
 }
