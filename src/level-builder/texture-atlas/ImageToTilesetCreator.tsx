@@ -257,10 +257,10 @@ const ImageToTilesetCreator: Component<{
     }
     {
       let atY = 0;
-      for (let yIdx = 0; yIdx < result.length; ++yIdx) {
+      for (let yIdx = 0; yIdx < result.length; ++yIdx, atY += tileHeight2) {
         let atX = 0;
         let row = result[yIdx];
-        for (let xIdx = 0; xIdx < row.length; ++xIdx) {
+        for (let xIdx = 0; xIdx < row.length; ++xIdx, atX += tileWidth2) {
           let tileId = row[xIdx];
           if (tileId == 0) {
             continue;
@@ -284,9 +284,7 @@ const ImageToTilesetCreator: Component<{
             tileWidth2,
             tileHeight2,
           );
-          atX += tileWidth2;
         }
-        atY += tileHeight2;
       }
     }
     resultCanvas.toBlob(

@@ -76,7 +76,7 @@ export function collapseTileset(
                 accumulate(row[j], "Left", row[j - 1]);
             }
             if (j < row.length-1) {
-                accumulate(row[j], "Right", row[i + 1]);
+                accumulate(row[j], "Right", row[j + 1]);
             }
             if (rowAbove != undefined) {
                 if (j < rowAbove.length) {
@@ -117,38 +117,85 @@ export function collapseTileset(
         }
         return row[xIdx];
     };
-    let finishedTiles = new Set<number>();
-    let getProbabilitiesAt = (xIdx: number, yIdx: number): Map<number,number> => {
-        let probabilities = new Map<number,number>();
+    let getPossibleTile = (xIdx: number, yIdx: number)  => {
+        let possibleTiles = new Set<number>();
         for (let i = 1; i <= maxTileIndex; ++i) {
             if (finishedTiles.has(i)) {
                 continue;
             }
-            probabilities.set(i, 1.0);
+            possibleTiles.add(i);
         }
         let offset = { x: 0, y: 0, };
         for (let dir of dirs) {
             dirToOffset(dir, offset);
             let tileAtDir = readResultTileAt(xIdx + offset.x, yIdx + offset.y);
+            if (tileAtDir == 0) {
+                continue;
+            }
+            let oppositeDir = dirToOpposite(dir);
+            let key = `${tileAtDir}/${oppositeDir}`;
+            let tiles = model.get(key);
+            if (tiles == undefined) {
+                return undefined;
+            }
+            let next = new Set<number>(tiles.keys());
+            possibleTiles = possibleTiles.intersection(next);
+        }
+        return possibleTiles.values().next().value;
+    };
+    let finishedTiles = new Set<number>();
+    let getProbabilitiesAt = (xIdx: number, yIdx: number): Map<number,number> => {
+        let probabilities = new Map<number,number>();
+        let offset = { x: 0, y: 0, };
+        let first = true;
+        for (let dir of dirs) {
+            dirToOffset(dir, offset);
+            let tileAtDir = readResultTileAt(xIdx + offset.x, yIdx + offset.y);
+            if (tileAtDir == 0) {
+                continue;
+            }
             let oppositeDir = dirToOpposite(dir);
             let denominator = getTotal(tileAtDir, oppositeDir);
             if (denominator == 0) {
-                // ???: What to do here?
-                continue;
+                return new Map();
             }
+            let firstDir = first;
+            first = false;
             for (let i = 1; i <= maxTileIndex; ++i) {
                 if (finishedTiles.has(i)) {
                     continue;
                 }
                 let numerator = getTargetCount(tileAtDir, oppositeDir, i);
                 let p = numerator / denominator;
-                probabilities.set(i, (probabilities.get(i) ?? 0) * p);
+                if (firstDir) {
+                    probabilities.set(i, p);
+                } else {
+                    let p2 = probabilities.get(i);
+                    if (p2 != undefined) {
+                        probabilities.set(i, p * p2);
+                    }
+                }
+            }
+        }
+        if (first) {
+            let count = 0;
+            for (let i = 1; i <= maxTileIndex; ++i) {
+                if (finishedTiles.has(i)) {
+                    continue;
+                }
+                ++count;
+            }
+            let p = 1.0 / count;
+            for (let i = 1; i <= maxTileIndex; ++i) {
+                if (finishedTiles.has(i)) {
+                    continue;
+                }
+                probabilities.set(i, p);
             }
         }
         return probabilities;
     }
-    let getEntropyAt = (xIdx: number, yIdx: number) => {
-        let probabilities = getProbabilitiesAt(xIdx, yIdx);
+    let getEntropy = (probabilities: Map<number,number>) => {
         let entropy = 0.0;
         for (let i = 1; i <= maxTileIndex; ++i) {
             if (finishedTiles.has(i)) {
@@ -181,8 +228,13 @@ export function collapseTileset(
                 if ((result[yIdx]?.[xIdx] ?? 0) != 0) {
                     continue;
                 }
-                let entropy = getEntropyAt(xIdx, yIdx);
-                if (maxEntropy == undefined || entropy > maxEntropy) {
+                let probabilities = getProbabilitiesAt(xIdx, yIdx);
+                let maxProbability = probabilities.values().reduce((a, b) => Math.max(a, b), 0);
+                if (maxProbability == 0) {
+                    continue;
+                }
+                let entropy = getEntropy(probabilities);
+                if (maxEntropy == undefined || entropy < maxEntropy) {
                     maxEntropy = entropy;
                     maxEntropyAtYIdx = yIdx;
                     maxEntropyAtXIdx = xIdx;
@@ -194,9 +246,10 @@ export function collapseTileset(
         }
         let xIdx = maxEntropyAtXIdx;
         let yIdx = maxEntropyAtYIdx;
+        //
         let probabilities = getProbabilitiesAt(xIdx, yIdx);
-        let maxProbability: number | undefined = undefined;
-        let maxProbabilityTile: number | undefined = undefined;
+        let minProbability: number | undefined = undefined;
+        let minProbabilityTile: number | undefined = undefined;
         for (let i = 1; i <= maxTileIndex; ++i) {
             if (finishedTiles.has(i)) {
                 continue;
@@ -205,16 +258,16 @@ export function collapseTileset(
             if (p == undefined) {
                 continue;
             }
-            if (maxProbability == undefined || p > maxProbability) {
-                maxProbability = p;
-                maxProbabilityTile = i;
+            if (minProbability == undefined || p > minProbability) {
+                minProbability = p;
+                minProbabilityTile = i;
             }
         }
-        if (maxProbabilityTile == undefined) {
+        if (minProbabilityTile == undefined) {
             break;
         }
-        writeResultCell(xIdx, yIdx, maxProbabilityTile);
-        finishedTiles.add(maxProbabilityTile);
+        writeResultCell(xIdx, yIdx, minProbabilityTile);
+        finishedTiles.add(minProbabilityTile);
     }
     return result;
 }
