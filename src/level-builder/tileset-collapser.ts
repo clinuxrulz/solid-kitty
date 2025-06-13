@@ -220,9 +220,9 @@ export function collapseTileset(
         row[xIdx] = tile;
     };
     while (true) {
-        let maxEntropy: undefined | number = undefined;
-        let maxEntropyAtYIdx: number | undefined = undefined;
-        let maxEntropyAtXIdx: number | undefined = undefined;
+        let minEntropy: undefined | number = undefined;
+        let minEntropyAtYIdx: number | undefined = undefined;
+        let minEntropyAtXIdx: number | undefined = undefined;
         for (let yIdx = 0; yIdx <= result.length+1; ++yIdx) {
             for (let xIdx = 0; xIdx < numTilesPerRow; ++xIdx) {
                 if ((result[yIdx]?.[xIdx] ?? 0) != 0) {
@@ -234,22 +234,22 @@ export function collapseTileset(
                     continue;
                 }
                 let entropy = getEntropy(probabilities);
-                if (maxEntropy == undefined || entropy < maxEntropy) {
-                    maxEntropy = entropy;
-                    maxEntropyAtYIdx = yIdx;
-                    maxEntropyAtXIdx = xIdx;
+                if (minEntropy == undefined || entropy < minEntropy) {
+                    minEntropy = entropy;
+                    minEntropyAtYIdx = yIdx;
+                    minEntropyAtXIdx = xIdx;
                 }
             }
         }
-        if (maxEntropyAtXIdx == undefined || maxEntropyAtYIdx == undefined) {
+        if (minEntropyAtXIdx == undefined || minEntropyAtYIdx == undefined) {
             break;
         }
-        let xIdx = maxEntropyAtXIdx;
-        let yIdx = maxEntropyAtYIdx;
+        let xIdx = minEntropyAtXIdx;
+        let yIdx = minEntropyAtYIdx;
         //
         let probabilities = getProbabilitiesAt(xIdx, yIdx);
-        let minProbability: number | undefined = undefined;
-        let minProbabilityTile: number | undefined = undefined;
+        let maxProbability: number | undefined = undefined;
+        let maxProbabilityTile: number | undefined = undefined;
         for (let i = 1; i <= maxTileIndex; ++i) {
             if (finishedTiles.has(i)) {
                 continue;
@@ -258,16 +258,16 @@ export function collapseTileset(
             if (p == undefined) {
                 continue;
             }
-            if (minProbability == undefined || p > minProbability) {
-                minProbability = p;
-                minProbabilityTile = i;
+            if (maxProbability == undefined || p > maxProbability) {
+                maxProbability = p;
+                maxProbabilityTile = i;
             }
         }
-        if (minProbabilityTile == undefined) {
+        if (maxProbabilityTile == undefined) {
             break;
         }
-        writeResultCell(xIdx, yIdx, minProbabilityTile);
-        finishedTiles.add(minProbabilityTile);
+        writeResultCell(xIdx, yIdx, maxProbabilityTile);
+        finishedTiles.add(maxProbabilityTile);
     }
     return result;
 }
