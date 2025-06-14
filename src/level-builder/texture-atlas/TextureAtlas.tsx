@@ -5,6 +5,7 @@ import {
   createComputed,
   createEffect,
   createMemo,
+  createRoot,
   createSignal,
   JSX,
   mergeProps,
@@ -29,6 +30,7 @@ import { registry } from "../components/registry";
 import { textureAtlasComponentType } from "../components/TextureAtlasComponent";
 import { ReactiveVirtualFileSystem } from "../../ReactiveVirtualFileSystem";
 import {
+  AutomergeVfsFile,
   AutomergeVfsFolder,
   AutomergeVirtualFileSystem,
 } from "solid-fs-automerge";
@@ -109,6 +111,7 @@ export class TextureAtlas {
     let [imageUrlDispose, setImageUrlDispose] = createSignal<() => void>(
       () => {},
     );
+    let [ imageFileId, setImageFileId, ] = createSignal<string>();
     let [image, setImage] = createSignal<HTMLImageElement>();
     let [size, setSize] = createSignal<Vec2>();
     onCleanup(() => {
@@ -205,6 +208,7 @@ export class TextureAtlas {
                     image.style.setProperty("image-rendering", "pixelated");
                     image.onload = () => {
                       batch(() => {
+                        setImageFileId(imageFileId);
                         setImage(image);
                         setSize(Vec2.create(image.width, image.height));
                       });
@@ -592,9 +596,62 @@ export class TextureAtlas {
                           <ImageToTilesetCreator
                             world={state.world}
                             image={image}
-                            overwriteImage={(newImage) => {
-                              // TODO: save over the current image in automerge
-                              setImage(newImage);
+                            overwriteImage={async (newImage) => {
+                              let imagesFolder = params.imagesFolder();
+                              if (imagesFolder.type != "Success") {
+                                return;
+                              }
+                              let imagesFolder2 = imagesFolder.value;
+                              let imageFileId2 = imageFileId();
+                              if (imageFileId2 == undefined) {
+                                return;
+                              }
+                              let imageFile = imagesFolder2.openFileById<{
+                                mimeType: string,
+                                data: Uint8Array,
+                              }>(imageFileId2);
+                              let imageFile2 = await new Promise<AutomergeVfsFile<{
+                                mimeType: string,
+                                data: Uint8Array,
+                              }>>((resolve, reject) => createRoot((dispose) => {
+                                createComputed(on(
+                                  imageFile,
+                                  (imageFile) => {
+                                    if (imageFile.type == "Pending") {
+                                      return;
+                                    }
+                                    if (imageFile.type == "Failed") {
+                                      reject(imageFile.message);
+                                      dispose();
+                                      return;
+                                    }
+                                    resolve(imageFile.value);
+                                    dispose();
+                                  },
+                                ));
+                              }));
+                              let canvas = document.createElement("canvas");
+                              canvas.width = newImage.naturalWidth;
+                              canvas.height = newImage.naturalHeight;
+                              let ctx = canvas.getContext("2d");
+                              if (ctx == undefined) {
+                                return;
+                              }
+                              ctx.drawImage(newImage, 0, 0);
+                              canvas.toBlob(
+                                async (blob) => {
+                                  if (blob == null) {
+                                    return;
+                                  }
+                                  let data = await blob.bytes();
+                                  imageFile2.docHandle.change((doc) => {
+                                    doc.mimeType = "image/png";
+                                    doc.data = data;
+                                  });
+                                  setImage(newImage);
+                                },
+                                "image/png",
+                              );
                             }}
                           />
                         )}

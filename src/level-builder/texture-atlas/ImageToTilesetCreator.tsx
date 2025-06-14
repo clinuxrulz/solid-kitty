@@ -41,11 +41,13 @@ const ImageToTilesetCreator: Component<{
     offsetYText: string;
     tileWidthText: string;
     tileHeightText: string;
+    matchDone: boolean;
   }>({
     offsetXText: "0",
     offsetYText: "0",
     tileWidthText: "16",
     tileHeightText: "16",
+    matchDone: false,
   });
   let offsetX = createMemo(() => {
     let value = Number.parseFloat(state.offsetXText);
@@ -106,7 +108,7 @@ const ImageToTilesetCreator: Component<{
     }
     return h32(_hashTileBuffer2, 0);
   };
-  let hasTileByHashSet = new Set<string>();
+  let tileHashToFrameIdMap = new Map<string,string>();
   let performMatch = () => {
     let image = props.image;
     let offsetX2 = offsetX();
@@ -136,6 +138,10 @@ const ImageToTilesetCreator: Component<{
     let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     let imageData2 = imageData.data;
     //
+    for (let frameId of props.world.entitiesWithComponentType(frameComponentType)) {
+      props.world.destroyEntity(frameId);
+    }
+    //
     let yIdx = 0;
     let atY = offsetY2;
     while (atY + tileHeight2 <= canvas.height) {
@@ -151,9 +157,8 @@ const ImageToTilesetCreator: Component<{
           tileHeight2,
         );
         let hash2 = hash.toString();
-        if (!hasTileByHashSet.has(hash2)) {
-          hasTileByHashSet.add(hash2);
-          props.world.createEntity([
+        if (!tileHashToFrameIdMap.has(hash2)) {
+          let frameId = props.world.createEntity([
             frameComponentType.create({
               name: "frame",
               pos: Vec2.create(atX, atY),
@@ -162,6 +167,7 @@ const ImageToTilesetCreator: Component<{
               metaData: null,
             }),
           ]);
+          tileHashToFrameIdMap.set(hash2, frameId);
         }
         ++xIdx;
         atX += tileWidth2;
@@ -169,13 +175,15 @@ const ImageToTilesetCreator: Component<{
       ++yIdx;
       atY += tileHeight2;
     }
+    //
+    setState("matchDone", true);
   };
   let collapseTiles = () => {
     let nextId = 1;
     let tileHashToIdMap = new Map<string,number>();
     let tileIdToHashMap = new Map<number,string>();
     let tileHashToXY = new Map<string, { x: number, y: number, }>();
-    for (let tileHash of hasTileByHashSet) {
+    for (let tileHash of tileHashToFrameIdMap.keys()) {
       let tileId = nextId++;
       tileHashToIdMap.set(tileHash, tileId);
       tileIdToHashMap.set(tileId, tileHash);
@@ -284,6 +292,19 @@ const ImageToTilesetCreator: Component<{
             tileWidth2,
             tileHeight2,
           );
+          let frameId = tileHashToFrameIdMap.get(tileHash);
+          if (frameId != undefined) {
+            let frameComponent = props.world.getComponent(frameId, frameComponentType);
+            if (frameComponent != undefined) {
+              frameComponent.setState(
+                "pos",
+                Vec2.create(
+                  atX,
+                  atY,
+                ),
+              );
+            }
+          }
         }
       }
     }
@@ -362,9 +383,11 @@ const ImageToTilesetCreator: Component<{
         <button class="btn" onClick={() => performMatch()}>
           Find Unique Tiles
         </button>
-        <button class="btn" onClick={() => collapseTiles()}>
-          Collapse Tiles
-        </button>
+        <Show when={state.matchDone}>
+          <button class="btn" onClick={() => collapseTiles()}>
+            Collapse Tiles
+          </button>
+        </Show>
       </div>
     </div>
   );
