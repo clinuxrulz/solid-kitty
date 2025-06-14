@@ -104,3 +104,9 @@ export function mkAccessorToPromise<A, E>(
     });
   });
 }
+
+export type Overwrite<TTarget, TSource extends Record<string, unknown>> = Omit<
+  TTarget,
+  keyof TSource
+> &
+  TSource;
