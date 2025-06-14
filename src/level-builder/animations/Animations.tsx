@@ -14,7 +14,11 @@ const Animations: Component<Overwrite<
       "world",
     ],
   );
-  return undefined;
+  return (
+    <div {...rest}>
+
+    </div>
+  );
 };
 
 export default Animations;
