@@ -106,6 +106,9 @@ export function createPanZoomManager(params: {
             params.releasePointerCapture(e.pointerId);
         },
         onPointerMove(e) {
+            if (!pointersDown.has(e.pointerId)) {
+                return;
+            }
             pointersDown.set(
                 e.pointerId,
                 Vec2.create(
