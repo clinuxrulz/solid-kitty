@@ -40,6 +40,7 @@ import { base64ToUint8Array, NoTrack } from "../../util";
 import { IEcsWorld } from "../../ecs/IEcsWorld";
 import { EcsWorldAutomergeProjection } from "../../ecs/EcsWorldAutomergeProjection";
 import ImageToTilesetCreator from "./ImageToTilesetCreator";
+import Animations from "../animations/Animations";
 
 type State = {
   mousePos: Vec2 | undefined;
@@ -662,6 +663,28 @@ export class TextureAtlas {
               }}
             >
               Auto Frames
+            </button>
+            <button
+              class="btn"
+              onClick={() => {
+                setState(
+                  "overlayApp",
+                  new NoTrack({
+                    Title: () => "Animations",
+                    View: () => (
+                      <Animations
+                        world={state.world}
+                        style={{
+                          "width": "100%",
+                          "height": "100%",
+                        }}
+                      />
+                    ),
+                  })
+                );
+              }}
+            >
+              Animations
             </button>
           </div>
           <div
