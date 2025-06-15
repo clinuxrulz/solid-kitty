@@ -118,13 +118,24 @@ export function createPanZoomManager(params: {
             );
         },
         onWheel(e) {
+            let m = Vec2.create(
+                e.offsetX,
+                e.offsetY,
+            );
+            let pt = m.multScalar(1.0 / params.scale()).add(params.pan());
             let newScale = params.scale();
             if (e.deltaY > 0) {
                 newScale *= 1.1;
             } else if (e.deltaY < 0) {
                 newScale /= 1.1;
+            } else {
+                return;
             }
-            params.setScale(newScale);
+            let newPan = pt.sub(m.multScalar(1.0 / newScale));
+            batch(() => {
+                params.setPan(newPan);
+                params.setScale(newScale);
+            });
         },
         debugPointers,
     };
